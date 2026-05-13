@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Product Candy
 
-## Getting Started
+Embedded Shopify admin app that gives merchants two tools:
 
-First, run the development server:
+1. **Description Layouts** — pick a polished template, fill in fields, and write
+   rich HTML straight into the product description.
+2. **Image Resize & Crop** — crop, resize, and re-upload product images
+   without leaving the Shopify admin.
+
+## Stack
+
+- Next.js 16 (App Router) + TypeScript + Tailwind v4
+- Shopify Polaris + App Bridge React
+- `@shopify/shopify-api` for OAuth and REST/GraphQL
+- Prisma + PostgreSQL (session storage + per-shop data)
+- Deployed on Railway
+
+## Local development
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env          # then fill in values
+npm install
+npm run db:migrate:dev        # creates the Postgres schema
+npm run dev                   # starts on http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+You'll need a tunnel (e.g. `cloudflared tunnel --url http://localhost:3000`)
+so Shopify can redirect back into your dev machine. Update `HOST` in `.env`
+and the **App URL** + **Allowed redirection URL** in your Partner dashboard
+to match the tunnel URL.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Install on a dev store by visiting:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+https://<your-tunnel>/api/auth?shop=<your-store>.myshopify.com
+```
 
-## Learn More
+## Project layout
 
-To learn more about Next.js, take a look at the following resources:
+```
+src/
+  app/
+    api/auth/route.ts            # OAuth begin
+    api/auth/callback/route.ts   # OAuth callback + session storage
+    descriptions/page.tsx        # Description Layouts UI
+    images/page.tsx              # Image Resize/Crop UI
+    layout.tsx                   # App Bridge script + Polaris Provider
+    page.tsx                     # Embedded home
+    providers.tsx                # Polaris AppProvider
+  lib/
+    prisma.ts                    # Prisma client singleton
+    shopify.ts                   # Shopify API client + session storage
+prisma/
+  schema.prisma                  # Session, Shop, DescriptionTemplate
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Production (Railway)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+1. Push this repo to GitHub.
+2. Railway → New Project → Deploy from GitHub repo.
+3. Add a **PostgreSQL** plugin to the project. Railway injects `DATABASE_URL`.
+4. Set the following service variables:
+   - `SHOPIFY_API_KEY`
+   - `SHOPIFY_API_SECRET`
+   - `NEXT_PUBLIC_SHOPIFY_API_KEY` (same value as `SHOPIFY_API_KEY`)
+   - `SCOPES=read_products,write_products,read_files,write_files`
+   - `HOST=https://<service>.up.railway.app`
+5. Set the start command to `npm run db:migrate && npm start`.
+6. Update the Shopify Partner app's **App URL** to `$HOST` and
+   **Allowed redirection URL(s)** to `$HOST/api/auth/callback`.
