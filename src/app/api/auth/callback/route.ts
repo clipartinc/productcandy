@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
 
   // Redirect into the embedded app inside Shopify admin
   const host = req.nextUrl.searchParams.get("host");
-  const redirectUrl = `/?shop=${encodeURIComponent(session.shop)}${
+  const redirectUrl = `/app?shop=${encodeURIComponent(session.shop)}${
     host ? `&host=${encodeURIComponent(host)}` : ""
   }`;
 

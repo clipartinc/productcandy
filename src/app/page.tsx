@@ -1,67 +1,119 @@
-"use client";
-
-import {
-  Page,
-  Layout,
-  Card,
-  BlockStack,
-  Text,
-  Button,
-  InlineStack,
-  Box,
-} from "@shopify/polaris";
 import Link from "next/link";
 
-export default function Home() {
+// TODO: replace with the real Shopify App Store URL once the listing is live.
+const APP_STORE_URL: string | null = null;
+
+export default function Landing() {
   return (
-    <Page title="Product Candy" subtitle="Sweeter product pages, in two clicks.">
-      <Layout>
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">
-                Description Layouts
-              </Text>
-              <Text as="p" tone="subdued">
-                Pick a polished template, fill in the blanks, and write rich
-                HTML straight into your product description.
-              </Text>
-              <InlineStack>
-                <Link href="/descriptions">
-                  <Button variant="primary">Open description tool</Button>
-                </Link>
-              </InlineStack>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+    <div className="flex flex-col flex-1 bg-white text-zinc-900">
+      <header className="border-b border-zinc-100">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
+          <Link href="/" className="flex items-center gap-2 font-semibold">
+            <span className="inline-block size-7 rounded-lg bg-gradient-to-br from-pink-400 to-rose-500" />
+            Product Candy
+          </Link>
+          <nav className="flex items-center gap-6 text-sm text-zinc-600">
+            <a href="#features" className="hover:text-zinc-900">Features</a>
+            <a href="mailto:support@productcandy.app" className="hover:text-zinc-900">Contact</a>
+            <AppStoreCta variant="ghost" />
+          </nav>
+        </div>
+      </header>
 
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <Text as="h2" variant="headingMd">
-                Image Resize & Crop
-              </Text>
-              <Text as="p" tone="subdued">
-                Crop, resize, and re-upload product images without leaving the
-                Shopify admin.
-              </Text>
-              <InlineStack>
-                <Link href="/images">
-                  <Button variant="primary">Open image tool</Button>
-                </Link>
-              </InlineStack>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
+      <main className="flex-1">
+        <section className="mx-auto max-w-6xl px-6 py-24 text-center">
+          <p className="mb-4 text-sm font-medium uppercase tracking-wider text-rose-500">
+            Shopify admin app
+          </p>
+          <h1 className="mx-auto max-w-3xl text-balance text-5xl font-semibold leading-tight tracking-tight sm:text-6xl">
+            Sweeter product pages, in two clicks.
+          </h1>
+          <p className="mx-auto mt-6 max-w-2xl text-lg text-zinc-600">
+            Polished description templates and one-click image cropping —
+            without leaving your Shopify admin.
+          </p>
+          <div className="mt-10 flex items-center justify-center gap-4">
+            <AppStoreCta />
+            <a
+              href="#features"
+              className="text-sm font-medium text-zinc-700 hover:text-zinc-900"
+            >
+              See what it does →
+            </a>
+          </div>
+        </section>
 
-        <Layout.Section>
-          <Box paddingBlockStart="400">
-            <Text as="p" tone="subdued" alignment="center">
-              Need help? Email support@productcandy.app
-            </Text>
-          </Box>
-        </Layout.Section>
-      </Layout>
-    </Page>
+        <section id="features" className="border-t border-zinc-100 bg-zinc-50">
+          <div className="mx-auto grid max-w-6xl gap-8 px-6 py-20 md:grid-cols-2">
+            <Feature
+              title="Description Layouts"
+              body="Pick a polished template, fill in the blanks, and write rich HTML straight into your product description. No theme edits, no copy-paste."
+            />
+            <Feature
+              title="Image Resize & Crop"
+              body="Crop and resize product images right from the product page. We re-upload the result so your store always looks pixel-perfect."
+            />
+          </div>
+        </section>
+
+        <section className="mx-auto max-w-3xl px-6 py-24 text-center">
+          <h2 className="text-3xl font-semibold tracking-tight">
+            Ready when you are.
+          </h2>
+          <p className="mt-4 text-zinc-600">
+            Install Product Candy on your store and ship better-looking
+            product pages this afternoon.
+          </p>
+          <div className="mt-8 flex justify-center">
+            <AppStoreCta />
+          </div>
+        </section>
+      </main>
+
+      <footer className="border-t border-zinc-100">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-8 text-sm text-zinc-500 sm:flex-row">
+          <span>© {new Date().getFullYear()} Product Candy</span>
+          <a
+            href="mailto:support@productcandy.app"
+            className="hover:text-zinc-900"
+          >
+            support@productcandy.app
+          </a>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+function Feature({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm">
+      <h3 className="text-xl font-semibold">{title}</h3>
+      <p className="mt-3 text-zinc-600">{body}</p>
+    </div>
+  );
+}
+
+function AppStoreCta({ variant = "primary" }: { variant?: "primary" | "ghost" }) {
+  const label = APP_STORE_URL
+    ? "Get on the Shopify App Store"
+    : "Coming soon to the Shopify App Store";
+  const base =
+    "inline-flex items-center justify-center rounded-full px-5 py-2.5 text-sm font-medium transition-colors";
+  const styles =
+    variant === "primary"
+      ? "bg-rose-500 text-white hover:bg-rose-600 disabled:bg-zinc-300 disabled:text-zinc-600 disabled:cursor-not-allowed"
+      : "text-zinc-700 hover:text-zinc-900";
+  if (APP_STORE_URL) {
+    return (
+      <a href={APP_STORE_URL} className={`${base} ${styles}`}>
+        {label}
+      </a>
+    );
+  }
+  return (
+    <button type="button" disabled className={`${base} ${styles}`}>
+      {label}
+    </button>
   );
 }

@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import "./globals.css";
-import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "Product Candy",
-  description: "Improved product descriptions and image tools for Shopify.",
+  title: "Product Candy — Sweeter product pages for Shopify",
+  description:
+    "Polished description templates and one-click image cropping for Shopify merchants. Built as an embedded admin app.",
 };
 
 export default function RootLayout({
@@ -13,20 +12,9 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const apiKey = process.env.NEXT_PUBLIC_SHOPIFY_API_KEY ?? "";
-
   return (
     <html lang="en" className="h-full antialiased">
-      <head>
-        <Script
-          src="https://cdn.shopify.com/shopifycloud/app-bridge.js"
-          data-api-key={apiKey}
-          strategy="beforeInteractive"
-        />
-      </head>
-      <body className="min-h-full flex flex-col">
-        <Providers>{children}</Providers>
-      </body>
+      <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
 }

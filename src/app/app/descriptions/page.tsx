@@ -4,7 +4,7 @@ import { Page, Card, BlockStack, Text } from "@shopify/polaris";
 
 export default function DescriptionsPage() {
   return (
-    <Page title="Description Layouts" backAction={{ content: "Home", url: "/" }}>
+    <Page title="Description Layouts" backAction={{ content: "Home", url: "/app" }}>
       <Card>
         <BlockStack gap="400">
           <Text as="h2" variant="headingMd">

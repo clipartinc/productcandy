@@ -4,7 +4,7 @@ import { Page, Card, BlockStack, Text } from "@shopify/polaris";
 
 export default function ImagesPage() {
   return (
-    <Page title="Image Resize & Crop" backAction={{ content: "Home", url: "/" }}>
+    <Page title="Image Resize & Crop" backAction={{ content: "Home", url: "/app" }}>
       <Card>
         <BlockStack gap="400">
           <Text as="h2" variant="headingMd">

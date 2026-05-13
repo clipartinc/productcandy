@@ -37,22 +37,35 @@ https://<your-tunnel>/api/auth?shop=<your-store>.myshopify.com
 
 ## Project layout
 
+The same Next.js app serves two surfaces:
+
+- `/` — public marketing site (Tailwind, no Polaris). Links to the Shopify
+  App Store listing once it's live.
+- `/app/*` — the embedded admin app (Polaris + App Bridge). This is what
+  Shopify loads inside the merchant's admin iframe.
+
 ```
 src/
   app/
+    layout.tsx                   # Root layout (HTML shell only)
+    page.tsx                     # Marketing landing
+    providers.tsx                # Polaris AppProvider (used by /app)
     api/auth/route.ts            # OAuth begin
     api/auth/callback/route.ts   # OAuth callback + session storage
-    descriptions/page.tsx        # Description Layouts UI
-    images/page.tsx              # Image Resize/Crop UI
-    layout.tsx                   # App Bridge script + Polaris Provider
-    page.tsx                     # Embedded home
-    providers.tsx                # Polaris AppProvider
+    app/
+      layout.tsx                 # App Bridge script + Polaris Provider
+      page.tsx                   # Embedded home
+      descriptions/page.tsx      # Description Layouts UI
+      images/page.tsx            # Image Resize/Crop UI
   lib/
     prisma.ts                    # Prisma client singleton
     shopify.ts                   # Shopify API client + session storage
 prisma/
   schema.prisma                  # Session, Shop, DescriptionTemplate
 ```
+
+In the Shopify Partner dashboard, set the **App URL** to `$HOST/app` (not
+`$HOST/`) so merchants land on the embedded app, not the marketing page.
 
 ## Production (Railway)
 
