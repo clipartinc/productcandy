@@ -43,7 +43,7 @@ function ph(label: string, bg: string, text: string): string {
   if (bg === "none") {
     return `<div data-pc-placeholder="1" style="color:${text};font-style:italic;margin:8px 0;">${label}</div>`;
   }
-  return `<div data-pc-placeholder="1" style="background:${bg};color:${text};border:1px dashed #d1d5db;border-radius:8px;padding:12px 16px;margin:8px 0;font-style:italic;">${label}</div>`;
+  return `<div data-pc-placeholder="1" style="background-color:${bg};color:${text};border:1px dashed #d1d5db;border-radius:8px;padding:12px 16px;margin:8px 0;font-style:italic;">${label}</div>`;
 }
 
 // Inline placeholder (used for headings, short labels)
@@ -51,7 +51,7 @@ function phInline(label: string, bg: string, text: string): string {
   if (bg === "none") {
     return `<span data-pc-placeholder="1" style="color:${text};font-style:italic;">${label}</span>`;
   }
-  return `<span data-pc-placeholder="1" style="background:${bg};color:${text};border:1px dashed #d1d5db;border-radius:6px;padding:2px 8px;font-style:italic;">${label}</span>`;
+  return `<span data-pc-placeholder="1" style="background-color:${bg};color:${text};border:1px dashed #d1d5db;border-radius:6px;padding:2px 8px;font-style:italic;">${label}</span>`;
 }
 
 /**
