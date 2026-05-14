@@ -169,7 +169,7 @@ function App() {
 
   const [mode, setMode] = useState<Mode>("append");
   const [bgColor, setBgColor] = useState<string>("none");
-  const [textColor, setTextColor] = useState<string>("#6b7280");
+  const [textColor, setTextColor] = useState<string>("#111827");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<
     | { kind: "idle" }
