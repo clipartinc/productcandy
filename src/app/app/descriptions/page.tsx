@@ -13,13 +13,20 @@ import {
   Modal,
   Spinner,
   Box,
+  Select,
 } from "@shopify/polaris";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import Image from "@tiptap/extension-image";
+import TiptapImage from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import {
+  TEMPLATES,
+  TEMPLATE_LIST,
+  type ProductImage,
+  type TemplateId,
+} from "@/lib/templates";
 
 type Status =
   | { kind: "loading" }
@@ -28,14 +35,15 @@ type Status =
   | { kind: "saved" }
   | { kind: "error"; message: string };
 
-type ProductImage = { id: string; url: string; altText: string | null };
-
 type LoadedProduct = {
   id: string;
   title: string;
   descriptionHtml: string;
   images: ProductImage[];
 };
+
+const isTemplateId = (v: string | null): v is TemplateId =>
+  !!v && Object.prototype.hasOwnProperty.call(TEMPLATES, v);
 
 export default function DescriptionsPage() {
   return (
@@ -48,6 +56,10 @@ export default function DescriptionsPage() {
 function DescriptionsEditor() {
   const params = useSearchParams();
   const productId = params.get("id");
+  const initialTemplate = isTemplateId(params.get("t")) ? (params.get("t") as TemplateId) : null;
+
+  const [templateId, setTemplateId] = useState<TemplateId | null>(initialTemplate);
+  const mode: "template" | "freeform" = templateId ? "template" : "freeform";
 
   const [product, setProduct] = useState<LoadedProduct | null>(null);
   const [status, setStatus] = useState<Status>(
@@ -56,11 +68,16 @@ function DescriptionsEditor() {
   const [imagePickerOpen, setImagePickerOpen] = useState(false);
   const [linkPickerOpen, setLinkPickerOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [values, setValues] = useState<Record<string, string>>({});
 
   const editor = useEditor({
     extensions: [
       StarterKit,
-      Image.configure({ HTMLAttributes: { style: "max-width:100%;height:auto;border-radius:6px;" } }),
+      TiptapImage.configure({
+        HTMLAttributes: {
+          style: "max-width:100%;height:auto;border-radius:6px;",
+        },
+      }),
       Link.configure({ openOnClick: false, HTMLAttributes: { rel: "noopener" } }),
     ],
     content: "",
@@ -68,14 +85,16 @@ function DescriptionsEditor() {
   });
 
   useEffect(() => {
-    if (!productId || !editor) return;
+    if (!productId) return;
     setStatus({ kind: "loading" });
     fetchWithSessionToken(`/api/app/product/${encodeURIComponent(productId)}`)
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Load failed");
         setProduct(json as LoadedProduct);
-        editor.commands.setContent(json.descriptionHtml ?? "");
+        if (editor && mode === "freeform") {
+          editor.commands.setContent(json.descriptionHtml ?? "");
+        }
         setStatus({ kind: "ready" });
       })
       .catch((e) =>
@@ -84,10 +103,23 @@ function DescriptionsEditor() {
           message: e instanceof Error ? e.message : "Load failed",
         })
       );
-  }, [productId, editor]);
+  }, [productId, editor, mode]);
+
+  // Reset form values when switching between templates
+  useEffect(() => {
+    setValues({});
+    setStatus((s) => (s.kind === "saved" ? { kind: "ready" } : s));
+  }, [templateId]);
+
+  const template = templateId ? TEMPLATES[templateId] : null;
+  const templateHtml = useMemo(
+    () => (template ? template.render(values, product?.images ?? []) : ""),
+    [template, values, product]
+  );
 
   async function save() {
-    if (!productId || !editor) return;
+    if (!productId) return;
+    const html = mode === "template" ? templateHtml : editor?.getHTML() ?? "";
     setStatus({ kind: "saving" });
     try {
       const res = await fetchWithSessionToken(
@@ -95,7 +127,7 @@ function DescriptionsEditor() {
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ descriptionHtml: editor.getHTML() }),
+          body: JSON.stringify({ descriptionHtml: html }),
         }
       );
       const json = await res.json();
@@ -116,12 +148,7 @@ function DescriptionsEditor() {
 
   function insertLink() {
     if (!linkUrl) return;
-    editor
-      ?.chain()
-      .focus()
-      .extendMarkRange("link")
-      .setLink({ href: linkUrl })
-      .run();
+    editor?.chain().focus().extendMarkRange("link").setLink({ href: linkUrl }).run();
     setLinkPickerOpen(false);
     setLinkUrl("");
   }
@@ -133,16 +160,16 @@ function DescriptionsEditor() {
       primaryAction={{
         content: status.kind === "saving" ? "Saving…" : "Save to product",
         onAction: save,
-        disabled: !productId || !editor || status.kind === "loading" || status.kind === "saving",
+        disabled: !productId || status.kind === "loading" || status.kind === "saving",
       }}
     >
       <BlockStack gap="400">
         {!productId && (
           <Banner tone="info" title="No product selected">
             <p>
-              Open this editor from a product page (Apps → Product Candy →
-              Customize freely…) to load a product. We&apos;ll add a product
-              picker here in a later release.
+              Open this editor from a product page (Description Layouts block →
+              pick a layout). We&apos;ll add a product picker here in a later
+              release.
             </p>
           </Banner>
         )}
@@ -168,34 +195,68 @@ function DescriptionsEditor() {
           </Card>
         )}
 
-        {productId && editor && (
+        {productId && status.kind !== "loading" && (
           <Card>
-            <BlockStack gap="300">
-              <Toolbar
-                editor={editor}
-                onPickImage={() => setImagePickerOpen(true)}
-                onPickLink={() => {
-                  setLinkUrl(editor.getAttributes("link").href ?? "");
-                  setLinkPickerOpen(true);
-                }}
-                imagesAvailable={(product?.images.length ?? 0) > 0}
-              />
-              <Box
-                padding="400"
-                background="bg-surface-secondary"
-                borderRadius="200"
-                borderColor="border"
-                borderWidth="025"
-                minHeight="320px"
-              >
-                <EditorContent editor={editor} />
-              </Box>
+            <BlockStack gap="400">
+              <InlineStack gap="300" align="space-between" blockAlign="center" wrap>
+                <Text as="p" tone="subdued">
+                  {mode === "template"
+                    ? "Template editor — fill in the fields and save."
+                    : "Freeform editor — full rich text + image inserts."}
+                </Text>
+                <Select
+                  label="Layout"
+                  labelHidden
+                  options={[
+                    { label: "Freeform editor", value: "__free" },
+                    ...TEMPLATE_LIST.map((t) => ({ label: t.label, value: t.id })),
+                  ]}
+                  value={templateId ?? "__free"}
+                  onChange={(v) =>
+                    setTemplateId(v === "__free" ? null : (v as TemplateId))
+                  }
+                />
+              </InlineStack>
+
+              {mode === "template" && template && (
+                <TemplateEditor
+                  template={template}
+                  images={product?.images ?? []}
+                  values={values}
+                  onChange={setValues}
+                  previewHtml={templateHtml}
+                />
+              )}
+
+              {mode === "freeform" && editor && (
+                <BlockStack gap="300">
+                  <Toolbar
+                    editor={editor}
+                    onPickImage={() => setImagePickerOpen(true)}
+                    onPickLink={() => {
+                      setLinkUrl(editor.getAttributes("link").href ?? "");
+                      setLinkPickerOpen(true);
+                    }}
+                    imagesAvailable={(product?.images.length ?? 0) > 0}
+                  />
+                  <Box
+                    padding="400"
+                    background="bg-surface-secondary"
+                    borderRadius="200"
+                    borderColor="border"
+                    borderWidth="025"
+                    minHeight="320px"
+                  >
+                    <EditorContent editor={editor} />
+                  </Box>
+                </BlockStack>
+              )}
             </BlockStack>
           </Card>
         )}
       </BlockStack>
 
-      {product && (
+      {product && mode === "freeform" && (
         <Modal
           open={imagePickerOpen}
           onClose={() => setImagePickerOpen(false)}
@@ -207,32 +268,35 @@ function DescriptionsEditor() {
                 No images on this product yet. Add some in Shopify first.
               </Text>
             ) : (
-              <BlockStack gap="200">
-                <InlineStack gap="200" wrap>
-                  {product.images.map((img) => (
-                    <button
-                      key={img.id}
-                      type="button"
-                      onClick={() => insertImage(img)}
+              <InlineStack gap="200" wrap>
+                {product.images.map((img) => (
+                  <button
+                    key={img.id}
+                    type="button"
+                    onClick={() => insertImage(img)}
+                    style={{
+                      padding: 4,
+                      border: "1px solid #d1d5db",
+                      background: "transparent",
+                      borderRadius: 6,
+                      cursor: "pointer",
+                    }}
+                    aria-label={img.altText ?? "Insert image"}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={img.url}
+                      alt={img.altText ?? ""}
                       style={{
-                        padding: 4,
-                        border: "1px solid #d1d5db",
-                        background: "transparent",
-                        borderRadius: 6,
-                        cursor: "pointer",
+                        width: 110,
+                        height: 110,
+                        objectFit: "cover",
+                        borderRadius: 4,
                       }}
-                      aria-label={img.altText ?? "Insert image"}
-                    >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={img.url}
-                        alt={img.altText ?? ""}
-                        style={{ width: 110, height: 110, objectFit: "cover", borderRadius: 4 }}
-                      />
-                    </button>
-                  ))}
-                </InlineStack>
-              </BlockStack>
+                    />
+                  </button>
+                ))}
+              </InlineStack>
             )}
           </Modal.Section>
         </Modal>
@@ -282,6 +346,148 @@ function DescriptionsEditor() {
   );
 }
 
+function TemplateEditor({
+  template,
+  images,
+  values,
+  onChange,
+  previewHtml,
+}: {
+  template: (typeof TEMPLATES)[TemplateId];
+  images: ProductImage[];
+  values: Record<string, string>;
+  onChange: (v: Record<string, string>) => void;
+  previewHtml: string;
+}) {
+  const [previewOpen, setPreviewOpen] = useState(true);
+
+  function setValue(key: string, value: string) {
+    onChange({ ...values, [key]: value });
+  }
+
+  return (
+    <BlockStack gap="300">
+      <Text as="p" tone="subdued">
+        {template.description}
+      </Text>
+
+      {template.fields.map((field) => {
+        if (field.kind === "image") {
+          return (
+            <ImagePicker
+              key={field.key}
+              label={field.label}
+              images={images}
+              selectedId={values[field.key] ?? null}
+              onSelect={(id) => setValue(field.key, id)}
+            />
+          );
+        }
+        if (field.kind === "multiline") {
+          return (
+            <TextField
+              key={field.key}
+              label={field.label}
+              autoComplete="off"
+              multiline={4}
+              value={values[field.key] ?? ""}
+              onChange={(v) => setValue(field.key, v)}
+            />
+          );
+        }
+        return (
+          <TextField
+            key={field.key}
+            label={field.label}
+            autoComplete="off"
+            value={values[field.key] ?? ""}
+            onChange={(v) => setValue(field.key, v)}
+          />
+        );
+      })}
+
+      <InlineStack gap="200">
+        <Button onClick={() => setPreviewOpen((p) => !p)}>
+          {previewOpen ? "Hide preview" : "Show preview"}
+        </Button>
+      </InlineStack>
+
+      {previewOpen && (
+        <Box
+          padding="400"
+          background="bg-surface-secondary"
+          borderRadius="200"
+          borderColor="border"
+          borderWidth="025"
+        >
+          <div dangerouslySetInnerHTML={{ __html: previewHtml }} />
+        </Box>
+      )}
+    </BlockStack>
+  );
+}
+
+function ImagePicker({
+  label,
+  images,
+  selectedId,
+  onSelect,
+}: {
+  label: string;
+  images: ProductImage[];
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  if (images.length === 0) {
+    return (
+      <Banner tone="warning" title={`${label}: no images on this product`}>
+        <p>Add an image to the product first, then come back here.</p>
+      </Banner>
+    );
+  }
+  return (
+    <BlockStack gap="200">
+      <Text as="p" fontWeight="semibold">
+        {label}
+      </Text>
+      <InlineStack gap="200" wrap>
+        {images.map((img) => {
+          const selected = selectedId === img.id;
+          return (
+            <button
+              key={img.id}
+              type="button"
+              onClick={() => onSelect(img.id)}
+              style={{
+                padding: 4,
+                border: selected ? "2px solid #ec4899" : "1px solid #d1d5db",
+                background: selected ? "#fef2f8" : "transparent",
+                borderRadius: 6,
+                cursor: "pointer",
+              }}
+              aria-pressed={selected}
+              aria-label={img.altText ?? label}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={img.url}
+                alt={img.altText ?? ""}
+                style={{
+                  width: 90,
+                  height: 90,
+                  objectFit: "cover",
+                  borderRadius: 4,
+                  display: "block",
+                }}
+              />
+            </button>
+          );
+        })}
+      </InlineStack>
+    </BlockStack>
+  );
+}
+
 function Toolbar({
   editor,
   onPickImage,
@@ -295,16 +501,10 @@ function Toolbar({
 }) {
   return (
     <InlineStack gap="100" wrap>
-      <Button
-        pressed={editor.isActive("bold")}
-        onClick={() => editor.chain().focus().toggleBold().run()}
-      >
+      <Button pressed={editor.isActive("bold")} onClick={() => editor.chain().focus().toggleBold().run()}>
         Bold
       </Button>
-      <Button
-        pressed={editor.isActive("italic")}
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-      >
+      <Button pressed={editor.isActive("italic")} onClick={() => editor.chain().focus().toggleItalic().run()}>
         Italic
       </Button>
       <Button
@@ -313,44 +513,26 @@ function Toolbar({
       >
         H2
       </Button>
-      <Button
-        pressed={editor.isActive("bulletList")}
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-      >
+      <Button pressed={editor.isActive("bulletList")} onClick={() => editor.chain().focus().toggleBulletList().run()}>
         • List
       </Button>
-      <Button
-        pressed={editor.isActive("orderedList")}
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-      >
+      <Button pressed={editor.isActive("orderedList")} onClick={() => editor.chain().focus().toggleOrderedList().run()}>
         1. List
       </Button>
       <Button onClick={onPickLink}>Link…</Button>
       <Button onClick={onPickImage} disabled={!imagesAvailable}>
         Image…
       </Button>
-      <Button
-        onClick={() => editor.chain().focus().undo().run()}
-        disabled={!editor.can().undo()}
-      >
+      <Button onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()}>
         Undo
       </Button>
-      <Button
-        onClick={() => editor.chain().focus().redo().run()}
-        disabled={!editor.can().redo()}
-      >
+      <Button onClick={() => editor.chain().focus().redo().run()} disabled={!editor.can().redo()}>
         Redo
       </Button>
     </InlineStack>
   );
 }
 
-/**
- * Embedded apps in admin call our backend with a session token (App Bridge JWT)
- * in the Authorization header. The script tag in /app/layout.tsx attaches the
- * shopify-app-bridge script; once it's ready, calling shopify.idToken() returns
- * a fresh JWT we can forward to our /api/* routes.
- */
 async function fetchWithSessionToken(url: string, init: RequestInit = {}) {
   const w = window as unknown as { shopify?: { idToken: () => Promise<string> } };
   if (!w.shopify) throw new Error("App Bridge not loaded");
