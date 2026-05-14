@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="240" height="180">
+  <rect width="240" height="180" fill="#ffffff" stroke="#d1d5db" stroke-width="1" rx="8"/>
+  <!-- big hero headline -->
+  <rect x="20" y="22" width="180" height="12" rx="4" fill="#374151"/>
+  <rect x="20" y="40" width="140" height="12" rx="4" fill="#374151"/>
+  <!-- supporting paragraph -->
+  <rect x="20" y="68" width="200" height="5" rx="2" fill="#9ca3af"/>
+  <rect x="20" y="80" width="200" height="5" rx="2" fill="#9ca3af"/>
+  <rect x="20" y="92" width="160" height="5" rx="2" fill="#9ca3af"/>
+  <!-- CTA button -->
+  <rect x="20" y="120" width="100" height="32" rx="6" fill="#ec4899"/>
+  <rect x="40" y="132" width="60" height="8" rx="3" fill="#ffffff"/>
+</svg>
