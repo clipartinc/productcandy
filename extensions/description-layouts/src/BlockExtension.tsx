@@ -13,6 +13,7 @@ import {
   Image,
   Pressable,
   Divider,
+  Link,
 } from "@shopify/ui-extensions-react/admin";
 import { useEffect, useMemo, useState } from "react";
 
@@ -28,9 +29,18 @@ type TemplateId =
   | "faq"
   | "two-column"
   | "three-column"
-  | "hero-cta";
+  | "hero-cta"
+  | "image-text"
+  | "text-image"
+  | "gallery-3";
 
-type TemplateField = { key: string; label: string; multiline?: boolean };
+type FieldKind = "text" | "multiline" | "image";
+
+type TemplateField = { key: string; label: string; kind: FieldKind };
+
+type ProductImage = { id: string; url: string; altText: string | null };
+
+type Values = Record<string, string>;
 
 const TEMPLATES: Record<
   TemplateId,
@@ -39,7 +49,7 @@ const TEMPLATES: Record<
     description: string;
     thumb: string;
     fields: TemplateField[];
-    render: (v: Record<string, string>) => string;
+    render: (v: Values, images: ProductImage[]) => string;
   }
 > = {
   "spec-sheet": {
@@ -47,8 +57,8 @@ const TEMPLATES: Record<
     description: "Intro paragraph + a key/value table.",
     thumb: `${THUMB_BASE_URL}/spec-sheet.svg`,
     fields: [
-      { key: "intro", label: "Intro paragraph", multiline: true },
-      { key: "specs", label: "Specs (one per line, key: value)", multiline: true },
+      { key: "intro", label: "Intro paragraph", kind: "multiline" },
+      { key: "specs", label: "Specs (one per line, key: value)", kind: "multiline" },
     ],
     render: (v) => {
       const rows = (v.specs ?? "")
@@ -76,9 +86,9 @@ const TEMPLATES: Record<
     description: "Brand story paragraph followed by a bullet list.",
     thumb: `${THUMB_BASE_URL}/story-features.svg`,
     fields: [
-      { key: "story", label: "Story", multiline: true },
-      { key: "headline", label: "Features headline" },
-      { key: "features", label: "Features (one per line)", multiline: true },
+      { key: "story", label: "Story", kind: "multiline" },
+      { key: "headline", label: "Features headline", kind: "text" },
+      { key: "features", label: "Features (one per line)", kind: "multiline" },
     ],
     render: (v) => {
       const items = (v.features ?? "")
@@ -103,7 +113,7 @@ const TEMPLATES: Record<
       {
         key: "items",
         label: "FAQ pairs (Q: ... \\n A: ... — blank line between)",
-        multiline: true,
+        kind: "multiline",
       },
     ],
     render: (v) => {
@@ -129,10 +139,10 @@ const TEMPLATES: Record<
     description: "Side-by-side text columns with their own headings.",
     thumb: `${THUMB_BASE_URL}/two-column.svg`,
     fields: [
-      { key: "h1", label: "Column 1 heading" },
-      { key: "c1", label: "Column 1 text", multiline: true },
-      { key: "h2", label: "Column 2 heading" },
-      { key: "c2", label: "Column 2 text", multiline: true },
+      { key: "h1", label: "Column 1 heading", kind: "text" },
+      { key: "c1", label: "Column 1 text", kind: "multiline" },
+      { key: "h2", label: "Column 2 heading", kind: "text" },
+      { key: "c2", label: "Column 2 text", kind: "multiline" },
     ],
     render: (v) =>
       `
@@ -152,12 +162,12 @@ const TEMPLATES: Record<
     description: "Three side-by-side text columns with headings.",
     thumb: `${THUMB_BASE_URL}/three-column.svg`,
     fields: [
-      { key: "h1", label: "Column 1 heading" },
-      { key: "c1", label: "Column 1 text", multiline: true },
-      { key: "h2", label: "Column 2 heading" },
-      { key: "c2", label: "Column 2 text", multiline: true },
-      { key: "h3", label: "Column 3 heading" },
-      { key: "c3", label: "Column 3 text", multiline: true },
+      { key: "h1", label: "Column 1 heading", kind: "text" },
+      { key: "c1", label: "Column 1 text", kind: "multiline" },
+      { key: "h2", label: "Column 2 heading", kind: "text" },
+      { key: "c2", label: "Column 2 text", kind: "multiline" },
+      { key: "h3", label: "Column 3 heading", kind: "text" },
+      { key: "c3", label: "Column 3 text", kind: "multiline" },
     ],
     render: (v) =>
       `
@@ -181,10 +191,10 @@ const TEMPLATES: Record<
     description: "Bold headline + supporting paragraph + a call-to-action button.",
     thumb: `${THUMB_BASE_URL}/hero-cta.svg`,
     fields: [
-      { key: "headline", label: "Headline" },
-      { key: "body", label: "Supporting paragraph", multiline: true },
-      { key: "ctaLabel", label: "Button label" },
-      { key: "ctaUrl", label: "Button URL" },
+      { key: "headline", label: "Headline", kind: "text" },
+      { key: "body", label: "Supporting paragraph", kind: "multiline" },
+      { key: "ctaLabel", label: "Button label", kind: "text" },
+      { key: "ctaUrl", label: "Button URL", kind: "text" },
     ],
     render: (v) =>
       `
@@ -195,6 +205,86 @@ const TEMPLATES: Record<
     <a href="${escapeAttr(v.ctaUrl ?? "#")}" style="display:inline-block;background:#ec4899;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:600;">${escapeHtml(v.ctaLabel ?? "Learn more")}</a>
   </p>
 </div>`.trim(),
+  },
+  "image-text": {
+    label: "Image + text",
+    description: "Image on the left, text on the right.",
+    thumb: `${THUMB_BASE_URL}/image-text.svg`,
+    fields: [
+      { key: "img", label: "Image", kind: "image" },
+      { key: "headline", label: "Headline", kind: "text" },
+      { key: "body", label: "Body", kind: "multiline" },
+    ],
+    render: (v, images) => {
+      const img = images.find((i) => i.id === v.img);
+      const imgTag = img
+        ? `<img src="${escapeAttr(img.url)}" alt="${escapeAttr(img.altText ?? "")}" style="max-width:100%;height:auto;border-radius:6px;" />`
+        : "";
+      return `
+<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+  <div style="flex:1;min-width:240px;">${imgTag}</div>
+  <div style="flex:1;min-width:240px;">
+    <h3>${escapeHtml(v.headline ?? "")}</h3>
+    ${paragraphs(v.body)}
+  </div>
+</div>`.trim();
+    },
+  },
+  "text-image": {
+    label: "Text + image",
+    description: "Text on the left, image on the right.",
+    thumb: `${THUMB_BASE_URL}/text-image.svg`,
+    fields: [
+      { key: "headline", label: "Headline", kind: "text" },
+      { key: "body", label: "Body", kind: "multiline" },
+      { key: "img", label: "Image", kind: "image" },
+    ],
+    render: (v, images) => {
+      const img = images.find((i) => i.id === v.img);
+      const imgTag = img
+        ? `<img src="${escapeAttr(img.url)}" alt="${escapeAttr(img.altText ?? "")}" style="max-width:100%;height:auto;border-radius:6px;" />`
+        : "";
+      return `
+<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+  <div style="flex:1;min-width:240px;">
+    <h3>${escapeHtml(v.headline ?? "")}</h3>
+    ${paragraphs(v.body)}
+  </div>
+  <div style="flex:1;min-width:240px;">${imgTag}</div>
+</div>`.trim();
+    },
+  },
+  "gallery-3": {
+    label: "Image gallery (3)",
+    description: "Three images in a row with optional captions.",
+    thumb: `${THUMB_BASE_URL}/gallery-3.svg`,
+    fields: [
+      { key: "img1", label: "Image 1", kind: "image" },
+      { key: "cap1", label: "Caption 1", kind: "text" },
+      { key: "img2", label: "Image 2", kind: "image" },
+      { key: "cap2", label: "Caption 2", kind: "text" },
+      { key: "img3", label: "Image 3", kind: "image" },
+      { key: "cap3", label: "Caption 3", kind: "text" },
+    ],
+    render: (v, images) => {
+      const cells = [
+        ["img1", "cap1"],
+        ["img2", "cap2"],
+        ["img3", "cap3"],
+      ]
+        .map(([imgKey, capKey]) => {
+          const img = images.find((i) => i.id === v[imgKey]);
+          if (!img) return "";
+          return `
+<div style="flex:1;min-width:200px;">
+  <img src="${escapeAttr(img.url)}" alt="${escapeAttr(img.altText ?? "")}" style="width:100%;height:auto;border-radius:6px;" />
+  ${v[capKey] ? `<p style="margin-top:8px;text-align:center;font-size:0.9em;color:#6b7280;">${escapeHtml(v[capKey])}</p>` : ""}
+</div>`;
+        })
+        .filter(Boolean)
+        .join("");
+      return `<div style="display:flex;gap:16px;flex-wrap:wrap;">${cells}</div>`;
+    },
   },
 };
 
@@ -227,7 +317,9 @@ function App() {
   const productId = (data as { selected?: { id: string }[] })?.selected?.[0]?.id;
 
   const [templateId, setTemplateId] = useState<TemplateId | null>(null);
-  const [values, setValues] = useState<Record<string, string>>({});
+  const [values, setValues] = useState<Values>({});
+  const [images, setImages] = useState<ProductImage[]>([]);
+  const [imagesLoading, setImagesLoading] = useState(false);
   const [status, setStatus] = useState<
     | { kind: "idle" }
     | { kind: "saving" }
@@ -236,13 +328,52 @@ function App() {
   >({ kind: "idle" });
 
   const template = templateId ? TEMPLATES[templateId] : null;
+  const needsImages = !!template?.fields.some((f) => f.kind === "image");
 
   useEffect(() => {
     setValues({});
     setStatus({ kind: "idle" });
   }, [templateId, productId]);
 
-  const html = useMemo(() => (template ? template.render(values) : ""), [template, values]);
+  // Fetch product images on demand when an image-using template is selected.
+  useEffect(() => {
+    if (!productId || !needsImages || images.length > 0 || imagesLoading) return;
+    setImagesLoading(true);
+    query<{
+      product: {
+        media: { nodes: { id: string; image?: { url: string; altText: string | null } }[] };
+      } | null;
+    }>(
+      `query ProductImages($id: ID!) {
+        product(id: $id) {
+          media(first: 30, query: "media_type:IMAGE") {
+            nodes {
+              ... on MediaImage { id image { url altText } }
+            }
+          }
+        }
+      }`,
+      { variables: { id: productId } }
+    )
+      .then((res) => {
+        const flat: ProductImage[] = (res.data?.product?.media?.nodes ?? [])
+          .filter((n): n is { id: string; image: { url: string; altText: string | null } } =>
+            !!n.image
+          )
+          .map((n) => ({
+            id: n.id,
+            url: n.image.url,
+            altText: n.image.altText,
+          }));
+        setImages(flat);
+      })
+      .finally(() => setImagesLoading(false));
+  }, [productId, needsImages, images.length, imagesLoading, query]);
+
+  const html = useMemo(
+    () => (template ? template.render(values, images) : ""),
+    [template, values, images]
+  );
 
   async function applyToProduct() {
     if (!productId || !template) return;
@@ -309,24 +440,45 @@ function App() {
             <Text fontWeight="bold">{template.label}</Text>
             <Text>{template.description}</Text>
 
-            {template.fields.map((field) =>
-              field.multiline ? (
-                <TextArea
-                  key={field.key}
-                  label={field.label}
-                  value={values[field.key] ?? ""}
-                  onChange={(v) => setValues((prev) => ({ ...prev, [field.key]: v }))}
-                  rows={4}
-                />
-              ) : (
+            {template.fields.map((field) => {
+              if (field.kind === "image") {
+                return (
+                  <ImageField
+                    key={field.key}
+                    label={field.label}
+                    images={images}
+                    loading={imagesLoading}
+                    selectedId={values[field.key] ?? null}
+                    onSelect={(id) =>
+                      setValues((prev) => ({ ...prev, [field.key]: id }))
+                    }
+                  />
+                );
+              }
+              if (field.kind === "multiline") {
+                return (
+                  <TextArea
+                    key={field.key}
+                    label={field.label}
+                    value={values[field.key] ?? ""}
+                    onChange={(v) =>
+                      setValues((prev) => ({ ...prev, [field.key]: v }))
+                    }
+                    rows={4}
+                  />
+                );
+              }
+              return (
                 <TextField
                   key={field.key}
                   label={field.label}
                   value={values[field.key] ?? ""}
-                  onChange={(v) => setValues((prev) => ({ ...prev, [field.key]: v }))}
+                  onChange={(v) =>
+                    setValues((prev) => ({ ...prev, [field.key]: v }))
+                  }
                 />
-              )
-            )}
+              );
+            })}
 
             {status.kind === "success" && (
               <Banner tone="success" title="Saved to product">
@@ -344,7 +496,14 @@ function App() {
               <TextArea label="Preview HTML" value={html} rows={6} disabled />
             </Box>
 
-            <InlineStack gap="base" inlineAlignment="end">
+            <InlineStack gap="base" inlineAlignment="space-between">
+              <Link
+                to={`shopify://admin/apps/product-candy/app/descriptions?id=${encodeURIComponent(
+                  productId ?? ""
+                )}`}
+              >
+                Customize freely…
+              </Link>
               <Button
                 variant="primary"
                 disabled={!productId || status.kind === "saving"}
@@ -357,6 +516,62 @@ function App() {
         )}
       </BlockStack>
     </AdminBlock>
+  );
+}
+
+function ImageField({
+  label,
+  images,
+  loading,
+  selectedId,
+  onSelect,
+}: {
+  label: string;
+  images: ProductImage[];
+  loading: boolean;
+  selectedId: string | null;
+  onSelect: (id: string) => void;
+}) {
+  if (loading) {
+    return (
+      <BlockStack gap="small">
+        <Text fontWeight="bold">{label}</Text>
+        <Text>Loading product images…</Text>
+      </BlockStack>
+    );
+  }
+  if (images.length === 0) {
+    return (
+      <Banner tone="warning" title={`${label}: no images on this product`}>
+        <Text>Add an image to the product first, then come back here.</Text>
+      </Banner>
+    );
+  }
+  return (
+    <BlockStack gap="small">
+      <Text fontWeight="bold">{label}</Text>
+      <BlockStack gap="small">
+        {chunk(images, 4).map((row, i) => (
+          <InlineStack key={i} gap="small">
+            {row.map((img) => {
+              const selected = selectedId === img.id;
+              return (
+                <Pressable
+                  key={img.id}
+                  onPress={() => onSelect(img.id)}
+                  border={selected ? "base" : "dotted"}
+                  cornerRadius="base"
+                  padding="small"
+                  background={selected ? "subdued" : "transparent"}
+                >
+                  <Image source={img.url} alt={img.altText ?? ""} />
+                </Pressable>
+              );
+            })}
+          </InlineStack>
+        ))}
+      </BlockStack>
+    </BlockStack>
   );
 }
 
