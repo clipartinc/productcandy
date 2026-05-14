@@ -54,19 +54,6 @@ function phInline(label: string, bg: string, text: string): string {
   return `<span data-pc-placeholder="1" style="background-color:${bg};color:${text};border:1px dashed #d1d5db;border-radius:6px;padding:2px 8px;font-style:italic;">${label}</span>`;
 }
 
-/**
- * Strip styling from any element marked data-pc-placeholder="1", keeping
- * the structure and the (likely-edited) inner content intact. Color-agnostic
- * — works for any bg/text combination the merchant picked at apply time.
- */
-function cleanupPlaceholders(html: string): string {
-  return html
-    .replace(/<(\w+)\s+data-pc-placeholder="1"\s+style="[^"]*"([^>]*)>/g, "<$1$2>")
-    .replace(/<(\w+)\s+style="[^"]*"\s+data-pc-placeholder="1"([^>]*)>/g, "<$1$2>")
-    .replace(/\s*data-pc-placeholder="1"\s*/g, " ")
-    .replace(/<(\w+)\s+>/g, "<$1>");
-}
-
 const TEMPLATES: TemplateMeta[] = [
   {
     id: "spec-sheet",
@@ -265,41 +252,6 @@ function App() {
     }
   }
 
-  async function cleanup() {
-    if (!productId) return;
-    setBusy(true);
-    setStatus({ kind: "idle" });
-    try {
-      const cur = await query<{ product: { descriptionHtml: string } | null }>(
-        `query CurDesc($id: ID!) { product(id: $id) { descriptionHtml } }`,
-        { variables: { id: productId } }
-      );
-      const cleaned = cleanupPlaceholders(cur.data?.product?.descriptionHtml ?? "");
-      const upd = await query<
-        { productUpdate: { userErrors: { message: string }[] } },
-        { input: { id: string; descriptionHtml: string } }
-      >(
-        `mutation UpdateDescription($input: ProductInput!) {
-          productUpdate(input: $input) { userErrors { message } }
-        }`,
-        { variables: { input: { id: productId, descriptionHtml: cleaned } } }
-      );
-      const errs = upd.data?.productUpdate?.userErrors ?? [];
-      if (errs.length > 0) {
-        setStatus({ kind: "error", message: errs.map((e) => e.message).join(", ") });
-        setBusy(false);
-        return;
-      }
-      close();
-    } catch (e) {
-      setStatus({
-        kind: "error",
-        message: e instanceof Error ? e.message : "Unknown error",
-      });
-      setBusy(false);
-    }
-  }
-
   return (
     <AdminAction
       title="Description Layouts"
@@ -377,11 +329,6 @@ function App() {
               ))}
             </BlockStack>
 
-            <InlineStack gap="base" inlineAlignment="end">
-              <Button onPress={cleanup} disabled={busy}>
-                Clean up placeholder styling
-              </Button>
-            </InlineStack>
           </>
         )}
       </BlockStack>
