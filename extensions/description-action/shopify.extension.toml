@@ -6,6 +6,9 @@ name = "Description Layouts"
 handle = "description-action"
 type = "ui_extension"
 
+  [extensions.icon]
+  source = "./assets/icon.png"
+
   [[extensions.targeting]]
   module = "./src/ActionExtension.tsx"
   target = "admin.product-details.action.render"
