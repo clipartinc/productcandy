@@ -226,15 +226,17 @@ function App() {
       const errs = upd.data?.productUpdate?.userErrors ?? [];
       if (errs.length > 0) {
         setStatus({ kind: "error", message: errs.map((e) => e.message).join(", ") });
-      } else {
-        setStatus({ kind: "success", label: t.label });
+        setBusy(false);
+        return;
       }
+      // Success — close the modal so the merchant sees Shopify's product
+      // page (a refresh shows the new placeholders in the description editor).
+      close();
     } catch (e) {
       setStatus({
         kind: "error",
         message: e instanceof Error ? e.message : "Unknown error",
       });
-    } finally {
       setBusy(false);
     }
   }
@@ -261,15 +263,15 @@ function App() {
       const errs = upd.data?.productUpdate?.userErrors ?? [];
       if (errs.length > 0) {
         setStatus({ kind: "error", message: errs.map((e) => e.message).join(", ") });
-      } else {
-        setStatus({ kind: "success", label: "Placeholder styling removed" });
+        setBusy(false);
+        return;
       }
+      close();
     } catch (e) {
       setStatus({
         kind: "error",
         message: e instanceof Error ? e.message : "Unknown error",
       });
-    } finally {
       setBusy(false);
     }
   }
@@ -277,9 +279,15 @@ function App() {
   return (
     <AdminAction
       title="Edit description layout"
-      primaryAction={<Button onPress={close}>Done</Button>}
+      primaryAction={<Button onPress={close} disabled={busy}>Done</Button>}
     >
       <BlockStack gap="base">
+        {busy && (
+          <Banner tone="info" title="Applying change…">
+            <Text>Updating the product description in Shopify.</Text>
+          </Banner>
+        )}
+
         {!productId ? (
           <Banner tone="info" title="Save the product first">
             <Text>Save the product so it has an id, then come back here.</Text>
@@ -302,14 +310,6 @@ function App() {
               onChange={(v) => setMode(v as Mode)}
             />
 
-            {status.kind === "success" && (
-              <Banner tone="success" title={`${status.label} added`}>
-                <Text>
-                  Close this window and refresh the product page to see the
-                  placeholders in the description editor.
-                </Text>
-              </Banner>
-            )}
             {status.kind === "error" && (
               <Banner tone="critical" title="Couldn’t apply layout">
                 <Text>{status.message}</Text>
@@ -348,8 +348,6 @@ function App() {
                 Clean up placeholder styling
               </Button>
             </InlineStack>
-
-            {busy && <Text>Working…</Text>}
           </>
         )}
       </BlockStack>
