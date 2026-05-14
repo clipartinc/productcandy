@@ -322,7 +322,6 @@ function App() {
                   {row.map((t) => (
                     <BlockStack key={t.id} gap="small" inlineAlignment="center">
                       <Image source={`${THUMB_BASE_URL}/${t.id}.svg`} alt={t.label} />
-                      <Text>{t.label}</Text>
                       <InlineStack gap="small">
                         <Button
                           onPress={() => applyTemplate(t, false)}
@@ -337,6 +336,7 @@ function App() {
                           Apply Clear
                         </Button>
                       </InlineStack>
+                      <Text>{t.label}</Text>
                     </BlockStack>
                   ))}
                 </InlineStack>
