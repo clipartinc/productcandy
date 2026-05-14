@@ -360,14 +360,16 @@ function App() {
                 <InlineStack key={i} gap="base">
                   {row.map((t) => (
                     <BlockStack key={t.id} gap="small" inlineAlignment="center">
-                      <Image source={`${THUMB_BASE_URL}/${t.id}.svg`} alt={t.label} />
-                      <Button
-                        variant="primary"
-                        onPress={() => applyTemplate(t)}
-                        disabled={busy}
-                      >
-                        Apply Layout
-                      </Button>
+                      <BlockStack gap="none" inlineAlignment="center">
+                        <Image source={`${THUMB_BASE_URL}/${t.id}.svg`} alt={t.label} />
+                        <Button
+                          variant="primary"
+                          onPress={() => applyTemplate(t)}
+                          disabled={busy}
+                        >
+                          Apply Layout
+                        </Button>
+                      </BlockStack>
                       <Text>{t.label}</Text>
                     </BlockStack>
                   ))}
