@@ -278,7 +278,7 @@ function App() {
 
   return (
     <AdminAction
-      title="Edit description layout"
+      title="Description Layouts"
       primaryAction={<Button onPress={close} disabled={busy}>Done</Button>}
     >
       <BlockStack gap="base">
