@@ -1,30 +1,18 @@
-# This file is overwritten by `npx shopify app config link`, which discovers
-# the existing "Product Candy" app from your Partner account and fills in
-# the real client_id, application_url, and other fields.
-#
-# Run once: npx shopify app config link
-#
-# After that, never edit by hand — use `npx shopify app config push` to sync.
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "REPLACE_VIA_SHOPIFY_APP_CONFIG_LINK"
+client_id = "706652ab86a2ead73ca0e780fe466246"
 name = "Product Candy"
-handle = "product-candy"
 application_url = "https://productcandy.app/app"
 embedded = true
 
-[build]
-include_config_on_deploy = true
-
 [access_scopes]
-scopes = "read_products,write_products,read_files,write_files"
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_files,write_files,read_products,write_products"
+optional_scopes = [ ]
+use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [
-  "https://productcandy.app/api/auth/callback"
-]
+redirect_urls = [ "https://productcandy.app/api/auth/callback" ]
 
 [webhooks]
-api_version = "2026-01"
-
-[pos]
-embedded = false
+api_version = "2026-04"

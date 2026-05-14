@@ -1,4 +1,5 @@
-api_version = "2026-01"
+api_version = "2025-07"
+uid = "7e420071-0870-925e-5354-61199231aea4a8a18b4a"
 
 [[extensions]]
 name = "Image Resize & Crop"
