@@ -5,7 +5,6 @@ import {
   InlineStack,
   Text,
   Image,
-  Pressable,
   Button,
   Banner,
   Select,
@@ -194,15 +193,16 @@ function App() {
     | { kind: "error"; message: string }
   >({ kind: "idle" });
 
-  async function applyTemplate(t: TemplateMeta) {
+  async function applyTemplate(t: TemplateMeta, clean: boolean) {
     if (!productId) return;
     setBusy(true);
     setStatus({ kind: "idle" });
     try {
+      const skeleton = clean ? cleanupPlaceholders(t.skeleton) : t.skeleton;
       // Trailing empty paragraph so the merchant can click below the layout
       // and add free content (otherwise the cursor stays trapped inside the
       // flex columns or table).
-      const stampHtml = `${t.skeleton}\n<p><br></p>`;
+      const stampHtml = `${skeleton}\n<p><br></p>`;
       let nextHtml = stampHtml;
       if (mode === "append") {
         const cur = await query<{ product: { descriptionHtml: string } | null }>(
@@ -320,18 +320,24 @@ function App() {
               {chunk(TEMPLATES, 3).map((row, i) => (
                 <InlineStack key={i} gap="base">
                   {row.map((t) => (
-                    <Pressable
-                      key={t.id}
-                      onPress={() => applyTemplate(t)}
-                      border="dotted"
-                      cornerRadius="base"
-                      padding="small"
-                    >
-                      <BlockStack gap="small" inlineAlignment="center">
-                        <Image source={`${THUMB_BASE_URL}/${t.id}.svg`} alt={t.label} />
-                        <Text>{t.label}</Text>
-                      </BlockStack>
-                    </Pressable>
+                    <BlockStack key={t.id} gap="small" inlineAlignment="center">
+                      <Image source={`${THUMB_BASE_URL}/${t.id}.svg`} alt={t.label} />
+                      <Text>{t.label}</Text>
+                      <InlineStack gap="small">
+                        <Button
+                          onPress={() => applyTemplate(t, false)}
+                          disabled={busy}
+                        >
+                          Apply As Is
+                        </Button>
+                        <Button
+                          onPress={() => applyTemplate(t, true)}
+                          disabled={busy}
+                        >
+                          Apply Clear
+                        </Button>
+                      </InlineStack>
+                    </BlockStack>
                   ))}
                 </InlineStack>
               ))}
