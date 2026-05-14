@@ -17,8 +17,19 @@ const SVGS: Record<string, string> = {
   "gallery-3": `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="240" height="180"><rect width="240" height="180" fill="#ffffff" stroke="#d1d5db" stroke-width="1" rx="8"/><rect x="20" y="22" width="120" height="6" rx="3" fill="#9ca3af"/><rect x="20" y="44" width="62" height="100" rx="6" fill="#fbcfe8"/><circle cx="36" cy="64" r="6" fill="#ec4899" opacity="0.6"/><polygon points="20,144 38,114 60,134 82,98 82,144" fill="#ec4899" opacity="0.4"/><rect x="89" y="44" width="62" height="100" rx="6" fill="#fbcfe8"/><circle cx="105" cy="64" r="6" fill="#ec4899" opacity="0.6"/><polygon points="89,144 107,114 129,134 151,98 151,144" fill="#ec4899" opacity="0.4"/><rect x="158" y="44" width="62" height="100" rx="6" fill="#fbcfe8"/><circle cx="174" cy="64" r="6" fill="#ec4899" opacity="0.6"/><polygon points="158,144 176,114 198,134 220,98 220,144" fill="#ec4899" opacity="0.4"/><rect x="20" y="158" width="62" height="4" rx="2" fill="#d1d5db"/><rect x="89" y="158" width="62" height="4" rx="2" fill="#d1d5db"/><rect x="158" y="158" width="62" height="4" rx="2" fill="#d1d5db"/></svg>`,
 };
 
+// Cache base64 encoding so we don't redo it on every render.
+const cache: Record<string, string> = {};
+
 export function thumbDataUri(id: string): string {
   const svg = SVGS[id];
   if (!svg) return "";
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  if (cache[id]) return cache[id];
+  // base64 — more reliably accepted than URI-encoded SVG data URIs in
+  // sandboxed iframes. SVGs are pure ASCII so btoa() is safe.
+  const b64 =
+    typeof btoa === "function"
+      ? btoa(svg)
+      : Buffer.from(svg, "utf-8").toString("base64");
+  cache[id] = `data:image/svg+xml;base64,${b64}`;
+  return cache[id];
 }
