@@ -23,6 +23,8 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@shopify/app": "^3.58.2",
+    "@shopify/cli": "^3.94.3",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

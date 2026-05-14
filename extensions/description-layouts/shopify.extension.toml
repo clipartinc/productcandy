@@ -1,0 +1,10 @@
+api_version = "2026-01"
+
+[[extensions]]
+name = "Description Layouts"
+handle = "description-layouts"
+type = "ui_extension"
+
+  [[extensions.targeting]]
+  module = "./src/BlockExtension.tsx"
+  target = "admin.product-details.block.render"
