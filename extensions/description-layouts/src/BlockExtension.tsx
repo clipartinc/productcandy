@@ -317,6 +317,8 @@ function App() {
   const productId = (data as { selected?: { id: string }[] })?.selected?.[0]?.id;
 
   const [templateId, setTemplateId] = useState<TemplateId | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(true);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [values, setValues] = useState<Values>({});
   const [images, setImages] = useState<ProductImage[]>([]);
   const [imagesLoading, setImagesLoading] = useState(false);
@@ -333,6 +335,8 @@ function App() {
   useEffect(() => {
     setValues({});
     setStatus({ kind: "idle" });
+    setPreviewOpen(false);
+    if (templateId) setPickerOpen(false);
   }, [templateId, productId]);
 
   // Fetch product images on demand when an image-using template is selected.
@@ -407,37 +411,43 @@ function App() {
   return (
     <AdminBlock title="Product Candy — Description Layouts">
       <BlockStack gap="base">
-        <Text>Pick a layout. Fill in the fields. Save it to the product description.</Text>
-
-        <BlockStack gap="base">
-          {chunk(Object.entries(TEMPLATES), 3).map((row, i) => (
-            <InlineStack key={i} gap="base">
-              {row.map(([id, t]) => {
-                const selected = templateId === id;
-                return (
-                  <Pressable
-                    key={id}
-                    onPress={() => setTemplateId(id as TemplateId)}
-                    border={selected ? "base" : "dotted"}
-                    cornerRadius="base"
-                    padding="small"
-                    background={selected ? "subdued" : "transparent"}
-                  >
-                    <BlockStack gap="small" inlineAlignment="center">
-                      <Image source={t.thumb} alt={t.label} />
-                      <Text fontWeight={selected ? "bold" : "normal"}>{t.label}</Text>
-                    </BlockStack>
-                  </Pressable>
-                );
-              })}
-            </InlineStack>
-          ))}
-        </BlockStack>
+        {/* Picker: shown until a layout is chosen, or expanded again via "Change layout" */}
+        {(pickerOpen || !template) && (
+          <BlockStack gap="base">
+            <Text>Pick a layout.</Text>
+            {chunk(Object.entries(TEMPLATES), 3).map((row, i) => (
+              <InlineStack key={i} gap="base">
+                {row.map(([id, t]) => {
+                  const selected = templateId === id;
+                  return (
+                    <Pressable
+                      key={id}
+                      onPress={() => setTemplateId(id as TemplateId)}
+                      border={selected ? "base" : "dotted"}
+                      cornerRadius="base"
+                      padding="small"
+                      background={selected ? "subdued" : "transparent"}
+                    >
+                      <BlockStack gap="small" inlineAlignment="center">
+                        <Image source={t.thumb} alt={t.label} />
+                        <Text fontWeight={selected ? "bold" : "normal"}>{t.label}</Text>
+                      </BlockStack>
+                    </Pressable>
+                  );
+                })}
+              </InlineStack>
+            ))}
+          </BlockStack>
+        )}
 
         {template && (
           <>
-            <Divider />
-            <Text fontWeight="bold">{template.label}</Text>
+            {!pickerOpen && (
+              <InlineStack gap="base" inlineAlignment="space-between" blockAlignment="center">
+                <Text fontWeight="bold">Layout: {template.label}</Text>
+                <Button onPress={() => setPickerOpen(true)}>Change layout</Button>
+              </InlineStack>
+            )}
             <Text>{template.description}</Text>
 
             {template.fields.map((field) => {
@@ -491,10 +501,16 @@ function App() {
               </Banner>
             )}
 
-            <Box>
-              <Text fontWeight="bold">Preview HTML</Text>
-              <TextArea label="Preview HTML" value={html} rows={6} disabled />
-            </Box>
+            <InlineStack gap="base">
+              <Button onPress={() => setPreviewOpen((p) => !p)}>
+                {previewOpen ? "Hide preview" : "Show preview"}
+              </Button>
+            </InlineStack>
+            {previewOpen && (
+              <Box>
+                <TextArea label="Preview HTML" value={html} rows={6} disabled />
+              </Box>
+            )}
 
             <InlineStack gap="base" inlineAlignment="space-between">
               <Link
