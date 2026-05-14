@@ -15,24 +15,55 @@ import { useState } from "react";
 const TARGET = "admin.product-details.action.render";
 const THUMB_BASE_URL = "https://productcandy.app/templates";
 
-type TemplateMeta = { id: string; label: string; skeleton: string };
+type Skeleton = (bg: string, text: string) => string;
+type TemplateMeta = { id: string; label: string; skeleton: Skeleton };
 
-const PH_STYLE_BLOCK =
-  "background:#f3f4f6;color:#6b7280;border:1px dashed #d1d5db;border-radius:8px;padding:12px 16px;margin:8px 0;font-style:italic;";
-const PH_STYLE_INLINE =
-  "background:#f3f4f6;color:#6b7280;border:1px dashed #d1d5db;border-radius:6px;padding:2px 8px;font-style:italic;";
+const BG_OPTIONS = [
+  { label: "None (no background)", value: "none" },
+  { label: "Light gray", value: "#f3f4f6" },
+  { label: "Soft pink", value: "#fdf2f8" },
+  { label: "Soft blue", value: "#eff6ff" },
+  { label: "Soft yellow", value: "#fefce8" },
+  { label: "Soft green", value: "#f0fdf4" },
+  { label: "White", value: "#ffffff" },
+  { label: "Black", value: "#111827" },
+];
 
-const ph = (label: string) =>
-  `<div data-pc-placeholder="1" style="${PH_STYLE_BLOCK}">${label}</div>`;
+const TEXT_OPTIONS = [
+  { label: "Default gray", value: "#6b7280" },
+  { label: "Black", value: "#111827" },
+  { label: "Dark gray", value: "#374151" },
+  { label: "Pink", value: "#ec4899" },
+  { label: "Blue", value: "#2563eb" },
+  { label: "White", value: "#ffffff" },
+];
 
-const phInline = (label: string) =>
-  `<span data-pc-placeholder="1" style="${PH_STYLE_INLINE}">${label}</span>`;
+// Block placeholder (used for paragraph-sized regions)
+function ph(label: string, bg: string, text: string): string {
+  if (bg === "none") {
+    return `<div data-pc-placeholder="1" style="color:${text};font-style:italic;margin:8px 0;">${label}</div>`;
+  }
+  return `<div data-pc-placeholder="1" style="background:${bg};color:${text};border:1px dashed #d1d5db;border-radius:8px;padding:12px 16px;margin:8px 0;font-style:italic;">${label}</div>`;
+}
 
+// Inline placeholder (used for headings, short labels)
+function phInline(label: string, bg: string, text: string): string {
+  if (bg === "none") {
+    return `<span data-pc-placeholder="1" style="color:${text};font-style:italic;">${label}</span>`;
+  }
+  return `<span data-pc-placeholder="1" style="background:${bg};color:${text};border:1px dashed #d1d5db;border-radius:6px;padding:2px 8px;font-style:italic;">${label}</span>`;
+}
+
+/**
+ * Strip styling from any element marked data-pc-placeholder="1", keeping
+ * the structure and the (likely-edited) inner content intact. Color-agnostic
+ * — works for any bg/text combination the merchant picked at apply time.
+ */
 function cleanupPlaceholders(html: string): string {
   return html
-    .split(` style="${PH_STYLE_BLOCK}"`).join("")
-    .split(` style="${PH_STYLE_INLINE}"`).join("")
-    .split(` data-pc-placeholder="1"`).join("")
+    .replace(/<(\w+)\s+data-pc-placeholder="1"\s+style="[^"]*"([^>]*)>/g, "<$1$2>")
+    .replace(/<(\w+)\s+style="[^"]*"\s+data-pc-placeholder="1"([^>]*)>/g, "<$1$2>")
+    .replace(/\s*data-pc-placeholder="1"\s*/g, " ")
     .replace(/<(\w+)\s+>/g, "<$1>");
 }
 
@@ -40,138 +71,138 @@ const TEMPLATES: TemplateMeta[] = [
   {
     id: "spec-sheet",
     label: "Spec sheet",
-    skeleton: `
+    skeleton: (bg, text) => `
 <div data-pc-template="spec-sheet">
-  ${ph("Click here to write your intro paragraph…")}
+  ${ph("Click here to write your intro paragraph…", bg, text)}
   <table style="border-collapse:separate;border-spacing:0 6px;width:100%;margin-top:8px;">
-    <tr><th style="text-align:left;padding-right:12px;width:30%;">${phInline("Spec name")}</th><td>${phInline("Spec value")}</td></tr>
-    <tr><th style="text-align:left;padding-right:12px;">${phInline("Spec name")}</th><td>${phInline("Spec value")}</td></tr>
-    <tr><th style="text-align:left;padding-right:12px;">${phInline("Spec name")}</th><td>${phInline("Spec value")}</td></tr>
-    <tr><th style="text-align:left;padding-right:12px;">${phInline("Spec name")}</th><td>${phInline("Spec value")}</td></tr>
+    <tr><th style="text-align:left;padding-right:12px;width:30%;">${phInline("Spec name", bg, text)}</th><td>${phInline("Spec value", bg, text)}</td></tr>
+    <tr><th style="text-align:left;padding-right:12px;">${phInline("Spec name", bg, text)}</th><td>${phInline("Spec value", bg, text)}</td></tr>
+    <tr><th style="text-align:left;padding-right:12px;">${phInline("Spec name", bg, text)}</th><td>${phInline("Spec value", bg, text)}</td></tr>
+    <tr><th style="text-align:left;padding-right:12px;">${phInline("Spec name", bg, text)}</th><td>${phInline("Spec value", bg, text)}</td></tr>
   </table>
 </div>`.trim(),
   },
   {
     id: "story-features",
     label: "Story + features",
-    skeleton: `
+    skeleton: (bg, text) => `
 <div data-pc-template="story-features">
-  ${ph("Click here to write your brand story or product narrative…")}
-  <h3 style="margin-top:16px;">${phInline("Features headline")}</h3>
+  ${ph("Click here to write your brand story or product narrative…", bg, text)}
+  <h3 style="margin-top:16px;">${phInline("Features headline", bg, text)}</h3>
   <ul>
-    <li>${phInline("Feature one")}</li>
-    <li>${phInline("Feature two")}</li>
-    <li>${phInline("Feature three")}</li>
-    <li>${phInline("Feature four")}</li>
+    <li>${phInline("Feature one", bg, text)}</li>
+    <li>${phInline("Feature two", bg, text)}</li>
+    <li>${phInline("Feature three", bg, text)}</li>
+    <li>${phInline("Feature four", bg, text)}</li>
   </ul>
 </div>`.trim(),
   },
   {
     id: "faq",
     label: "FAQ block",
-    skeleton: `
+    skeleton: (bg, text) => `
 <div data-pc-template="faq">
   <h3>FAQ</h3>
   <div style="margin-bottom:12px;">
-    <p><strong>${phInline("Question one — click to edit")}</strong></p>
-    ${ph("Click to write the answer…")}
+    <p><strong>${phInline("Question one — click to edit", bg, text)}</strong></p>
+    ${ph("Click to write the answer…", bg, text)}
   </div>
   <div style="margin-bottom:12px;">
-    <p><strong>${phInline("Question two — click to edit")}</strong></p>
-    ${ph("Click to write the answer…")}
+    <p><strong>${phInline("Question two — click to edit", bg, text)}</strong></p>
+    ${ph("Click to write the answer…", bg, text)}
   </div>
   <div style="margin-bottom:12px;">
-    <p><strong>${phInline("Question three — click to edit")}</strong></p>
-    ${ph("Click to write the answer…")}
+    <p><strong>${phInline("Question three — click to edit", bg, text)}</strong></p>
+    ${ph("Click to write the answer…", bg, text)}
   </div>
 </div>`.trim(),
   },
   {
     id: "two-column",
     label: "Two columns",
-    skeleton: `
+    skeleton: (bg, text) => `
 <div data-pc-template="two-column" style="display:flex;gap:24px;flex-wrap:wrap;">
   <div style="flex:1;min-width:240px;">
-    <h3>${phInline("Column 1 heading")}</h3>
-    ${ph("Click here to write column 1 text…")}
+    <h3>${phInline("Column 1 heading", bg, text)}</h3>
+    ${ph("Click here to write column 1 text…", bg, text)}
   </div>
   <div style="flex:1;min-width:240px;">
-    <h3>${phInline("Column 2 heading")}</h3>
-    ${ph("Click here to write column 2 text…")}
+    <h3>${phInline("Column 2 heading", bg, text)}</h3>
+    ${ph("Click here to write column 2 text…", bg, text)}
   </div>
 </div>`.trim(),
   },
   {
     id: "three-column",
     label: "Three columns",
-    skeleton: `
+    skeleton: (bg, text) => `
 <div data-pc-template="three-column" style="display:flex;gap:20px;flex-wrap:wrap;">
   <div style="flex:1;min-width:200px;">
-    <h3>${phInline("Column 1 heading")}</h3>
-    ${ph("Click to write…")}
+    <h3>${phInline("Column 1 heading", bg, text)}</h3>
+    ${ph("Click to write…", bg, text)}
   </div>
   <div style="flex:1;min-width:200px;">
-    <h3>${phInline("Column 2 heading")}</h3>
-    ${ph("Click to write…")}
+    <h3>${phInline("Column 2 heading", bg, text)}</h3>
+    ${ph("Click to write…", bg, text)}
   </div>
   <div style="flex:1;min-width:200px;">
-    <h3>${phInline("Column 3 heading")}</h3>
-    ${ph("Click to write…")}
+    <h3>${phInline("Column 3 heading", bg, text)}</h3>
+    ${ph("Click to write…", bg, text)}
   </div>
 </div>`.trim(),
   },
   {
     id: "hero-cta",
     label: "Hero + CTA",
-    skeleton: `
+    skeleton: (bg, text) => `
 <div data-pc-template="hero-cta" style="text-align:left;padding:8px 0;">
-  <h2 style="font-size:1.6em;margin:0 0 12px 0;">${phInline("Bold headline goes here")}</h2>
-  ${ph("Click here to write a short supporting paragraph…")}
+  <h2 style="font-size:1.6em;margin:0 0 12px 0;">${phInline("Bold headline goes here", bg, text)}</h2>
+  ${ph("Click here to write a short supporting paragraph…", bg, text)}
   <p style="margin-top:16px;">
-    <a href="#" style="display:inline-block;background:#ec4899;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:600;">${phInline("Button label")}</a>
+    <a href="#" style="display:inline-block;background:#ec4899;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:600;">${phInline("Button label", bg, text)}</a>
   </p>
 </div>`.trim(),
   },
   {
     id: "image-text",
     label: "Image + text",
-    skeleton: `
+    skeleton: (bg, text) => `
 <div data-pc-template="image-text" style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
-  <div style="flex:1;min-width:240px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.")}</div>
+  <div style="flex:1;min-width:240px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
   <div style="flex:1;min-width:240px;">
-    <h3>${phInline("Headline")}</h3>
-    ${ph("Click here to write your supporting text…")}
+    <h3>${phInline("Headline", bg, text)}</h3>
+    ${ph("Click here to write your supporting text…", bg, text)}
   </div>
 </div>`.trim(),
   },
   {
     id: "text-image",
     label: "Text + image",
-    skeleton: `
+    skeleton: (bg, text) => `
 <div data-pc-template="text-image" style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
   <div style="flex:1;min-width:240px;">
-    <h3>${phInline("Headline")}</h3>
-    ${ph("Click here to write your supporting text…")}
+    <h3>${phInline("Headline", bg, text)}</h3>
+    ${ph("Click here to write your supporting text…", bg, text)}
   </div>
-  <div style="flex:1;min-width:240px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.")}</div>
+  <div style="flex:1;min-width:240px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
 </div>`.trim(),
   },
   {
     id: "gallery-3",
     label: "Image gallery (3)",
-    skeleton: `
+    skeleton: (bg, text) => `
 <div data-pc-template="gallery-3" style="display:flex;gap:16px;flex-wrap:wrap;">
   <div style="flex:1;min-width:200px;">
-    ${ph("Image 1 placeholder")}
-    ${ph("Caption 1")}
+    ${ph("Image 1 placeholder", bg, text)}
+    ${ph("Caption 1", bg, text)}
   </div>
   <div style="flex:1;min-width:200px;">
-    ${ph("Image 2 placeholder")}
-    ${ph("Caption 2")}
+    ${ph("Image 2 placeholder", bg, text)}
+    ${ph("Caption 2", bg, text)}
   </div>
   <div style="flex:1;min-width:200px;">
-    ${ph("Image 3 placeholder")}
-    ${ph("Caption 3")}
+    ${ph("Image 3 placeholder", bg, text)}
+    ${ph("Caption 3", bg, text)}
   </div>
 </div>`.trim(),
   },
@@ -186,23 +217,20 @@ function App() {
   const productId = (data as { selected?: { id: string }[] })?.selected?.[0]?.id;
 
   const [mode, setMode] = useState<Mode>("append");
+  const [bgColor, setBgColor] = useState<string>("#f3f4f6");
+  const [textColor, setTextColor] = useState<string>("#6b7280");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<
     | { kind: "idle" }
-    | { kind: "success"; label: string }
     | { kind: "error"; message: string }
   >({ kind: "idle" });
 
-  async function applyTemplate(t: TemplateMeta, clean: boolean) {
+  async function applyTemplate(t: TemplateMeta) {
     if (!productId) return;
     setBusy(true);
     setStatus({ kind: "idle" });
     try {
-      const skeleton = clean ? cleanupPlaceholders(t.skeleton) : t.skeleton;
-      // Trailing empty paragraph so the merchant can click below the layout
-      // and add free content (otherwise the cursor stays trapped inside the
-      // flex columns or table).
-      const stampHtml = `${skeleton}\n<p><br></p>`;
+      const stampHtml = `${t.skeleton(bgColor, textColor)}\n<p><br></p>`;
       let nextHtml = stampHtml;
       if (mode === "append") {
         const cur = await query<{ product: { descriptionHtml: string } | null }>(
@@ -217,9 +245,7 @@ function App() {
         { input: { id: string; descriptionHtml: string } }
       >(
         `mutation UpdateDescription($input: ProductInput!) {
-          productUpdate(input: $input) {
-            userErrors { message }
-          }
+          productUpdate(input: $input) { userErrors { message } }
         }`,
         { variables: { input: { id: productId, descriptionHtml: nextHtml } } }
       );
@@ -229,8 +255,6 @@ function App() {
         setBusy(false);
         return;
       }
-      // Success — close the modal so the merchant sees Shopify's product
-      // page (a refresh shows the new placeholders in the description editor).
       close();
     } catch (e) {
       setStatus({
@@ -295,10 +319,25 @@ function App() {
         ) : (
           <>
             <Text>
-              Click a layout to drop placeholder boxes into the product
-              description. Then close this window and edit each box inline in
-              the description editor — type over the gray placeholders.
+              Pick a layout to drop placeholder boxes into the product
+              description. Choose colors below — pick &quot;None&quot; for
+              background to get a clean (unstyled) skeleton.
             </Text>
+
+            <InlineStack gap="base">
+              <Select
+                label="Background color"
+                value={bgColor}
+                options={BG_OPTIONS}
+                onChange={setBgColor}
+              />
+              <Select
+                label="Text color"
+                value={textColor}
+                options={TEXT_OPTIONS}
+                onChange={setTextColor}
+              />
+            </InlineStack>
 
             <Select
               label="When applying a layout"
@@ -322,20 +361,13 @@ function App() {
                   {row.map((t) => (
                     <BlockStack key={t.id} gap="small" inlineAlignment="center">
                       <Image source={`${THUMB_BASE_URL}/${t.id}.svg`} alt={t.label} />
-                      <InlineStack gap="small">
-                        <Button
-                          onPress={() => applyTemplate(t, false)}
-                          disabled={busy}
-                        >
-                          Apply As Is
-                        </Button>
-                        <Button
-                          onPress={() => applyTemplate(t, true)}
-                          disabled={busy}
-                        >
-                          Apply Clear
-                        </Button>
-                      </InlineStack>
+                      <Button
+                        variant="primary"
+                        onPress={() => applyTemplate(t)}
+                        disabled={busy}
+                      >
+                        Apply Layout
+                      </Button>
                       <Text>{t.label}</Text>
                     </BlockStack>
                   ))}
