@@ -199,14 +199,18 @@ function App() {
     setBusy(true);
     setStatus({ kind: "idle" });
     try {
-      let nextHtml = t.skeleton;
+      // Trailing empty paragraph so the merchant can click below the layout
+      // and add free content (otherwise the cursor stays trapped inside the
+      // flex columns or table).
+      const stampHtml = `${t.skeleton}\n<p><br></p>`;
+      let nextHtml = stampHtml;
       if (mode === "append") {
         const cur = await query<{ product: { descriptionHtml: string } | null }>(
           `query CurDesc($id: ID!) { product(id: $id) { descriptionHtml } }`,
           { variables: { id: productId } }
         );
         const existing = cur.data?.product?.descriptionHtml ?? "";
-        nextHtml = existing ? `${existing}\n${t.skeleton}` : t.skeleton;
+        nextHtml = existing ? `${existing}\n${stampHtml}` : stampHtml;
       }
       const upd = await query<
         { productUpdate: { userErrors: { message: string }[] } },
