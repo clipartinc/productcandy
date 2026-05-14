@@ -30,7 +30,7 @@ type ProductImage = { id: string; url: string; altText: string | null };
 export default reactExtension(TARGET, () => <App />);
 
 function App() {
-  const { close, data, query, sessionToken } = useApi(TARGET);
+  const { close, data, query, auth } = useApi(TARGET);
   const productId = (data as { selected?: { id: string }[] })?.selected?.[0]?.id;
 
   const [images, setImages] = useState<ProductImage[]>([]);
@@ -81,7 +81,8 @@ function App() {
     setBusy(true);
     setStatus({ kind: "idle" });
     try {
-      const token = await sessionToken.get();
+      const token = await auth.idToken();
+      if (!token) throw new Error("No session token from Shopify");
       const res = await fetch(`${APP_BACKEND_URL}/api/extensions/image-process`, {
         method: "POST",
         headers: {
