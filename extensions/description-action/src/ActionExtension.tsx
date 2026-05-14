@@ -5,6 +5,7 @@ import {
   InlineStack,
   Text,
   Image,
+  Pressable,
   Button,
   Banner,
   Select,
@@ -313,7 +314,13 @@ function App() {
                   {row.map((t) => (
                     <BlockStack key={t.id} gap="small" inlineAlignment="center">
                       <BlockStack gap="none" inlineAlignment="center">
-                        <Image source={thumbDataUri(t.id)} alt={t.label} />
+                        <Pressable
+                          onPress={() => applyTemplate(t)}
+                          disabled={busy}
+                          accessibilityLabel={`Apply ${t.label} layout`}
+                        >
+                          <Image source={thumbDataUri(t.id)} alt={t.label} />
+                        </Pressable>
                         <Button
                           variant="primary"
                           onPress={() => applyTemplate(t)}
