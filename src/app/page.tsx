@@ -1,10 +1,26 @@
 import Image from "next/image";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
 // TODO: replace with the real Shopify App Store URL once the listing is live.
 const APP_STORE_URL: string | null = null;
 
-export default function Landing() {
+export default async function Landing({
+  searchParams,
+}: {
+  searchParams: Promise<{ shop?: string; host?: string; embedded?: string }>;
+}) {
+  // If Shopify is loading us in an iframe (always passes ?shop=) and the App
+  // URL hasn't been updated to /app yet, route the merchant to the embedded
+  // admin home instead of showing the marketing page.
+  const sp = await searchParams;
+  if (sp.shop) {
+    const qs = new URLSearchParams({ shop: sp.shop });
+    if (sp.host) qs.set("host", sp.host);
+    if (sp.embedded) qs.set("embedded", sp.embedded);
+    redirect(`/app?${qs.toString()}`);
+  }
+
   return (
     <div className="flex flex-col flex-1 bg-white text-zinc-900">
       <header className="border-b border-zinc-100">
