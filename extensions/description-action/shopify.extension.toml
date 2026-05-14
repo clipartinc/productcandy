@@ -1,0 +1,11 @@
+api_version = "2025-07"
+uid = "bb1b2426-33cd-8924-82ec-2cefe4b4c3218e4244fa"
+
+[[extensions]]
+name = "Edit description layout"
+handle = "description-action"
+type = "ui_extension"
+
+  [[extensions.targeting]]
+  module = "./src/ActionExtension.tsx"
+  target = "admin.product-details.action.render"
