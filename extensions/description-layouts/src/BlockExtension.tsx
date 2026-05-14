@@ -20,13 +20,31 @@ const THUMB_BASE_URL = "https://productcandy.app/templates";
 
 type TemplateMeta = { id: string; label: string; skeleton: string };
 
+const PH_STYLE_BLOCK =
+  "background:#f3f4f6;color:#6b7280;border:1px dashed #d1d5db;border-radius:8px;padding:12px 16px;margin:8px 0;font-style:italic;";
+const PH_STYLE_INLINE =
+  "background:#f3f4f6;color:#6b7280;border:1px dashed #d1d5db;border-radius:6px;padding:2px 8px;font-style:italic;";
+
 // Inline-styled placeholder block — looks like a soft gray rounded box that
 // the merchant clicks into and overtypes with their own content.
 const ph = (label: string) =>
-  `<div data-pc-placeholder="1" style="background:#f3f4f6;color:#6b7280;border:1px dashed #d1d5db;border-radius:8px;padding:12px 16px;margin:8px 0;font-style:italic;">${label}</div>`;
+  `<div data-pc-placeholder="1" style="${PH_STYLE_BLOCK}">${label}</div>`;
 
 const phInline = (label: string) =>
-  `<span data-pc-placeholder="1" style="background:#f3f4f6;color:#6b7280;border:1px dashed #d1d5db;border-radius:6px;padding:2px 8px;font-style:italic;">${label}</span>`;
+  `<span data-pc-placeholder="1" style="${PH_STYLE_INLINE}">${label}</span>`;
+
+/**
+ * Strip the gray box styling we add to placeholders, leaving the user's
+ * (or default) text in plain HTML. Layout structure (columns, headings,
+ * tables) is untouched.
+ */
+function cleanupPlaceholders(html: string): string {
+  return html
+    .split(` style="${PH_STYLE_BLOCK}"`).join("")
+    .split(` style="${PH_STYLE_INLINE}"`).join("")
+    .split(` data-pc-placeholder="1"`).join("")
+    .replace(/<(\w+)\s+>/g, "<$1>");
+}
 
 const TEMPLATES: TemplateMeta[] = [
   {
@@ -235,6 +253,40 @@ function App() {
     }
   }
 
+  async function cleanup() {
+    setBusy(true);
+    setStatus({ kind: "idle" });
+    try {
+      const cur = await query<{ product: { descriptionHtml: string } | null }>(
+        `query CurDesc($id: ID!) { product(id: $id) { descriptionHtml } }`,
+        { variables: { id: productId } }
+      );
+      const cleaned = cleanupPlaceholders(cur.data?.product?.descriptionHtml ?? "");
+      const upd = await query<
+        { productUpdate: { userErrors: { message: string }[] } },
+        { input: { id: string; descriptionHtml: string } }
+      >(
+        `mutation UpdateDescription($input: ProductInput!) {
+          productUpdate(input: $input) { userErrors { message } }
+        }`,
+        { variables: { input: { id: productId, descriptionHtml: cleaned } } }
+      );
+      const errs = upd.data?.productUpdate?.userErrors ?? [];
+      if (errs.length > 0) {
+        setStatus({ kind: "error", message: errs.map((e) => e.message).join(", ") });
+      } else {
+        setStatus({ kind: "success", label: "Placeholder styling removed" });
+      }
+    } catch (e) {
+      setStatus({
+        kind: "error",
+        message: e instanceof Error ? e.message : "Unknown error",
+      });
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <AdminBlock title="Product Candy — Description Layouts">
       <BlockStack gap="base">
@@ -295,8 +347,11 @@ function App() {
           >
             Open advanced editor →
           </Link>
-          {busy && <Text>Applying…</Text>}
+          <Button onPress={cleanup} disabled={busy}>
+            Clean up placeholder styling
+          </Button>
         </InlineStack>
+        {busy && <Text>Working…</Text>}
       </BlockStack>
     </AdminBlock>
   );
