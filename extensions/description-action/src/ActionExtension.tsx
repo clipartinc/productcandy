@@ -11,9 +11,9 @@ import {
   useApi,
 } from "@shopify/ui-extensions-react/admin";
 import { useState } from "react";
+import { thumbDataUri } from "./thumbnails";
 
 const TARGET = "admin.product-details.action.render";
-const THUMB_BASE_URL = "https://productcandy.app/templates";
 
 type Skeleton = (bg: string, text: string) => string;
 type TemplateMeta = { id: string; label: string; skeleton: Skeleton };
@@ -217,7 +217,7 @@ function App() {
   const productId = (data as { selected?: { id: string }[] })?.selected?.[0]?.id;
 
   const [mode, setMode] = useState<Mode>("append");
-  const [bgColor, setBgColor] = useState<string>("#f3f4f6");
+  const [bgColor, setBgColor] = useState<string>("none");
   const [textColor, setTextColor] = useState<string>("#6b7280");
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<
@@ -361,7 +361,7 @@ function App() {
                   {row.map((t) => (
                     <BlockStack key={t.id} gap="small" inlineAlignment="center">
                       <BlockStack gap="none" inlineAlignment="center">
-                        <Image source={`${THUMB_BASE_URL}/${t.id}.svg`} alt={t.label} />
+                        <Image source={thumbDataUri(t.id)} alt={t.label} />
                         <Button
                           variant="primary"
                           onPress={() => applyTemplate(t)}
