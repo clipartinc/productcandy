@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 // TODO: replace with the real Shopify App Store URL once the listing is live.
@@ -9,7 +10,13 @@ export default function Landing() {
       <header className="border-b border-zinc-100">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Link href="/" className="flex items-center gap-2 font-semibold">
-            <span className="inline-block size-7 rounded-lg bg-gradient-to-br from-pink-400 to-rose-500" />
+            <Image
+              src="/logo.png"
+              alt="Product Candy logo"
+              width={32}
+              height={32}
+              priority
+            />
             Product Candy
           </Link>
           <nav className="flex items-center gap-6 text-sm text-zinc-600">
@@ -22,6 +29,14 @@ export default function Landing() {
 
       <main className="flex-1">
         <section className="mx-auto max-w-6xl px-6 py-24 text-center">
+          <Image
+            src="/logo.png"
+            alt="Product Candy logo"
+            width={140}
+            height={140}
+            priority
+            className="mx-auto mb-8"
+          />
           <p className="mb-4 text-sm font-medium uppercase tracking-wider text-rose-500">
             Shopify admin app
           </p>
