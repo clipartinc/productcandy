@@ -25,5 +25,20 @@ export async function GET(req: NextRequest) {
     host ? `&host=${encodeURIComponent(host)}` : ""
   }`;
 
-  return NextResponse.redirect(new URL(redirectUrl, req.url));
+  const res = NextResponse.redirect(new URL(redirectUrl, req.url));
+
+  // The web-api adapter returns auth-related Set-Cookie headers we need to
+  // forward (otherwise the merchant's session cookie won't get set).
+  const headers = callback.headers as Headers | Record<string, string> | undefined;
+  if (headers) {
+    if (typeof (headers as Headers).forEach === "function") {
+      (headers as Headers).forEach((value, key) => res.headers.append(key, value));
+    } else {
+      for (const [k, v] of Object.entries(headers as Record<string, string>)) {
+        res.headers.append(k, v);
+      }
+    }
+  }
+
+  return res;
 }
