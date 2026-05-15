@@ -154,41 +154,33 @@ export default function EmbeddedHome() {
               </Text>
 
               <Text as="h3" variant="headingSm">
-                How to use it
+                How to use it from a product page
               </Text>
               <List type="number">
                 <List.Item>
-                  Open <strong>Image Resize &amp; Crop</strong> from the
-                  button below.
+                  Open any product in <strong>Products</strong>.
                 </List.Item>
                 <List.Item>
-                  Pick a product, then a specific image from its media
-                  library.
+                  At the top right of the product page, click{" "}
+                  <strong>More actions</strong>.
                 </List.Item>
                 <List.Item>
-                  Drag the crop handles or pick a preset aspect ratio
-                  (1:1, 4:5, 16:9). Set output width if you want to resize.
+                  Pick <strong>Image Resize &amp; Crop</strong> from the
+                  dropdown.
                 </List.Item>
                 <List.Item>
-                  Click <strong>Apply</strong>. The new image is uploaded to
-                  the product as an additional asset — your original is
-                  untouched.
+                  Choose an image, then a preset aspect ratio (1:1, 4:5,
+                  16:9) or output width. The cropped image is uploaded back
+                  to the product as a new asset — your original is never
+                  modified.
                 </List.Item>
               </List>
 
-              <Box>
-                <Banner tone="warning">
-                  Crops are saved as new images, never destructive. If you
-                  want to replace the original, delete it from the product
-                  after the crop is uploaded.
-                </Banner>
-              </Box>
-
-              <InlineStack>
-                <Link href="/app/images">
-                  <Button variant="primary">Open Image Resize &amp; Crop</Button>
-                </Link>
-              </InlineStack>
+              <Banner tone="warning">
+                Crops are saved as new images. To replace the original,
+                delete it from the product&apos;s media library after the
+                crop is uploaded.
+              </Banner>
             </BlockStack>
           </Card>
         </Layout.Section>
