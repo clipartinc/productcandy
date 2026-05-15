@@ -15,6 +15,7 @@ import {
   Divider,
 } from "@shopify/polaris";
 import { useEffect, useState } from "react";
+import { appBridgeFetch } from "@/lib/appBridgeFetch";
 
 type Snippet = {
   id: string;
@@ -40,7 +41,7 @@ export default function SnippetsPage() {
   async function load() {
     setStatus({ kind: "loading" });
     try {
-      const res = await fetchWithSessionToken("/api/app/snippets");
+      const res = await appBridgeFetch("/api/app/snippets");
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Load failed");
       setSnippets(json.snippets);
@@ -81,14 +82,14 @@ export default function SnippetsPage() {
     setSaving(true);
     try {
       if (editing === "new") {
-        const res = await fetchWithSessionToken("/api/app/snippets", {
+        const res = await appBridgeFetch("/api/app/snippets", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: draftName, html: draftHtml }),
         });
         if (!res.ok) throw new Error((await res.json()).error ?? "Save failed");
       } else {
-        const res = await fetchWithSessionToken(
+        const res = await appBridgeFetch(
           `/api/app/snippets/${encodeURIComponent(editing.id)}`,
           {
             method: "PUT",
@@ -113,7 +114,7 @@ export default function SnippetsPage() {
   async function doDelete(s: Snippet) {
     setSaving(true);
     try {
-      const res = await fetchWithSessionToken(
+      const res = await appBridgeFetch(
         `/api/app/snippets/${encodeURIComponent(s.id)}`,
         { method: "DELETE" }
       );
@@ -271,11 +272,3 @@ function previewText(html: string): string {
   return stripped.length > 140 ? stripped.slice(0, 140) + "…" : stripped;
 }
 
-async function fetchWithSessionToken(url: string, init: RequestInit = {}) {
-  const w = window as unknown as { shopify?: { idToken: () => Promise<string> } };
-  if (!w.shopify) throw new Error("App Bridge not loaded");
-  const token = await w.shopify.idToken();
-  const headers = new Headers(init.headers);
-  headers.set("Authorization", `Bearer ${token}`);
-  return fetch(url, { ...init, headers });
-}

@@ -21,6 +21,7 @@ import TiptapImage from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { appBridgeFetch } from "@/lib/appBridgeFetch";
 import {
   TEMPLATES,
   TEMPLATE_LIST,
@@ -87,7 +88,7 @@ function DescriptionsEditor() {
   useEffect(() => {
     if (!productId) return;
     setStatus({ kind: "loading" });
-    fetchWithSessionToken(`/api/app/product/${encodeURIComponent(productId)}`)
+    appBridgeFetch(`/api/app/product/${encodeURIComponent(productId)}`)
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Load failed");
@@ -122,7 +123,7 @@ function DescriptionsEditor() {
     const html = mode === "template" ? templateHtml : editor?.getHTML() ?? "";
     setStatus({ kind: "saving" });
     try {
-      const res = await fetchWithSessionToken(
+      const res = await appBridgeFetch(
         `/api/app/product/${encodeURIComponent(productId)}`,
         {
           method: "PUT",
@@ -533,11 +534,3 @@ function Toolbar({
   );
 }
 
-async function fetchWithSessionToken(url: string, init: RequestInit = {}) {
-  const w = window as unknown as { shopify?: { idToken: () => Promise<string> } };
-  if (!w.shopify) throw new Error("App Bridge not loaded");
-  const token = await w.shopify.idToken();
-  const headers = new Headers(init.headers);
-  headers.set("Authorization", `Bearer ${token}`);
-  return fetch(url, { ...init, headers });
-}
