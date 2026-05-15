@@ -1,0 +1,106 @@
+/**
+ * Starter HTML for the visual snippet editor. Each option pre-populates the
+ * Tiptap editor with a clean template structure the merchant can edit
+ * visually (no HTML knowledge required).
+ *
+ * Kept intentionally minimal — no inline styles other than column layout —
+ * because Tiptap's StarterKit handles bold/italic/headings/lists natively.
+ */
+
+export type Starter = {
+  id: string;
+  label: string;
+  html: string;
+};
+
+export const STARTERS: Starter[] = [
+  { id: "blank", label: "Blank — start from scratch", html: "" },
+  {
+    id: "spec-sheet",
+    label: "Spec sheet (intro + key/value table)",
+    html: `<p>Add an intro paragraph about the product here.</p>
+<table style="border-collapse:separate;border-spacing:0 6px;width:100%;margin-top:8px;">
+  <tr><th style="text-align:left;padding-right:12px;width:30%;">Spec name</th><td>Spec value</td></tr>
+  <tr><th style="text-align:left;padding-right:12px;">Spec name</th><td>Spec value</td></tr>
+  <tr><th style="text-align:left;padding-right:12px;">Spec name</th><td>Spec value</td></tr>
+</table>`,
+  },
+  {
+    id: "story-features",
+    label: "Story + features list",
+    html: `<p>Tell your brand or product story here.</p>
+<h3>What's inside</h3>
+<ul>
+  <li>Feature one</li>
+  <li>Feature two</li>
+  <li>Feature three</li>
+  <li>Feature four</li>
+</ul>`,
+  },
+  {
+    id: "faq",
+    label: "FAQ block",
+    html: `<h3>FAQ</h3>
+<p><strong>Question one — click to edit</strong></p>
+<p>Click to write the answer.</p>
+<p><strong>Question two — click to edit</strong></p>
+<p>Click to write the answer.</p>
+<p><strong>Question three — click to edit</strong></p>
+<p>Click to write the answer.</p>`,
+  },
+  {
+    id: "two-column",
+    label: "Two columns",
+    html: `<div style="display:flex;gap:24px;flex-wrap:wrap;">
+  <div style="flex:1;min-width:240px;">
+    <h3>Column 1 heading</h3>
+    <p>Add column 1 text here.</p>
+  </div>
+  <div style="flex:1;min-width:240px;">
+    <h3>Column 2 heading</h3>
+    <p>Add column 2 text here.</p>
+  </div>
+</div>`,
+  },
+  {
+    id: "three-column",
+    label: "Three columns",
+    html: `<div style="display:flex;gap:20px;flex-wrap:wrap;">
+  <div style="flex:1;min-width:200px;">
+    <h3>Column 1</h3>
+    <p>Add text.</p>
+  </div>
+  <div style="flex:1;min-width:200px;">
+    <h3>Column 2</h3>
+    <p>Add text.</p>
+  </div>
+  <div style="flex:1;min-width:200px;">
+    <h3>Column 3</h3>
+    <p>Add text.</p>
+  </div>
+</div>`,
+  },
+  {
+    id: "hero-cta",
+    label: "Hero + CTA button",
+    html: `<h2>Bold headline goes here</h2>
+<p>Add a short supporting paragraph here.</p>
+<p><a href="#" style="display:inline-block;background:#ec4899;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:600;">Button label</a></p>`,
+  },
+  {
+    id: "returns",
+    label: "Returns policy snippet",
+    html: `<h3>Returns &amp; exchanges</h3>
+<p>We accept returns within 30 days of delivery for unused items in original packaging. To start a return, email <a href="mailto:hello@yourstore.com">hello@yourstore.com</a> with your order number.</p>`,
+  },
+  {
+    id: "shipping",
+    label: "Shipping info snippet",
+    html: `<h3>Shipping</h3>
+<ul>
+  <li>Free shipping on orders over $50</li>
+  <li>Orders ship within 1–2 business days</li>
+  <li>Tracking number sent by email</li>
+</ul>`,
+  },
+];
