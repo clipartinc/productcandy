@@ -13,8 +13,22 @@ import {
   Banner,
   Divider,
   Badge,
+  Grid,
 } from "@shopify/polaris";
 import Link from "next/link";
+import Image from "next/image";
+
+const LAYOUT_THUMBS = [
+  { id: "spec-sheet", label: "Spec sheet" },
+  { id: "story-features", label: "Story + features" },
+  { id: "faq", label: "FAQ block" },
+  { id: "two-column", label: "Two columns" },
+  { id: "three-column", label: "Three columns" },
+  { id: "hero-cta", label: "Hero + CTA" },
+  { id: "image-text", label: "Image + text" },
+  { id: "text-image", label: "Text + image" },
+  { id: "gallery-3", label: "Image gallery (3)" },
+];
 
 export default function EmbeddedHome() {
   return (
@@ -46,46 +60,80 @@ export default function EmbeddedHome() {
                 <Badge tone="info">Tool</Badge>
               </InlineStack>
               <Text as="p" tone="subdued">
-                Build polished product descriptions from templates and write
-                rich HTML straight back to the product. No theme edits, no
-                copy-paste from a Google Doc.
+                Drop a polished layout into any product description in one
+                click. Pick from these built-in layouts or save your own
+                snippets.
               </Text>
 
+              <Grid columns={{ xs: 3, sm: 3, md: 3, lg: 3, xl: 3 }} gap={{ xs: "200" }}>
+                {LAYOUT_THUMBS.map((t) => (
+                  <Grid.Cell key={t.id}>
+                    <BlockStack gap="100" inlineAlign="center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`/templates/${t.id}.svg`}
+                        alt={t.label}
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          maxWidth: 200,
+                          border: "1px solid #e5e7eb",
+                          borderRadius: 6,
+                        }}
+                      />
+                      <Text as="p" tone="subdued" alignment="center">
+                        {t.label}
+                      </Text>
+                    </BlockStack>
+                  </Grid.Cell>
+                ))}
+              </Grid>
+
+              <Divider />
+
               <Text as="h3" variant="headingSm">
-                How to use it
+                How to use it from a product page
               </Text>
               <List type="number">
                 <List.Item>
-                  Open <strong>Description Layouts</strong> from the button
-                  below.
+                  Open any product in <strong>Products</strong>.
                 </List.Item>
                 <List.Item>
-                  Pick a product to edit, then choose a template
-                  (e.g. <em>Spec sheet</em>, <em>Story + features</em>,{" "}
-                  <em>FAQ block</em>).
+                  At the top right of the product page, click{" "}
+                  <strong>More actions</strong>.
                 </List.Item>
                 <List.Item>
-                  Fill in the fields. Live preview shows exactly what
-                  shoppers will see.
+                  Pick <strong>Description Layouts</strong> from the dropdown
+                  (see screenshot below).
                 </List.Item>
                 <List.Item>
-                  Hit <strong>Save to product</strong>. The rendered HTML is
-                  written to the product&apos;s description in Shopify.
+                  Choose colors and a layout, then click{" "}
+                  <strong>Apply Layout</strong>. The placeholder boxes drop into
+                  the description editor — overtype each one with your content.
                 </List.Item>
               </List>
 
-              <Box>
-                <Banner tone="info">
-                  Templates are saved per shop. Build a layout once and reuse
-                  it across your whole catalog.
-                </Banner>
+              <Box paddingBlockStart="200" paddingBlockEnd="200">
+                <Image
+                  src="/dropdown.png"
+                  alt="More actions menu showing Description Layouts"
+                  width={445}
+                  height={293}
+                  style={{
+                    maxWidth: "100%",
+                    height: "auto",
+                    border: "1px solid #e5e7eb",
+                    borderRadius: 8,
+                  }}
+                />
               </Box>
 
-              <InlineStack>
-                <Link href="/app/descriptions">
-                  <Button variant="primary">Open Description Layouts</Button>
-                </Link>
-              </InlineStack>
+              <Banner tone="info">
+                Want your own reusable HTML blocks (warranty, brand story,
+                size chart)? Save them in <strong>My snippets</strong> below
+                and they&apos;ll appear in the same modal alongside the
+                built-in layouts.
+              </Banner>
             </BlockStack>
           </Card>
         </Layout.Section>
