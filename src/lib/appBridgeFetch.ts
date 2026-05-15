@@ -22,7 +22,8 @@ async function getSessionToken(): Promise<string> {
     shopify?: { idToken?: () => Promise<string | null> };
   };
 
-  for (let i = 0; i < 50; i++) {
+  // Poll for ~10 seconds — afterInteractive can take a moment to evaluate.
+  for (let i = 0; i < 100; i++) {
     if (w.shopify?.idToken) {
       const token = await w.shopify.idToken();
       if (!token) throw new Error("Shopify session token came back empty.");
