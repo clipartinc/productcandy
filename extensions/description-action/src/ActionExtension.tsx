@@ -352,6 +352,7 @@ function App() {
                         <Pressable
                           onPress={() => applyTemplate(t)}
                           disabled={busy}
+                          padding="none"
                           accessibilityLabel={`Apply ${t.label} layout`}
                         >
                           <Image source={thumbDataUri(t.id)} alt={t.label} />
