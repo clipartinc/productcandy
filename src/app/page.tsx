@@ -99,6 +99,37 @@ export default async function Landing({
             <AppStoreCta />
           </div>
         </section>
+
+        <section className="border-t border-zinc-100 bg-zinc-50">
+          <div className="mx-auto max-w-6xl px-6 py-16">
+            <p className="mb-2 text-center text-sm font-medium uppercase tracking-wider text-rose-500">
+              More from us
+            </p>
+            <h2 className="mb-10 text-center text-2xl font-semibold tracking-tight">
+              Other Shopify apps you might like
+            </h2>
+            <div className="grid gap-6 md:grid-cols-3">
+              <SisterApp
+                name="Chart Candy"
+                tagline="Beautiful charts and dashboards for your store data."
+                href="https://apps.shopify.com/chart-candy"
+                accent="from-pink-400 to-rose-500"
+              />
+              <SisterApp
+                name="Cart Tracker"
+                tagline="Track abandoned carts and recover lost sales."
+                href="https://apps.shopify.com/haveincart"
+                accent="from-amber-400 to-orange-500"
+              />
+              <SisterApp
+                name="Marketing Cost"
+                tagline="See your true marketing spend and ROI in one place."
+                href="https://apps.shopify.com/marketingcost"
+                accent="from-sky-400 to-blue-500"
+              />
+            </div>
+          </div>
+        </section>
       </main>
 
       <footer className="border-t border-zinc-100">
@@ -113,6 +144,38 @@ export default async function Landing({
         </div>
       </footer>
     </div>
+  );
+}
+
+function SisterApp({
+  name,
+  tagline,
+  href,
+  accent,
+}: {
+  name: string;
+  tagline: string;
+  href: string;
+  accent: string;
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group flex items-start gap-4 rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+    >
+      <span
+        className={`inline-block size-10 shrink-0 rounded-lg bg-gradient-to-br ${accent}`}
+        aria-hidden
+      />
+      <div className="min-w-0 flex-1">
+        <h3 className="text-base font-semibold text-zinc-900 group-hover:text-rose-600">
+          {name} →
+        </h3>
+        <p className="mt-1 text-sm text-zinc-600">{tagline}</p>
+      </div>
+    </a>
   );
 }
 
