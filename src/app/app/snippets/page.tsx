@@ -24,6 +24,8 @@ import { useEffect, useState } from "react";
 import { appBridgeFetch } from "@/lib/appBridgeFetch";
 import { STARTERS } from "@/lib/snippetStarters";
 import { Div } from "@/lib/tiptapDiv";
+import { SnippetBuilder } from "./SnippetBuilder";
+import { type Block, blocksToHtml } from "@/lib/snippetBlocks";
 
 const TWO_COL_INSERT = `<div style="display:flex;gap:24px;flex-wrap:wrap;"><div style="flex:1;min-width:240px;"><h3>Column 1 heading</h3><p>Add column 1 text here.</p></div><div style="flex:1;min-width:240px;"><h3>Column 2 heading</h3><p>Add column 2 text here.</p></div></div><p></p>`;
 
@@ -54,6 +56,8 @@ export default function SnippetsPage() {
   const [confirmDelete, setConfirmDelete] = useState<Snippet | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
+  const [mode, setMode] = useState<"builder" | "html">("builder");
+  const [blocks, setBlocks] = useState<Block[]>([]);
 
   const editor = useEditor({
     extensions: [
@@ -92,19 +96,26 @@ export default function SnippetsPage() {
 
   function openNew() {
     setDraftName("");
+    setBlocks([]);
     editor?.commands.setContent("");
+    setMode("builder");
     setEditing("new");
   }
 
   function openEdit(s: Snippet) {
     setDraftName(s.name);
     editor?.commands.setContent(s.html);
+    setBlocks([]);
+    // Existing snippets default to HTML mode since we can't reliably parse
+    // arbitrary HTML back into our block model.
+    setMode("html");
     setEditing(s);
   }
 
   function closeEditor() {
     setEditing(null);
     setDraftName("");
+    setBlocks([]);
     editor?.commands.setContent("");
   }
 
@@ -116,7 +127,7 @@ export default function SnippetsPage() {
 
   async function save() {
     if (!editing || !editor) return;
-    const html = editor.getHTML();
+    const html = mode === "builder" ? blocksToHtml(blocks) : editor.getHTML();
     if (!draftName.trim() || !html.trim() || html === "<p></p>") return;
     setSaving(true);
     try {
@@ -214,41 +225,57 @@ export default function SnippetsPage() {
                 placeholder="e.g. Returns policy"
               />
 
-              {editing === "new" && (
-                <Select
-                  label="Start from a layout"
-                  helpText="Pick a starting template, then edit the content visually below. Or pick Blank to write from scratch."
-                  options={STARTERS.map((s) => ({ label: s.label, value: s.id }))}
-                  value="blank"
-                  onChange={applyStarter}
-                />
-              )}
+              <Select
+                label="Editor mode"
+                options={[
+                  { label: "Visual builder (drag & drop sections)", value: "builder" },
+                  { label: "HTML editor (rich text)", value: "html" },
+                ]}
+                value={mode}
+                onChange={(v) => setMode(v as "builder" | "html")}
+              />
 
-              <BlockStack gap="200">
-                <Text as="p" fontWeight="semibold">
-                  Content
-                </Text>
-                <Toolbar
-                  editor={editor}
-                  onPickLink={() => {
-                    setLinkUrl(editor.getAttributes("link").href ?? "");
-                    setLinkOpen(true);
-                  }}
-                  onInsert={(html) =>
-                    editor.chain().focus().insertContent(html).run()
-                  }
-                />
-                <Box
-                  padding="400"
-                  background="bg-surface-secondary"
-                  borderRadius="200"
-                  borderColor="border"
-                  borderWidth="025"
-                  minHeight="240px"
-                >
-                  <EditorContent editor={editor} />
-                </Box>
-              </BlockStack>
+              {mode === "builder" ? (
+                <SnippetBuilder blocks={blocks} onChange={setBlocks} />
+              ) : (
+                <>
+                  {editing === "new" && (
+                    <Select
+                      label="Start from a layout"
+                      helpText="Pick a starting template, then edit the content visually below. Or pick Blank to write from scratch."
+                      options={STARTERS.map((s) => ({ label: s.label, value: s.id }))}
+                      value="blank"
+                      onChange={applyStarter}
+                    />
+                  )}
+
+                  <BlockStack gap="200">
+                    <Text as="p" fontWeight="semibold">
+                      Content
+                    </Text>
+                    <Toolbar
+                      editor={editor}
+                      onPickLink={() => {
+                        setLinkUrl(editor.getAttributes("link").href ?? "");
+                        setLinkOpen(true);
+                      }}
+                      onInsert={(html) =>
+                        editor.chain().focus().insertContent(html).run()
+                      }
+                    />
+                    <Box
+                      padding="400"
+                      background="bg-surface-secondary"
+                      borderRadius="200"
+                      borderColor="border"
+                      borderWidth="025"
+                      minHeight="240px"
+                    >
+                      <EditorContent editor={editor} />
+                    </Box>
+                  </BlockStack>
+                </>
+              )}
 
               <InlineStack gap="200" align="end">
                 <Button onClick={closeEditor} disabled={saving}>
