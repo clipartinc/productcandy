@@ -8,7 +8,63 @@
 
 type Common = { id: string; filled?: boolean };
 
-export type ColumnContent = { heading: string; text: string };
+/**
+ * Sub-blocks live inside a Column. They're the same shape as top-level Blocks
+ * but only the kinds that make sense nested: heading, paragraph, list, image,
+ * button. (No nested columns, hero-cta, spec-row, or raw html — keeps the
+ * UX simple and the structure non-recursive.)
+ */
+export type SubBlock =
+  | { id: string; kind: "heading"; level: 2 | 3; text: string }
+  | { id: string; kind: "paragraph"; text: string }
+  | { id: string; kind: "list"; ordered: boolean; items: string[] }
+  | { id: string; kind: "image"; url: string; alt: string }
+  | { id: string; kind: "button"; label: string; url: string };
+
+export type SubBlockKind = SubBlock["kind"];
+
+export const SUB_BLOCK_LABELS: Record<SubBlockKind, string> = {
+  heading: "Heading",
+  paragraph: "Paragraph",
+  list: "List",
+  image: "Image",
+  button: "Button",
+};
+
+export const SUB_BLOCK_ORDER: SubBlockKind[] = [
+  "heading",
+  "paragraph",
+  "list",
+  "image",
+  "button",
+];
+
+const newSubId = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
+
+export function newSubBlock(kind: SubBlockKind): SubBlock {
+  switch (kind) {
+    case "heading":
+      return { id: newSubId(), kind, level: 3, text: "Heading" };
+    case "paragraph":
+      return { id: newSubId(), kind, text: "Paragraph text." };
+    case "list":
+      return {
+        id: newSubId(),
+        kind,
+        ordered: false,
+        items: ["Item 1", "Item 2", "Item 3"],
+      };
+    case "image":
+      return { id: newSubId(), kind, url: "", alt: "" };
+    case "button":
+      return { id: newSubId(), kind, label: "Button", url: "#" };
+  }
+}
+
+export type ColumnContent = SubBlock[];
 
 export type Block =
   | (Common & { kind: "heading"; level: 2 | 3; text: string })
@@ -85,17 +141,28 @@ export function newBlock(kind: BlockKind): Block {
         items: ["First item", "Second item", "Third item"],
         filled: false,
       };
-    case "columns":
+    case "columns": {
+      const defaultCol = (i: number): ColumnContent => [
+        {
+          id: newSubId(),
+          kind: "heading",
+          level: 3,
+          text: `Column ${i + 1} heading`,
+        },
+        {
+          id: newSubId(),
+          kind: "paragraph",
+          text: `Column ${i + 1} text.`,
+        },
+      ];
       return {
         id: newId(),
         kind,
         count: 2,
-        columns: [
-          { heading: "Column 1 heading", text: "Column 1 text." },
-          { heading: "Column 2 heading", text: "Column 2 text." },
-        ],
+        columns: [defaultCol(0), defaultCol(1)],
         filled: false,
       };
+    }
     case "hero-cta":
       return {
         id: newId(),
@@ -176,6 +243,35 @@ function placeholderHtml(b: Block): string {
   }
 }
 
+function subBlockToHtml(s: SubBlock): string {
+  switch (s.kind) {
+    case "heading":
+      return `<h${s.level}>${escapeHtml(s.text)}</h${s.level}>`;
+    case "paragraph":
+      return paragraphs(s.text);
+    case "list": {
+      const tag = s.ordered ? "ol" : "ul";
+      const items = s.items
+        .map((i) => i.trim())
+        .filter(Boolean)
+        .map((i) => `<li>${escapeHtml(i)}</li>`)
+        .join("");
+      return `<${tag}>${items}</${tag}>`;
+    }
+    case "image":
+      if (!s.url) return "";
+      return `<p><img src="${escapeAttr(s.url)}" alt="${escapeAttr(
+        s.alt
+      )}" style="max-width:100%;height:auto;border-radius:6px;" /></p>`;
+    case "button":
+      return `<p><a href="${escapeAttr(
+        s.url || "#"
+      )}" style="display:inline-block;background:#ec4899;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:600;">${escapeHtml(
+        s.label
+      )}</a></p>`;
+  }
+}
+
 function blockToHtml(b: Block): string {
   if (b.filled === false) return placeholderHtml(b);
   switch (b.kind) {
@@ -195,12 +291,17 @@ function blockToHtml(b: Block): string {
     case "columns": {
       const minW = b.count === 2 ? 240 : b.count === 3 ? 200 : 160;
       const cells = b.columns
-        .map(
-          (c) =>
-            `<div style="flex:1;min-width:${minW}px;"><h3>${escapeHtml(
-              c.heading
-            )}</h3>${paragraphs(c.text)}</div>`
-        )
+        .map((col) => {
+          const inner = Array.isArray(col)
+            ? col.map(subBlockToHtml).filter(Boolean).join("")
+            : // Backward-compat with old { heading, text } shape
+              `<h3>${escapeHtml(
+                (col as unknown as { heading?: string }).heading ?? ""
+              )}</h3>${paragraphs(
+                (col as unknown as { text?: string }).text ?? ""
+              )}`;
+          return `<div style="flex:1;min-width:${minW}px;">${inner}</div>`;
+        })
         .join("");
       return `<div style="display:flex;gap:20px;flex-wrap:wrap;">${cells}</div>`;
     }

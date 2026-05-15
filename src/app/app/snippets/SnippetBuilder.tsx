@@ -36,10 +36,16 @@ import { useState } from "react";
 import {
   type Block,
   type BlockKind,
+  type SubBlock,
+  type SubBlockKind,
+  type ColumnContent,
   BLOCK_LABELS,
   BLOCK_DESCRIPTIONS,
   BLOCK_ORDER,
+  SUB_BLOCK_LABELS,
+  SUB_BLOCK_ORDER,
   newBlock,
+  newSubBlock,
   blocksToHtml,
 } from "@/lib/snippetBlocks";
 import { BlockIcon, BlockPreview } from "./BlockIcons";
@@ -525,7 +531,7 @@ function BlockEditor({
       );
     case "columns":
       return (
-        <BlockStack gap="200">
+        <BlockStack gap="300">
           <Select
             label="Number of columns"
             options={[
@@ -537,44 +543,43 @@ function BlockEditor({
             onChange={(v) => {
               const count = Number(v) as 2 | 3 | 4;
               const cur = block.columns;
-              const next = Array.from({ length: count }).map((_, i) =>
-                cur[i] ?? {
-                  heading: `Column ${i + 1} heading`,
-                  text: `Column ${i + 1} text.`,
+              const next: ColumnContent[] = Array.from({ length: count }).map(
+                (_, i) => {
+                  if (cur[i]) return cur[i];
+                  const h = newSubBlock("heading");
+                  const p = newSubBlock("paragraph");
+                  return [
+                    h.kind === "heading" ? { ...h, text: `Column ${i + 1} heading` } : h,
+                    p.kind === "paragraph" ? { ...p, text: `Column ${i + 1} text.` } : p,
+                  ] as ColumnContent;
                 }
               );
               onChange({ count, columns: next } as Partial<Block>);
             }}
           />
-          <InlineStack gap="200" wrap>
+          <Text as="p" tone="subdued">
+            Each column can have multiple pieces. Add a heading, paragraph,
+            list, image, or button — in any order.
+          </Text>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `repeat(${block.count}, minmax(0, 1fr))`,
+              gap: 12,
+            }}
+          >
             {block.columns.map((col, i) => (
-              <BlockStack key={i} gap="200">
-                <TextField
-                  label={`Column ${i + 1} heading`}
-                  autoComplete="off"
-                  value={col.heading}
-                  onChange={(v) => {
-                    const next = block.columns.map((c, j) =>
-                      j === i ? { ...c, heading: v } : c
-                    );
-                    onChange({ columns: next } as Partial<Block>);
-                  }}
-                />
-                <TextField
-                  label={`Column ${i + 1} text`}
-                  autoComplete="off"
-                  multiline={3}
-                  value={col.text}
-                  onChange={(v) => {
-                    const next = block.columns.map((c, j) =>
-                      j === i ? { ...c, text: v } : c
-                    );
-                    onChange({ columns: next } as Partial<Block>);
-                  }}
-                />
-              </BlockStack>
+              <ColumnEditor
+                key={i}
+                index={i}
+                items={col}
+                onChange={(items) => {
+                  const next = block.columns.map((c, j) => (j === i ? items : c));
+                  onChange({ columns: next } as Partial<Block>);
+                }}
+              />
             ))}
-          </InlineStack>
+          </div>
         </BlockStack>
       );
     case "hero-cta":
@@ -622,6 +627,253 @@ function BlockEditor({
           value={block.html}
           onChange={(v) => onChange({ html: v } as Partial<Block>)}
         />
+      );
+  }
+}
+
+function ColumnEditor({
+  index,
+  items,
+  onChange,
+}: {
+  index: number;
+  items: ColumnContent;
+  onChange: (items: ColumnContent) => void;
+}) {
+  const [addKind, setAddKind] = useState<SubBlockKind>("paragraph");
+
+  function add() {
+    onChange([...items, newSubBlock(addKind)]);
+  }
+
+  function update(id: string, patch: Partial<SubBlock>) {
+    onChange(items.map((s) => (s.id === id ? ({ ...s, ...patch } as SubBlock) : s)));
+  }
+
+  function remove(id: string) {
+    onChange(items.filter((s) => s.id !== id));
+  }
+
+  function move(id: string, dir: -1 | 1) {
+    const i = items.findIndex((s) => s.id === id);
+    if (i < 0) return;
+    const j = i + dir;
+    if (j < 0 || j >= items.length) return;
+    const next = items.slice();
+    [next[i], next[j]] = [next[j], next[i]];
+    onChange(next);
+  }
+
+  return (
+    <div
+      style={{
+        border: "1px solid #e5e7eb",
+        borderRadius: 8,
+        padding: 8,
+        background: "#f9fafb",
+      }}
+    >
+      <BlockStack gap="200">
+        <Text as="p" fontWeight="semibold">
+          Column {index + 1}
+        </Text>
+        {items.length === 0 && (
+          <Text as="p" tone="subdued">
+            Empty. Add a piece below.
+          </Text>
+        )}
+        <BlockStack gap="200">
+          {items.map((s, i) => (
+            <SubBlockEditor
+              key={s.id}
+              sub={s}
+              isFirst={i === 0}
+              isLast={i === items.length - 1}
+              onChange={(patch) => update(s.id, patch)}
+              onMoveUp={() => move(s.id, -1)}
+              onMoveDown={() => move(s.id, 1)}
+              onDelete={() => remove(s.id)}
+            />
+          ))}
+        </BlockStack>
+        <InlineStack gap="100" blockAlign="center">
+          <Select
+            label="Add"
+            labelHidden
+            options={SUB_BLOCK_ORDER.map((k) => ({
+              label: SUB_BLOCK_LABELS[k],
+              value: k,
+            }))}
+            value={addKind}
+            onChange={(v) => setAddKind(v as SubBlockKind)}
+          />
+          <Button onClick={add}>+ Add to column</Button>
+        </InlineStack>
+      </BlockStack>
+    </div>
+  );
+}
+
+function SubBlockEditor({
+  sub,
+  isFirst,
+  isLast,
+  onChange,
+  onMoveUp,
+  onMoveDown,
+  onDelete,
+}: {
+  sub: SubBlock;
+  isFirst: boolean;
+  isLast: boolean;
+  onChange: (patch: Partial<SubBlock>) => void;
+  onMoveUp: () => void;
+  onMoveDown: () => void;
+  onDelete: () => void;
+}) {
+  return (
+    <div
+      style={{
+        background: "#fff",
+        border: "1px solid #e5e7eb",
+        borderRadius: 6,
+        padding: 8,
+      }}
+    >
+      <BlockStack gap="100">
+        <InlineStack align="space-between" blockAlign="center">
+          <Text as="p" fontWeight="semibold">
+            {SUB_BLOCK_LABELS[sub.kind]}
+          </Text>
+          <InlineStack gap="100">
+            <Button size="micro" onClick={onMoveUp} disabled={isFirst}>
+              ↑
+            </Button>
+            <Button size="micro" onClick={onMoveDown} disabled={isLast}>
+              ↓
+            </Button>
+            <Button size="micro" tone="critical" variant="tertiary" onClick={onDelete}>
+              ✕
+            </Button>
+          </InlineStack>
+        </InlineStack>
+        <SubBlockFields sub={sub} onChange={onChange} />
+      </BlockStack>
+    </div>
+  );
+}
+
+function SubBlockFields({
+  sub,
+  onChange,
+}: {
+  sub: SubBlock;
+  onChange: (patch: Partial<SubBlock>) => void;
+}) {
+  switch (sub.kind) {
+    case "heading":
+      return (
+        <BlockStack gap="100">
+          <Select
+            label="Size"
+            labelHidden
+            options={[
+              { label: "Big (H2)", value: "2" },
+              { label: "Medium (H3)", value: "3" },
+            ]}
+            value={String(sub.level)}
+            onChange={(v) =>
+              onChange({ level: Number(v) as 2 | 3 } as Partial<SubBlock>)
+            }
+          />
+          <TextField
+            label="Text"
+            labelHidden
+            autoComplete="off"
+            value={sub.text}
+            onChange={(v) => onChange({ text: v } as Partial<SubBlock>)}
+          />
+        </BlockStack>
+      );
+    case "paragraph":
+      return (
+        <TextField
+          label="Text"
+          labelHidden
+          autoComplete="off"
+          multiline={2}
+          value={sub.text}
+          onChange={(v) => onChange({ text: v } as Partial<SubBlock>)}
+        />
+      );
+    case "list":
+      return (
+        <BlockStack gap="100">
+          <Select
+            label="Type"
+            labelHidden
+            options={[
+              { label: "Bulleted", value: "false" },
+              { label: "Numbered", value: "true" },
+            ]}
+            value={String(sub.ordered)}
+            onChange={(v) =>
+              onChange({ ordered: v === "true" } as Partial<SubBlock>)
+            }
+          />
+          <TextField
+            label="Items"
+            labelHidden
+            autoComplete="off"
+            multiline={3}
+            value={sub.items.join("\n")}
+            onChange={(v) =>
+              onChange({ items: v.split("\n") } as Partial<SubBlock>)
+            }
+          />
+        </BlockStack>
+      );
+    case "image":
+      return (
+        <BlockStack gap="100">
+          <TextField
+            label="URL"
+            labelHidden
+            autoComplete="off"
+            placeholder="Image URL"
+            value={sub.url}
+            onChange={(v) => onChange({ url: v } as Partial<SubBlock>)}
+          />
+          <TextField
+            label="Alt"
+            labelHidden
+            autoComplete="off"
+            placeholder="Alt text"
+            value={sub.alt}
+            onChange={(v) => onChange({ alt: v } as Partial<SubBlock>)}
+          />
+        </BlockStack>
+      );
+    case "button":
+      return (
+        <BlockStack gap="100">
+          <TextField
+            label="Label"
+            labelHidden
+            autoComplete="off"
+            placeholder="Button label"
+            value={sub.label}
+            onChange={(v) => onChange({ label: v } as Partial<SubBlock>)}
+          />
+          <TextField
+            label="URL"
+            labelHidden
+            autoComplete="off"
+            placeholder="https://…"
+            value={sub.url}
+            onChange={(v) => onChange({ url: v } as Partial<SubBlock>)}
+          />
+        </BlockStack>
       );
   }
 }
