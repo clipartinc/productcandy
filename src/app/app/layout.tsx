@@ -1,27 +1,12 @@
-import Script from "next/script";
 import { Providers } from "../providers";
 
+// App Bridge script is loaded in the root layout (src/app/layout.tsx) — it
+// has to be the FIRST <script> tag in the document with no async/defer for
+// Shopify's loader to accept it.
 export default function EmbeddedLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const apiKey = process.env.NEXT_PUBLIC_SHOPIFY_API_KEY ?? "";
-  return (
-    <>
-      {/*
-        Next/Script with strategy="beforeInteractive" only works in the ROOT
-        app/layout.tsx. In a nested layout it silently downgrades / doesn't
-        run reliably. Using "afterInteractive" (the default for non-root
-        layouts) here, paired with the appBridgeFetch helper that polls for
-        window.shopify before issuing requests.
-      */}
-      <Script
-        src="https://cdn.shopify.com/shopifycloud/app-bridge.js"
-        data-api-key={apiKey}
-        strategy="afterInteractive"
-      />
-      <Providers>{children}</Providers>
-    </>
-  );
+  return <Providers>{children}</Providers>;
 }
