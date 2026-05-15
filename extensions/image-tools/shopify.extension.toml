@@ -7,7 +7,7 @@ handle = "image-tools"
 type = "ui_extension"
 
   [extensions.icon]
-  source = "./assets/icon.png"
+  source = "./assets/icon.svg"
 
   [[extensions.targeting]]
   module = "./src/ActionExtension.tsx"

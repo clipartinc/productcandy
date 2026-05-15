@@ -7,7 +7,7 @@ handle = "description-block"
 type = "ui_extension"
 
   [extensions.icon]
-  source = "./assets/icon.png"
+  source = "./assets/icon.svg"
 
   [[extensions.targeting]]
   module = "./src/BlockExtension.tsx"
