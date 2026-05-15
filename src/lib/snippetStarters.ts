@@ -17,13 +17,11 @@ export const STARTERS: Starter[] = [
   { id: "blank", label: "Blank — start from scratch", html: "" },
   {
     id: "spec-sheet",
-    label: "Spec sheet (intro + key/value table)",
+    label: "Spec sheet (intro + spec rows)",
     html: `<p>Add an intro paragraph about the product here.</p>
-<table style="border-collapse:separate;border-spacing:0 6px;width:100%;margin-top:8px;">
-  <tr><th style="text-align:left;padding-right:12px;width:30%;">Spec name</th><td>Spec value</td></tr>
-  <tr><th style="text-align:left;padding-right:12px;">Spec name</th><td>Spec value</td></tr>
-  <tr><th style="text-align:left;padding-right:12px;">Spec name</th><td>Spec value</td></tr>
-</table>`,
+<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:120px;font-weight:600;"><p>Spec name</p></div><div style="flex:2;min-width:200px;"><p>Spec value</p></div></div>
+<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:120px;font-weight:600;"><p>Spec name</p></div><div style="flex:2;min-width:200px;"><p>Spec value</p></div></div>
+<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:120px;font-weight:600;"><p>Spec name</p></div><div style="flex:2;min-width:200px;"><p>Spec value</p></div></div>`,
   },
   {
     id: "story-features",

@@ -23,6 +23,15 @@ import Link from "@tiptap/extension-link";
 import { useEffect, useState } from "react";
 import { appBridgeFetch } from "@/lib/appBridgeFetch";
 import { STARTERS } from "@/lib/snippetStarters";
+import { Div } from "@/lib/tiptapDiv";
+
+const TWO_COL_INSERT = `<div style="display:flex;gap:24px;flex-wrap:wrap;"><div style="flex:1;min-width:240px;"><h3>Column 1 heading</h3><p>Add column 1 text here.</p></div><div style="flex:1;min-width:240px;"><h3>Column 2 heading</h3><p>Add column 2 text here.</p></div></div><p></p>`;
+
+const THREE_COL_INSERT = `<div style="display:flex;gap:20px;flex-wrap:wrap;"><div style="flex:1;min-width:200px;"><h3>Column 1</h3><p>Add text.</p></div><div style="flex:1;min-width:200px;"><h3>Column 2</h3><p>Add text.</p></div><div style="flex:1;min-width:200px;"><h3>Column 3</h3><p>Add text.</p></div></div><p></p>`;
+
+const HERO_CTA_INSERT = `<h2>Bold headline goes here</h2><p>Add a short supporting paragraph here.</p><p><a href="#" style="display:inline-block;background:#ec4899;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:600;">Button label</a></p><p></p>`;
+
+const SPEC_ROW_INSERT = `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:120px;font-weight:600;"><p>Spec name</p></div><div style="flex:2;min-width:200px;"><p>Spec value</p></div></div><p></p>`;
 
 type Snippet = {
   id: string;
@@ -49,6 +58,7 @@ export default function SnippetsPage() {
   const editor = useEditor({
     extensions: [
       StarterKit,
+      Div,
       TiptapImage.configure({
         HTMLAttributes: {
           style: "max-width:100%;height:auto;border-radius:6px;",
@@ -224,6 +234,9 @@ export default function SnippetsPage() {
                     setLinkUrl(editor.getAttributes("link").href ?? "");
                     setLinkOpen(true);
                   }}
+                  onInsert={(html) =>
+                    editor.chain().focus().insertContent(html).run()
+                  }
                 />
                 <Box
                   padding="400"
@@ -365,10 +378,14 @@ export default function SnippetsPage() {
         .ProseMirror h2 { font-size: 1.4em; margin: 16px 0 8px; }
         .ProseMirror h3 { font-size: 1.2em; margin: 16px 0 6px; }
         .ProseMirror ul, .ProseMirror ol { padding-left: 22px; margin-bottom: 12px; }
-        .ProseMirror table { border-collapse: collapse; margin: 8px 0; }
-        .ProseMirror table td, .ProseMirror table th { padding: 6px 12px 6px 0; vertical-align: top; }
         .ProseMirror img { max-width: 100%; height: auto; border-radius: 6px; }
         .ProseMirror a { color: #ec4899; text-decoration: underline; }
+        /* Make our inserted layout divs visible in the editor with a soft
+           outline so the merchant can see the column boundaries while editing. */
+        .ProseMirror div[style] {
+          outline: 1px dashed rgba(236, 72, 153, 0.25);
+          outline-offset: 2px;
+        }
       `}</style>
     </Page>
   );
@@ -377,62 +394,76 @@ export default function SnippetsPage() {
 function Toolbar({
   editor,
   onPickLink,
+  onInsert,
 }: {
   editor: Editor;
   onPickLink: () => void;
+  onInsert: (html: string) => void;
 }) {
   return (
-    <InlineStack gap="100" wrap>
-      <Button
-        pressed={editor.isActive("bold")}
-        onClick={() => editor.chain().focus().toggleBold().run()}
-      >
-        Bold
-      </Button>
-      <Button
-        pressed={editor.isActive("italic")}
-        onClick={() => editor.chain().focus().toggleItalic().run()}
-      >
-        Italic
-      </Button>
-      <Button
-        pressed={editor.isActive("heading", { level: 2 })}
-        onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-      >
-        H2
-      </Button>
-      <Button
-        pressed={editor.isActive("heading", { level: 3 })}
-        onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-      >
-        H3
-      </Button>
-      <Button
-        pressed={editor.isActive("bulletList")}
-        onClick={() => editor.chain().focus().toggleBulletList().run()}
-      >
-        • List
-      </Button>
-      <Button
-        pressed={editor.isActive("orderedList")}
-        onClick={() => editor.chain().focus().toggleOrderedList().run()}
-      >
-        1. List
-      </Button>
-      <Button onClick={onPickLink}>Link…</Button>
-      <Button
-        onClick={() => editor.chain().focus().undo().run()}
-        disabled={!editor.can().undo()}
-      >
-        Undo
-      </Button>
-      <Button
-        onClick={() => editor.chain().focus().redo().run()}
-        disabled={!editor.can().redo()}
-      >
-        Redo
-      </Button>
-    </InlineStack>
+    <BlockStack gap="100">
+      <InlineStack gap="100" wrap>
+        <Button
+          pressed={editor.isActive("bold")}
+          onClick={() => editor.chain().focus().toggleBold().run()}
+        >
+          Bold
+        </Button>
+        <Button
+          pressed={editor.isActive("italic")}
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+        >
+          Italic
+        </Button>
+        <Button
+          pressed={editor.isActive("heading", { level: 2 })}
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+        >
+          H2
+        </Button>
+        <Button
+          pressed={editor.isActive("heading", { level: 3 })}
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+        >
+          H3
+        </Button>
+        <Button
+          pressed={editor.isActive("bulletList")}
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+        >
+          • List
+        </Button>
+        <Button
+          pressed={editor.isActive("orderedList")}
+          onClick={() => editor.chain().focus().toggleOrderedList().run()}
+        >
+          1. List
+        </Button>
+        <Button onClick={onPickLink}>Link…</Button>
+        <Button
+          onClick={() => editor.chain().focus().undo().run()}
+          disabled={!editor.can().undo()}
+        >
+          Undo
+        </Button>
+        <Button
+          onClick={() => editor.chain().focus().redo().run()}
+          disabled={!editor.can().redo()}
+        >
+          Redo
+        </Button>
+      </InlineStack>
+
+      <InlineStack gap="100" wrap>
+        <Text as="span" tone="subdued">
+          Insert layout:
+        </Text>
+        <Button onClick={() => onInsert(TWO_COL_INSERT)}>Two columns</Button>
+        <Button onClick={() => onInsert(THREE_COL_INSERT)}>Three columns</Button>
+        <Button onClick={() => onInsert(HERO_CTA_INSERT)}>Hero + CTA</Button>
+        <Button onClick={() => onInsert(SPEC_ROW_INSERT)}>Spec row</Button>
+      </InlineStack>
+    </BlockStack>
   );
 }
 
