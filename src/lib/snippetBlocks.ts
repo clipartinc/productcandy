@@ -8,26 +8,13 @@
 
 type Common = { id: string; filled?: boolean };
 
+export type ColumnContent = { heading: string; text: string };
+
 export type Block =
   | (Common & { kind: "heading"; level: 2 | 3; text: string })
   | (Common & { kind: "paragraph"; text: string })
   | (Common & { kind: "list"; ordered: boolean; items: string[] })
-  | (Common & {
-      kind: "two-column";
-      h1: string;
-      c1: string;
-      h2: string;
-      c2: string;
-    })
-  | (Common & {
-      kind: "three-column";
-      h1: string;
-      c1: string;
-      h2: string;
-      c2: string;
-      h3: string;
-      c3: string;
-    })
+  | (Common & { kind: "columns"; count: 2 | 3 | 4; columns: ColumnContent[] })
   | (Common & {
       kind: "hero-cta";
       headline: string;
@@ -45,8 +32,7 @@ export const BLOCK_LABELS: Record<BlockKind, string> = {
   heading: "Title",
   paragraph: "Paragraph of text",
   list: "Bulleted list",
-  "two-column": "Two columns side by side",
-  "three-column": "Three columns side by side",
+  columns: "Columns side by side",
   "hero-cta": "Banner with a button",
   image: "Image",
   "spec-row": "Label and value",
@@ -57,8 +43,7 @@ export const BLOCK_DESCRIPTIONS: Record<BlockKind, string> = {
   heading: "A short, bold line that introduces a section.",
   paragraph: "A block of text. Use blank lines to make multiple paragraphs.",
   list: "A list of bullet points or numbered steps.",
-  "two-column": "Two side-by-side blocks that stack on mobile.",
-  "three-column": "Three side-by-side blocks that stack on mobile.",
+  columns: "Side-by-side blocks (2, 3, or 4) that stack on mobile.",
   "hero-cta": "A big headline plus a clickable button.",
   image: "An image from a URL with optional alt text.",
   "spec-row": "A label/value pair for specs (e.g. Material — Cotton).",
@@ -70,8 +55,7 @@ export const BLOCK_ORDER: BlockKind[] = [
   "paragraph",
   "list",
   "image",
-  "two-column",
-  "three-column",
+  "columns",
   "hero-cta",
   "spec-row",
   "html",
@@ -101,26 +85,15 @@ export function newBlock(kind: BlockKind): Block {
         items: ["First item", "Second item", "Third item"],
         filled: false,
       };
-    case "two-column":
+    case "columns":
       return {
         id: newId(),
         kind,
-        h1: "Column 1 heading",
-        c1: "Column 1 text.",
-        h2: "Column 2 heading",
-        c2: "Column 2 text.",
-        filled: false,
-      };
-    case "three-column":
-      return {
-        id: newId(),
-        kind,
-        h1: "Column 1",
-        c1: "Text.",
-        h2: "Column 2",
-        c2: "Text.",
-        h3: "Column 3",
-        c3: "Text.",
+        count: 2,
+        columns: [
+          { heading: "Column 1 heading", text: "Column 1 text." },
+          { heading: "Column 2 heading", text: "Column 2 text." },
+        ],
         filled: false,
       };
     case "hero-cta":
@@ -182,10 +155,16 @@ function placeholderHtml(b: Block): string {
       return `<div ${PH_BLOCK}>Paragraph placeholder — click to edit.</div>`;
     case "list":
       return `<div ${PH_BLOCK}>List placeholder — one item per line.</div>`;
-    case "two-column":
-      return `<div style="display:flex;gap:24px;flex-wrap:wrap;"><div style="flex:1;min-width:240px;"><div ${PH_BLOCK}>Column 1 placeholder</div></div><div style="flex:1;min-width:240px;"><div ${PH_BLOCK}>Column 2 placeholder</div></div></div>`;
-    case "three-column":
-      return `<div style="display:flex;gap:20px;flex-wrap:wrap;"><div style="flex:1;min-width:200px;"><div ${PH_BLOCK}>Column 1 placeholder</div></div><div style="flex:1;min-width:200px;"><div ${PH_BLOCK}>Column 2 placeholder</div></div><div style="flex:1;min-width:200px;"><div ${PH_BLOCK}>Column 3 placeholder</div></div></div>`;
+    case "columns": {
+      const minW = b.count === 2 ? 240 : b.count === 3 ? 200 : 160;
+      const cells = Array.from({ length: b.count })
+        .map(
+          (_, i) =>
+            `<div style="flex:1;min-width:${minW}px;"><div ${PH_BLOCK}>Column ${i + 1} placeholder</div></div>`
+        )
+        .join("");
+      return `<div style="display:flex;gap:20px;flex-wrap:wrap;">${cells}</div>`;
+    }
     case "hero-cta":
       return `<div ${PH_BLOCK}>Hero headline placeholder</div><div ${PH_BLOCK}>Body text placeholder</div><div ${PH_BLOCK}>Button placeholder</div>`;
     case "image":
@@ -213,20 +192,18 @@ function blockToHtml(b: Block): string {
         .join("");
       return `<${tag}>${items}</${tag}>`;
     }
-    case "two-column":
-      return `<div style="display:flex;gap:24px;flex-wrap:wrap;"><div style="flex:1;min-width:240px;"><h3>${escapeHtml(
-        b.h1
-      )}</h3>${paragraphs(b.c1)}</div><div style="flex:1;min-width:240px;"><h3>${escapeHtml(
-        b.h2
-      )}</h3>${paragraphs(b.c2)}</div></div>`;
-    case "three-column":
-      return `<div style="display:flex;gap:20px;flex-wrap:wrap;"><div style="flex:1;min-width:200px;"><h3>${escapeHtml(
-        b.h1
-      )}</h3>${paragraphs(b.c1)}</div><div style="flex:1;min-width:200px;"><h3>${escapeHtml(
-        b.h2
-      )}</h3>${paragraphs(b.c2)}</div><div style="flex:1;min-width:200px;"><h3>${escapeHtml(
-        b.h3
-      )}</h3>${paragraphs(b.c3)}</div></div>`;
+    case "columns": {
+      const minW = b.count === 2 ? 240 : b.count === 3 ? 200 : 160;
+      const cells = b.columns
+        .map(
+          (c) =>
+            `<div style="flex:1;min-width:${minW}px;"><h3>${escapeHtml(
+              c.heading
+            )}</h3>${paragraphs(c.text)}</div>`
+        )
+        .join("");
+      return `<div style="display:flex;gap:20px;flex-wrap:wrap;">${cells}</div>`;
+    }
     case "hero-cta":
       return `<h2>${escapeHtml(b.headline)}</h2>${paragraphs(
         b.body

@@ -42,7 +42,7 @@ import {
   newBlock,
   blocksToHtml,
 } from "@/lib/snippetBlocks";
-import { BlockIcon } from "./BlockIcons";
+import { BlockIcon, BlockPreview } from "./BlockIcons";
 
 const PALETTE_PREFIX = "palette-";
 
@@ -373,62 +373,80 @@ function CanvasItem({
     <div ref={setNodeRef} style={style}>
       <div
         style={{
-          background: isPlaceholder ? "#f3f4f6" : "#fff",
+          background: "#fff",
           border: isPlaceholder
             ? "1px dashed #d1d5db"
-            : "1px solid #e5e7eb",
-          borderRadius: 8,
-          padding: 12,
+            : "1px solid #ec4899",
+          borderRadius: 10,
+          padding: 0,
+          overflow: "hidden",
         }}
       >
-        <InlineStack gap="200" align="space-between" blockAlign="center">
-          <InlineStack gap="200" blockAlign="center">
-            <button
-              type="button"
-              {...attributes}
-              {...listeners}
-              aria-label="Drag to reorder"
-              style={{
-                cursor: "grab",
-                background: "transparent",
-                border: "1px solid #d1d5db",
-                borderRadius: 6,
-                padding: "4px 8px",
-                fontSize: 14,
-                lineHeight: 1,
-              }}
-            >
-              ⋮⋮
-            </button>
-            <BlockIcon kind={block.kind} />
-            <span
-              style={{
-                fontSize: 14,
-                color: isPlaceholder ? "#6b7280" : "#111827",
-                fontStyle: isPlaceholder ? "italic" : "normal",
-                fontWeight: isPlaceholder ? 400 : 600,
-              }}
-            >
-              {BLOCK_LABELS[block.kind]}
-              {!isPlaceholder && (
-                <span style={{ marginLeft: 8, fontSize: 12, color: "#10b981" }}>
-                  ✓ filled
-                </span>
-              )}
-            </span>
+        {/* Header with drag handle, label, action buttons */}
+        <div
+          style={{
+            background: isPlaceholder ? "#f9fafb" : "#fdf2f8",
+            padding: "8px 12px",
+            borderBottom: "1px solid #e5e7eb",
+          }}
+        >
+          <InlineStack gap="200" align="space-between" blockAlign="center">
+            <InlineStack gap="200" blockAlign="center">
+              <button
+                type="button"
+                {...attributes}
+                {...listeners}
+                aria-label="Drag to reorder"
+                style={{
+                  cursor: "grab",
+                  background: "transparent",
+                  border: "1px solid #d1d5db",
+                  borderRadius: 6,
+                  padding: "2px 6px",
+                  fontSize: 14,
+                  lineHeight: 1,
+                }}
+              >
+                ⋮⋮
+              </button>
+              <span
+                style={{
+                  fontSize: 13,
+                  color: "#374151",
+                  fontWeight: 600,
+                }}
+              >
+                {BLOCK_LABELS[block.kind]}
+                {!isPlaceholder && (
+                  <span style={{ marginLeft: 8, fontSize: 11, color: "#10b981" }}>
+                    ✓ filled
+                  </span>
+                )}
+              </span>
+            </InlineStack>
+            <InlineStack gap="100">
+              <Button size="micro" onClick={onExpand}>
+                {expanded ? "Done" : isPlaceholder ? "Add content" : "Edit"}
+              </Button>
+              <Button
+                size="micro"
+                tone="critical"
+                variant="tertiary"
+                onClick={onDelete}
+              >
+                Delete
+              </Button>
+            </InlineStack>
           </InlineStack>
-          <InlineStack gap="200">
-            <Button onClick={onExpand}>
-              {expanded ? "Done" : isPlaceholder ? "Add content" : "Edit"}
-            </Button>
-            <Button tone="critical" variant="tertiary" onClick={onDelete}>
-              Delete
-            </Button>
-          </InlineStack>
-        </InlineStack>
+        </div>
+
+        {/* Visual preview (large) */}
+        <div style={{ padding: "8px 12px" }}>
+          <BlockPreview block={block} />
+        </div>
 
         {expanded && (
-          <Box paddingBlockStart="300">
+          <Box padding="300">
             <BlockStack gap="200">
               <Divider />
               <BlockEditor
@@ -505,35 +523,59 @@ function BlockEditor({
           />
         </BlockStack>
       );
-    case "two-column":
+    case "columns":
       return (
-        <InlineStack gap="200" wrap>
-          <BlockStack gap="200">
-            <TextField label="Column 1 heading" autoComplete="off" value={block.h1} onChange={(v) => onChange({ h1: v } as Partial<Block>)} />
-            <TextField label="Column 1 text" autoComplete="off" multiline={3} value={block.c1} onChange={(v) => onChange({ c1: v } as Partial<Block>)} />
-          </BlockStack>
-          <BlockStack gap="200">
-            <TextField label="Column 2 heading" autoComplete="off" value={block.h2} onChange={(v) => onChange({ h2: v } as Partial<Block>)} />
-            <TextField label="Column 2 text" autoComplete="off" multiline={3} value={block.c2} onChange={(v) => onChange({ c2: v } as Partial<Block>)} />
-          </BlockStack>
-        </InlineStack>
-      );
-    case "three-column":
-      return (
-        <InlineStack gap="200" wrap>
-          <BlockStack gap="200">
-            <TextField label="Col 1 heading" autoComplete="off" value={block.h1} onChange={(v) => onChange({ h1: v } as Partial<Block>)} />
-            <TextField label="Col 1 text" autoComplete="off" multiline={3} value={block.c1} onChange={(v) => onChange({ c1: v } as Partial<Block>)} />
-          </BlockStack>
-          <BlockStack gap="200">
-            <TextField label="Col 2 heading" autoComplete="off" value={block.h2} onChange={(v) => onChange({ h2: v } as Partial<Block>)} />
-            <TextField label="Col 2 text" autoComplete="off" multiline={3} value={block.c2} onChange={(v) => onChange({ c2: v } as Partial<Block>)} />
-          </BlockStack>
-          <BlockStack gap="200">
-            <TextField label="Col 3 heading" autoComplete="off" value={block.h3} onChange={(v) => onChange({ h3: v } as Partial<Block>)} />
-            <TextField label="Col 3 text" autoComplete="off" multiline={3} value={block.c3} onChange={(v) => onChange({ c3: v } as Partial<Block>)} />
-          </BlockStack>
-        </InlineStack>
+        <BlockStack gap="200">
+          <Select
+            label="Number of columns"
+            options={[
+              { label: "2 columns", value: "2" },
+              { label: "3 columns", value: "3" },
+              { label: "4 columns", value: "4" },
+            ]}
+            value={String(block.count)}
+            onChange={(v) => {
+              const count = Number(v) as 2 | 3 | 4;
+              const cur = block.columns;
+              const next = Array.from({ length: count }).map((_, i) =>
+                cur[i] ?? {
+                  heading: `Column ${i + 1} heading`,
+                  text: `Column ${i + 1} text.`,
+                }
+              );
+              onChange({ count, columns: next } as Partial<Block>);
+            }}
+          />
+          <InlineStack gap="200" wrap>
+            {block.columns.map((col, i) => (
+              <BlockStack key={i} gap="200">
+                <TextField
+                  label={`Column ${i + 1} heading`}
+                  autoComplete="off"
+                  value={col.heading}
+                  onChange={(v) => {
+                    const next = block.columns.map((c, j) =>
+                      j === i ? { ...c, heading: v } : c
+                    );
+                    onChange({ columns: next } as Partial<Block>);
+                  }}
+                />
+                <TextField
+                  label={`Column ${i + 1} text`}
+                  autoComplete="off"
+                  multiline={3}
+                  value={col.text}
+                  onChange={(v) => {
+                    const next = block.columns.map((c, j) =>
+                      j === i ? { ...c, text: v } : c
+                    );
+                    onChange({ columns: next } as Partial<Block>);
+                  }}
+                />
+              </BlockStack>
+            ))}
+          </InlineStack>
+        </BlockStack>
       );
     case "hero-cta":
       return (
