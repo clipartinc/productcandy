@@ -25,7 +25,7 @@ import { appBridgeFetch } from "@/lib/appBridgeFetch";
 import { STARTERS } from "@/lib/snippetStarters";
 import { Div } from "@/lib/tiptapDiv";
 import { SnippetBuilder } from "./SnippetBuilder";
-import { type Block, blocksToHtml } from "@/lib/snippetBlocks";
+import { type Layout, layoutToHtml } from "@/lib/snippetBlocks";
 
 const TWO_COL_INSERT = `<div style="display:flex;gap:24px;flex-wrap:wrap;"><div style="flex:1;min-width:240px;"><h3>Column 1 heading</h3><p>Add column 1 text here.</p></div><div style="flex:1;min-width:240px;"><h3>Column 2 heading</h3><p>Add column 2 text here.</p></div></div><p></p>`;
 
@@ -57,7 +57,7 @@ export default function SnippetsPage() {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [mode, setMode] = useState<"builder" | "html">("builder");
-  const [blocks, setBlocks] = useState<Block[]>([]);
+  const [layout, setLayout] = useState<Layout>([]);
 
   const editor = useEditor({
     extensions: [
@@ -96,7 +96,7 @@ export default function SnippetsPage() {
 
   function openNew() {
     setDraftName("");
-    setBlocks([]);
+    setLayout([]);
     editor?.commands.setContent("");
     setMode("builder");
     setEditing("new");
@@ -105,7 +105,7 @@ export default function SnippetsPage() {
   function openEdit(s: Snippet) {
     setDraftName(s.name);
     editor?.commands.setContent(s.html);
-    setBlocks([]);
+    setLayout([]);
     // Existing snippets default to HTML mode since we can't reliably parse
     // arbitrary HTML back into our block model.
     setMode("html");
@@ -115,7 +115,7 @@ export default function SnippetsPage() {
   function closeEditor() {
     setEditing(null);
     setDraftName("");
-    setBlocks([]);
+    setLayout([]);
     editor?.commands.setContent("");
   }
 
@@ -127,7 +127,7 @@ export default function SnippetsPage() {
 
   async function save() {
     if (!editing || !editor) return;
-    const html = mode === "builder" ? blocksToHtml(blocks) : editor.getHTML();
+    const html = mode === "builder" ? layoutToHtml(layout) : editor.getHTML();
     if (!draftName.trim() || !html.trim() || html === "<p></p>") return;
     setSaving(true);
     try {
@@ -236,7 +236,7 @@ export default function SnippetsPage() {
               />
 
               {mode === "builder" ? (
-                <SnippetBuilder blocks={blocks} onChange={setBlocks} />
+                <SnippetBuilder layout={layout} onChange={setLayout} />
               ) : (
                 <>
                   {editing === "new" && (

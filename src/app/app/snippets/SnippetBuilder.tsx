@@ -30,12 +30,15 @@ import {
   sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
+  horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useState } from "react";
 import {
   type Block,
   type BlockKind,
+  type Layout,
+  type Row,
   type SubBlock,
   type SubBlockKind,
   type ColumnContent,
@@ -45,19 +48,22 @@ import {
   SUB_BLOCK_LABELS,
   SUB_BLOCK_ORDER,
   newBlock,
+  newRow,
   newSubBlock,
-  blocksToHtml,
+  layoutToHtml,
 } from "@/lib/snippetBlocks";
 import { BlockIcon, BlockPreview } from "./BlockIcons";
 
 const PALETTE_PREFIX = "palette-";
+const ROW_DROP_PREFIX = "row-drop-";
+const NEW_ROW_PREFIX = "new-row-";
 
 export function SnippetBuilder({
-  blocks,
+  layout,
   onChange,
 }: {
-  blocks: Block[];
-  onChange: (blocks: Block[]) => void;
+  layout: Layout;
+  onChange: (layout: Layout) => void;
 }) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [draggingKind, setDraggingKind] = useState<BlockKind | null>(null);
@@ -70,20 +76,34 @@ export function SnippetBuilder({
 
   function handleAdd(kind: BlockKind) {
     const block = newBlock(kind);
-    onChange([...blocks, block]);
+    onChange([...layout, newRow([block])]);
   }
 
-  function handleUpdate(id: string, patch: Partial<Block>) {
+  function handleUpdateBlock(rowId: string, blockId: string, patch: Partial<Block>) {
     onChange(
-      blocks.map((b) =>
-        b.id === id ? ({ ...b, ...patch } as Block) : b
+      layout.map((row) =>
+        row.id === rowId
+          ? {
+              ...row,
+              blocks: row.blocks.map((b) =>
+                b.id === blockId ? ({ ...b, ...patch } as Block) : b
+              ),
+            }
+          : row
       )
     );
   }
 
-  function handleDelete(id: string) {
-    onChange(blocks.filter((b) => b.id !== id));
-    if (expandedId === id) setExpandedId(null);
+  function handleDeleteBlock(rowId: string, blockId: string) {
+    const next = layout
+      .map((row) =>
+        row.id === rowId
+          ? { ...row, blocks: row.blocks.filter((b) => b.id !== blockId) }
+          : row
+      )
+      .filter((row) => row.blocks.length > 0);
+    onChange(next);
+    if (expandedId === blockId) setExpandedId(null);
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -101,29 +121,44 @@ export function SnippetBuilder({
     const overId = over.id.toString();
 
     if (activeId.startsWith(PALETTE_PREFIX)) {
-      // Palette → canvas
       const kind = activeId.slice(PALETTE_PREFIX.length) as BlockKind;
       const block = newBlock(kind);
-      // Drop position: if over a canvas item, insert above it; else append
-      const overIndex = blocks.findIndex((b) => b.id === overId);
-      if (overIndex >= 0) {
-        const next = [...blocks];
-        next.splice(overIndex, 0, block);
+
+      if (overId.startsWith(NEW_ROW_PREFIX)) {
+        // Drop in "between rows" gap → new row at that index
+        const idx = Number(overId.slice(NEW_ROW_PREFIX.length));
+        const next = [...layout];
+        next.splice(idx, 0, newRow([block]));
         onChange(next);
-      } else {
-        onChange([...blocks, block]);
+        return;
       }
-    } else if (activeId !== overId) {
-      // Reorder within canvas
-      const oldIndex = blocks.findIndex((b) => b.id === activeId);
-      const newIndex = blocks.findIndex((b) => b.id === overId);
-      if (oldIndex >= 0 && newIndex >= 0) {
-        onChange(arrayMove(blocks, oldIndex, newIndex));
+
+      if (overId.startsWith(ROW_DROP_PREFIX)) {
+        // Drop on a row's "add to row" zone → append to that row
+        const rowId = overId.slice(ROW_DROP_PREFIX.length);
+        onChange(
+          layout.map((row) =>
+            row.id === rowId ? { ...row, blocks: [...row.blocks, block] } : row
+          )
+        );
+        return;
       }
+
+      // Default: append as new row at end
+      onChange([...layout, newRow([block])]);
+      return;
+    }
+
+    // Reordering rows (active.id and over.id are row ids)
+    const fromIdx = layout.findIndex((r) => r.id === activeId);
+    const toIdx = layout.findIndex((r) => r.id === overId);
+    if (fromIdx >= 0 && toIdx >= 0 && fromIdx !== toIdx) {
+      onChange(arrayMove(layout, fromIdx, toIdx));
     }
   }
 
-  const html = blocksToHtml(blocks);
+  const html = layoutToHtml(layout);
+  const allBlocks = layout.flatMap((r) => r.blocks);
 
   return (
     <DndContext
@@ -145,8 +180,9 @@ export function SnippetBuilder({
               </Button>
             </InlineStack>
             <Text as="p" tone="subdued">
-              Drag any section type below into the canvas. You can rearrange,
-              add more, and optionally fill in the content later.
+              Drag a section into the canvas to add a new row. Drop it into an
+              existing row to put it side-by-side with the other sections in
+              that row.
             </Text>
             <div
               style={{
@@ -164,11 +200,11 @@ export function SnippetBuilder({
 
         {/* Canvas */}
         <Canvas
-          blocks={blocks}
+          layout={layout}
           expandedId={expandedId}
           onExpand={setExpandedId}
-          onUpdate={handleUpdate}
-          onDelete={handleDelete}
+          onUpdateBlock={handleUpdateBlock}
+          onDeleteBlock={handleDeleteBlock}
         />
 
         {previewOpen && (
@@ -229,6 +265,9 @@ export function SnippetBuilder({
           </div>
         )}
       </DragOverlay>
+
+      {/* Suppress unused-var warning for allBlocks (handy for future features) */}
+      <span style={{ display: "none" }}>{allBlocks.length}</span>
     </DndContext>
   );
 }
@@ -283,73 +322,198 @@ function PaletteItem({
 }
 
 function Canvas({
-  blocks,
+  layout,
   expandedId,
   onExpand,
-  onUpdate,
-  onDelete,
+  onUpdateBlock,
+  onDeleteBlock,
 }: {
-  blocks: Block[];
+  layout: Layout;
   expandedId: string | null;
   onExpand: (id: string | null) => void;
-  onUpdate: (id: string, patch: Partial<Block>) => void;
-  onDelete: (id: string) => void;
+  onUpdateBlock: (rowId: string, blockId: string, patch: Partial<Block>) => void;
+  onDeleteBlock: (rowId: string, blockId: string) => void;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: "canvas-drop" });
-
   return (
     <Card>
       <BlockStack gap="300">
         <Text as="h3" variant="headingSm">
           Your layout
         </Text>
-        <div
-          ref={setNodeRef}
-          style={{
-            minHeight: blocks.length === 0 ? 180 : 80,
-            border: blocks.length === 0
-              ? `2px dashed ${isOver ? "#ec4899" : "#d1d5db"}`
-              : "none",
-            borderRadius: 8,
-            padding: blocks.length === 0 ? 24 : 0,
-            background: isOver ? "#fdf2f8" : "transparent",
-            transition: "background 120ms, border-color 120ms",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          {blocks.length === 0 ? (
-            <Text as="p" tone="subdued" alignment="center">
-              Drag a section from the palette above to start building your
-              layout.
-            </Text>
-          ) : (
-            <SortableContext
-              items={blocks.map((b) => b.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              <BlockStack gap="200">
-                {blocks.map((b) => (
-                  <CanvasItem
-                    key={b.id}
-                    block={b}
-                    expanded={expandedId === b.id}
-                    onExpand={() => onExpand(expandedId === b.id ? null : b.id)}
-                    onUpdate={(patch) => onUpdate(b.id, patch)}
-                    onDelete={() => onDelete(b.id)}
+
+        {layout.length === 0 ? (
+          <EmptyDropzone />
+        ) : (
+          <SortableContext
+            items={layout.map((r) => r.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <BlockStack gap="0">
+              {layout.map((row, i) => (
+                <div key={row.id}>
+                  <NewRowDropZone index={i} />
+                  <RowItem
+                    row={row}
+                    expandedId={expandedId}
+                    onExpand={onExpand}
+                    onUpdateBlock={(blockId, patch) => onUpdateBlock(row.id, blockId, patch)}
+                    onDeleteBlock={(blockId) => onDeleteBlock(row.id, blockId)}
                   />
-                ))}
-              </BlockStack>
-            </SortableContext>
-          )}
-        </div>
+                </div>
+              ))}
+              <NewRowDropZone index={layout.length} />
+            </BlockStack>
+          </SortableContext>
+        )}
       </BlockStack>
     </Card>
   );
 }
 
-function CanvasItem({
+function EmptyDropzone() {
+  const { setNodeRef, isOver } = useDroppable({ id: `${NEW_ROW_PREFIX}0` });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        minHeight: 180,
+        border: `2px dashed ${isOver ? "#ec4899" : "#d1d5db"}`,
+        borderRadius: 8,
+        padding: 24,
+        background: isOver ? "#fdf2f8" : "transparent",
+        transition: "background 120ms, border-color 120ms",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text as="p" tone="subdued" alignment="center">
+        Drag a section from the palette above to start building your layout.
+      </Text>
+    </div>
+  );
+}
+
+function NewRowDropZone({ index }: { index: number }) {
+  const { setNodeRef, isOver } = useDroppable({ id: `${NEW_ROW_PREFIX}${index}` });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        height: isOver ? 36 : 16,
+        margin: "2px 0",
+        border: isOver ? "2px dashed #ec4899" : "2px dashed transparent",
+        borderRadius: 6,
+        background: isOver ? "#fdf2f8" : "transparent",
+        transition: "all 120ms",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 11,
+        color: "#ec4899",
+      }}
+    >
+      {isOver && "↓ New row here"}
+    </div>
+  );
+}
+
+function RowItem({
+  row,
+  expandedId,
+  onExpand,
+  onUpdateBlock,
+  onDeleteBlock,
+}: {
+  row: Row;
+  expandedId: string | null;
+  onExpand: (id: string | null) => void;
+  onUpdateBlock: (blockId: string, patch: Partial<Block>) => void;
+  onDeleteBlock: (blockId: string) => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: row.id });
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: `${ROW_DROP_PREFIX}${row.id}`,
+  });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    width: "100%",
+  };
+
+  return (
+    <div ref={setNodeRef} style={style}>
+      <div
+        ref={setDropRef}
+        style={{
+          border: isOver ? "2px solid #ec4899" : "1px solid #e5e7eb",
+          borderRadius: 10,
+          padding: 8,
+          background: isOver ? "#fdf2f8" : "#fff",
+          transition: "all 120ms",
+        }}
+      >
+        <InlineStack gap="100" align="space-between" blockAlign="center">
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            aria-label="Drag row to reorder"
+            style={{
+              cursor: "grab",
+              background: "transparent",
+              border: "1px solid #d1d5db",
+              borderRadius: 6,
+              padding: "2px 8px",
+              fontSize: 12,
+              lineHeight: 1,
+              color: "#6b7280",
+            }}
+          >
+            ⋮⋮ row
+          </button>
+          <Text as="span" tone="subdued">
+            {row.blocks.length === 1
+              ? "1 section"
+              : `${row.blocks.length} sections side-by-side`}
+          </Text>
+        </InlineStack>
+
+        <div
+          style={{
+            marginTop: 8,
+            display: "flex",
+            gap: 8,
+            flexWrap: "wrap",
+          }}
+        >
+          {row.blocks.map((block) => (
+            <div
+              key={block.id}
+              style={{
+                flex: 1,
+                minWidth: row.blocks.length === 1 ? "100%" : 220,
+              }}
+            >
+              <CanvasBlock
+                block={block}
+                expanded={expandedId === block.id}
+                onExpand={() => onExpand(expandedId === block.id ? null : block.id)}
+                onUpdate={(patch) => onUpdateBlock(block.id, patch)}
+                onDelete={() => onDeleteBlock(block.id)}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CanvasBlock({
   block,
   expanded,
   onExpand,
@@ -362,109 +526,58 @@ function CanvasItem({
   onUpdate: (patch: Partial<Block>) => void;
   onDelete: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: block.id,
-  });
-
-  const style: React.CSSProperties = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-    width: "100%",
-  };
-
   const isPlaceholder = block.filled === false;
-
   return (
-    <div ref={setNodeRef} style={style}>
+    <div
+      style={{
+        background: "#fff",
+        border: isPlaceholder ? "1px dashed #d1d5db" : "1px solid #ec4899",
+        borderRadius: 8,
+        overflow: "hidden",
+      }}
+    >
       <div
         style={{
-          background: "#fff",
-          border: isPlaceholder
-            ? "1px dashed #d1d5db"
-            : "1px solid #ec4899",
-          borderRadius: 10,
-          padding: 0,
-          overflow: "hidden",
+          background: isPlaceholder ? "#f9fafb" : "#fdf2f8",
+          padding: "6px 10px",
+          borderBottom: "1px solid #e5e7eb",
         }}
       >
-        {/* Header with drag handle, label, action buttons */}
-        <div
-          style={{
-            background: isPlaceholder ? "#f9fafb" : "#fdf2f8",
-            padding: "8px 12px",
-            borderBottom: "1px solid #e5e7eb",
-          }}
-        >
-          <InlineStack gap="200" align="space-between" blockAlign="center">
-            <InlineStack gap="200" blockAlign="center">
-              <button
-                type="button"
-                {...attributes}
-                {...listeners}
-                aria-label="Drag to reorder"
-                style={{
-                  cursor: "grab",
-                  background: "transparent",
-                  border: "1px solid #d1d5db",
-                  borderRadius: 6,
-                  padding: "2px 6px",
-                  fontSize: 14,
-                  lineHeight: 1,
-                }}
-              >
-                ⋮⋮
-              </button>
-              <span
-                style={{
-                  fontSize: 13,
-                  color: "#374151",
-                  fontWeight: 600,
-                }}
-              >
-                {BLOCK_LABELS[block.kind]}
-                {!isPlaceholder && (
-                  <span style={{ marginLeft: 8, fontSize: 11, color: "#10b981" }}>
-                    ✓ filled
-                  </span>
-                )}
+        <InlineStack gap="100" align="space-between" blockAlign="center">
+          <span style={{ fontSize: 12, color: "#374151", fontWeight: 600 }}>
+            {BLOCK_LABELS[block.kind]}
+            {!isPlaceholder && (
+              <span style={{ marginLeft: 6, fontSize: 10, color: "#10b981" }}>
+                ✓
               </span>
-            </InlineStack>
-            <InlineStack gap="100">
-              <Button size="micro" onClick={onExpand}>
-                {expanded ? "Done" : isPlaceholder ? "Add content" : "Edit"}
-              </Button>
-              <Button
-                size="micro"
-                tone="critical"
-                variant="tertiary"
-                onClick={onDelete}
-              >
-                Delete
-              </Button>
-            </InlineStack>
+            )}
+          </span>
+          <InlineStack gap="100">
+            <Button size="micro" onClick={onExpand}>
+              {expanded ? "Done" : isPlaceholder ? "Add content" : "Edit"}
+            </Button>
+            <Button size="micro" tone="critical" variant="tertiary" onClick={onDelete}>
+              ✕
+            </Button>
           </InlineStack>
-        </div>
-
-        {/* Visual preview (large) */}
-        <div style={{ padding: "8px 12px" }}>
-          <BlockPreview block={block} />
-        </div>
-
-        {expanded && (
-          <Box padding="300">
-            <BlockStack gap="200">
-              <Divider />
-              <BlockEditor
-                block={block}
-                onChange={(patch) =>
-                  onUpdate({ ...patch, filled: true } as Partial<Block>)
-                }
-              />
-            </BlockStack>
-          </Box>
-        )}
+        </InlineStack>
       </div>
+      <div style={{ padding: "8px 10px" }}>
+        <BlockPreview block={block} />
+      </div>
+      {expanded && (
+        <Box padding="300">
+          <BlockStack gap="200">
+            <Divider />
+            <BlockEditor
+              block={block}
+              onChange={(patch) =>
+                onUpdate({ ...patch, filled: true } as Partial<Block>)
+              }
+            />
+          </BlockStack>
+        </Box>
+      )}
     </div>
   );
 }
@@ -596,19 +709,8 @@ function BlockEditor({
     case "image":
       return (
         <BlockStack gap="200">
-          <TextField
-            label="Image URL"
-            autoComplete="off"
-            value={block.url}
-            onChange={(v) => onChange({ url: v } as Partial<Block>)}
-            helpText="Paste a Shopify CDN URL or any public image URL."
-          />
-          <TextField
-            label="Alt text"
-            autoComplete="off"
-            value={block.alt}
-            onChange={(v) => onChange({ alt: v } as Partial<Block>)}
-          />
+          <TextField label="Image URL" autoComplete="off" value={block.url} onChange={(v) => onChange({ url: v } as Partial<Block>)} helpText="Paste a Shopify CDN URL or any public image URL." />
+          <TextField label="Alt text" autoComplete="off" value={block.alt} onChange={(v) => onChange({ alt: v } as Partial<Block>)} />
         </BlockStack>
       );
     case "spec-row":
@@ -620,13 +722,7 @@ function BlockEditor({
       );
     case "html":
       return (
-        <TextField
-          label="Raw HTML"
-          autoComplete="off"
-          multiline={4}
-          value={block.html}
-          onChange={(v) => onChange({ html: v } as Partial<Block>)}
-        />
+        <TextField label="Raw HTML" autoComplete="off" multiline={4} value={block.html} onChange={(v) => onChange({ html: v } as Partial<Block>)} />
       );
   }
 }
@@ -645,15 +741,12 @@ function ColumnEditor({
   function add() {
     onChange([...items, newSubBlock(addKind)]);
   }
-
   function update(id: string, patch: Partial<SubBlock>) {
     onChange(items.map((s) => (s.id === id ? ({ ...s, ...patch } as SubBlock) : s)));
   }
-
   function remove(id: string) {
     onChange(items.filter((s) => s.id !== id));
   }
-
   function move(id: string, dir: -1 | 1) {
     const i = items.findIndex((s) => s.id === id);
     if (i < 0) return;
@@ -782,9 +875,7 @@ function SubBlockFields({
               { label: "Medium (H3)", value: "3" },
             ]}
             value={String(sub.level)}
-            onChange={(v) =>
-              onChange({ level: Number(v) as 2 | 3 } as Partial<SubBlock>)
-            }
+            onChange={(v) => onChange({ level: Number(v) as 2 | 3 } as Partial<SubBlock>)}
           />
           <TextField
             label="Text"
@@ -817,9 +908,7 @@ function SubBlockFields({
               { label: "Numbered", value: "true" },
             ]}
             value={String(sub.ordered)}
-            onChange={(v) =>
-              onChange({ ordered: v === "true" } as Partial<SubBlock>)
-            }
+            onChange={(v) => onChange({ ordered: v === "true" } as Partial<SubBlock>)}
           />
           <TextField
             label="Items"
@@ -827,9 +916,7 @@ function SubBlockFields({
             autoComplete="off"
             multiline={3}
             value={sub.items.join("\n")}
-            onChange={(v) =>
-              onChange({ items: v.split("\n") } as Partial<SubBlock>)
-            }
+            onChange={(v) => onChange({ items: v.split("\n") } as Partial<SubBlock>)}
           />
         </BlockStack>
       );
@@ -877,3 +964,8 @@ function SubBlockFields({
       );
   }
 }
+
+// horizontalListSortingStrategy unused for now (we handle drops via useDroppable
+// drop zones rather than sortable per row); kept imported for future iteration
+// where dragging blocks BETWEEN rows or reordering within a row is added.
+void horizontalListSortingStrategy;

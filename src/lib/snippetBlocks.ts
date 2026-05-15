@@ -328,3 +328,32 @@ function blockToHtml(b: Block): string {
 export function blocksToHtml(blocks: Block[]): string {
   return blocks.map(blockToHtml).filter(Boolean).join("\n");
 }
+
+// -----------------------------------------------------------------------------
+// Rows: top-level layout container
+// -----------------------------------------------------------------------------
+
+export type Row = { id: string; blocks: Block[] };
+export type Layout = Row[];
+
+export function newRow(initial?: Block[]): Row {
+  return { id: newId(), blocks: initial ?? [] };
+}
+
+function rowToHtml(row: Row): string {
+  if (row.blocks.length === 0) return "";
+  if (row.blocks.length === 1) return blockToHtml(row.blocks[0]);
+  // Multi-block row: render each block as a flex cell
+  const minW = Math.max(120, Math.floor(720 / row.blocks.length));
+  const cells = row.blocks
+    .map((b) => `<div style="flex:1;min-width:${minW}px;">${blockToHtml(b)}</div>`)
+    .join("");
+  return `<div style="display:flex;gap:24px;flex-wrap:wrap;">${cells}</div>`;
+}
+
+export function layoutToHtml(layout: Layout): string {
+  return layout
+    .map(rowToHtml)
+    .filter(Boolean)
+    .join("\n");
+}
