@@ -222,9 +222,9 @@ export default function EmbeddedHome() {
                   Will this overwrite my existing product descriptions?
                 </Text>
                 <Text as="p" tone="subdued">
-                  Only when you click <strong>Save to product</strong> in the
-                  Description Layouts tool. We never modify products in the
-                  background.
+                  You can select to override the current description or append
+                  it, which will add it to your current description and not
+                  remove anything.
                 </Text>
               </BlockStack>
 
