@@ -6,20 +6,20 @@
  * gets stamped into product descriptions when the snippet is applied.
  */
 
+type Common = { id: string; filled?: boolean };
+
 export type Block =
-  | { id: string; kind: "heading"; level: 2 | 3; text: string }
-  | { id: string; kind: "paragraph"; text: string }
-  | { id: string; kind: "list"; ordered: boolean; items: string[] }
-  | {
-      id: string;
+  | (Common & { kind: "heading"; level: 2 | 3; text: string })
+  | (Common & { kind: "paragraph"; text: string })
+  | (Common & { kind: "list"; ordered: boolean; items: string[] })
+  | (Common & {
       kind: "two-column";
       h1: string;
       c1: string;
       h2: string;
       c2: string;
-    }
-  | {
-      id: string;
+    })
+  | (Common & {
       kind: "three-column";
       h1: string;
       c1: string;
@@ -27,18 +27,17 @@ export type Block =
       c2: string;
       h3: string;
       c3: string;
-    }
-  | {
-      id: string;
+    })
+  | (Common & {
       kind: "hero-cta";
       headline: string;
       body: string;
       ctaLabel: string;
       ctaUrl: string;
-    }
-  | { id: string; kind: "image"; url: string; alt: string }
-  | { id: string; kind: "spec-row"; key: string; value: string }
-  | { id: string; kind: "html"; html: string };
+    })
+  | (Common & { kind: "image"; url: string; alt: string })
+  | (Common & { kind: "spec-row"; key: string; value: string })
+  | (Common & { kind: "html"; html: string });
 
 export type BlockKind = Block["kind"];
 
@@ -86,15 +85,21 @@ const newId = () =>
 export function newBlock(kind: BlockKind): Block {
   switch (kind) {
     case "heading":
-      return { id: newId(), kind, level: 2, text: "Heading text" };
+      return { id: newId(), kind, level: 2, text: "Heading text", filled: false };
     case "paragraph":
-      return { id: newId(), kind, text: "Add your paragraph text here." };
+      return {
+        id: newId(),
+        kind,
+        text: "Add your paragraph text here.",
+        filled: false,
+      };
     case "list":
       return {
         id: newId(),
         kind,
         ordered: false,
         items: ["First item", "Second item", "Third item"],
+        filled: false,
       };
     case "two-column":
       return {
@@ -104,6 +109,7 @@ export function newBlock(kind: BlockKind): Block {
         c1: "Column 1 text.",
         h2: "Column 2 heading",
         c2: "Column 2 text.",
+        filled: false,
       };
     case "three-column":
       return {
@@ -115,6 +121,7 @@ export function newBlock(kind: BlockKind): Block {
         c2: "Text.",
         h3: "Column 3",
         c3: "Text.",
+        filled: false,
       };
     case "hero-cta":
       return {
@@ -124,13 +131,20 @@ export function newBlock(kind: BlockKind): Block {
         body: "Add a short supporting paragraph.",
         ctaLabel: "Button label",
         ctaUrl: "#",
+        filled: false,
       };
     case "image":
-      return { id: newId(), kind, url: "", alt: "" };
+      return { id: newId(), kind, url: "", alt: "", filled: false };
     case "spec-row":
-      return { id: newId(), kind, key: "Spec name", value: "Spec value" };
+      return {
+        id: newId(),
+        kind,
+        key: "Spec name",
+        value: "Spec value",
+        filled: false,
+      };
     case "html":
-      return { id: newId(), kind, html: "<p>Custom HTML here</p>" };
+      return { id: newId(), kind, html: "<p>Custom HTML here</p>", filled: false };
   }
 }
 
@@ -156,7 +170,35 @@ function paragraphs(text: string): string {
     .join("");
 }
 
+// Same placeholder styling the action extension stamps when the merchant
+// applies a layout — keeps editing-time visuals consistent across surfaces.
+const PH_BLOCK = `data-pc-placeholder="1" style="background-color:#f3f4f6;color:#6b7280;border:1px dashed #d1d5db;border-radius:8px;padding:12px 16px;margin:8px 0;font-style:italic;"`;
+
+function placeholderHtml(b: Block): string {
+  switch (b.kind) {
+    case "heading":
+      return `<div ${PH_BLOCK}>Heading placeholder</div>`;
+    case "paragraph":
+      return `<div ${PH_BLOCK}>Paragraph placeholder — click to edit.</div>`;
+    case "list":
+      return `<div ${PH_BLOCK}>List placeholder — one item per line.</div>`;
+    case "two-column":
+      return `<div style="display:flex;gap:24px;flex-wrap:wrap;"><div style="flex:1;min-width:240px;"><div ${PH_BLOCK}>Column 1 placeholder</div></div><div style="flex:1;min-width:240px;"><div ${PH_BLOCK}>Column 2 placeholder</div></div></div>`;
+    case "three-column":
+      return `<div style="display:flex;gap:20px;flex-wrap:wrap;"><div style="flex:1;min-width:200px;"><div ${PH_BLOCK}>Column 1 placeholder</div></div><div style="flex:1;min-width:200px;"><div ${PH_BLOCK}>Column 2 placeholder</div></div><div style="flex:1;min-width:200px;"><div ${PH_BLOCK}>Column 3 placeholder</div></div></div>`;
+    case "hero-cta":
+      return `<div ${PH_BLOCK}>Hero headline placeholder</div><div ${PH_BLOCK}>Body text placeholder</div><div ${PH_BLOCK}>Button placeholder</div>`;
+    case "image":
+      return `<div ${PH_BLOCK}>Image placeholder — replace with a product image.</div>`;
+    case "spec-row":
+      return `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:120px;"><div ${PH_BLOCK}>Spec name</div></div><div style="flex:2;min-width:200px;"><div ${PH_BLOCK}>Spec value</div></div></div>`;
+    case "html":
+      return `<div ${PH_BLOCK}>Custom HTML placeholder</div>`;
+  }
+}
+
 function blockToHtml(b: Block): string {
+  if (b.filled === false) return placeholderHtml(b);
   switch (b.kind) {
     case "heading":
       return `<h${b.level}>${escapeHtml(b.text)}</h${b.level}>`;
