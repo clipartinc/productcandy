@@ -9,6 +9,7 @@ import {
   Button,
   Banner,
   Select,
+  Link,
   useApi,
 } from "@shopify/ui-extensions-react/admin";
 import { useEffect, useState } from "react";
@@ -372,22 +373,30 @@ function App() {
               ))}
             </BlockStack>
 
-            {snippets && snippets.length > 0 && (
-              <>
-                <Text fontWeight="bold">Your snippets</Text>
-                <BlockStack gap="small">
-                  {snippets.map((s) => (
-                    <Button
-                      key={s.id}
-                      onPress={() => applySnippet(s)}
-                      disabled={busy}
-                    >
-                      {s.name}
-                    </Button>
-                  ))}
-                </BlockStack>
-              </>
+            <Text fontWeight="bold">Your snippets</Text>
+            {snippets && snippets.length > 0 ? (
+              <BlockStack gap="small">
+                {snippets.map((s) => (
+                  <Button
+                    key={s.id}
+                    onPress={() => applySnippet(s)}
+                    disabled={busy}
+                  >
+                    {s.name}
+                  </Button>
+                ))}
+              </BlockStack>
+            ) : (
+              <Text>
+                Save reusable HTML blocks (warranty, brand story, size chart…)
+                to stamp them here alongside the built-in layouts.
+              </Text>
             )}
+            <InlineStack gap="base">
+              <Link to="shopify://admin/apps/product-candy/app/snippets">
+                + Add new snippet
+              </Link>
+            </InlineStack>
           </>
         )}
       </BlockStack>
