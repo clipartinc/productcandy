@@ -148,6 +148,29 @@ export default function EmbeddedHome() {
         <Layout.Section>
           <Card>
             <BlockStack gap="400">
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="h2" variant="headingMd">
+                  My snippets
+                </Text>
+                <Badge tone="info">New</Badge>
+              </InlineStack>
+              <Text as="p" tone="subdued">
+                Save reusable HTML blocks — warranty info, return policy, size
+                charts, brand story — and stamp them into any product
+                description from the Description Layouts modal.
+              </Text>
+              <InlineStack>
+                <Link href="/app/snippets">
+                  <Button variant="primary">Manage snippets</Button>
+                </Link>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400">
               <Text as="h2" variant="headingMd">
                 Tips &amp; FAQ
               </Text>

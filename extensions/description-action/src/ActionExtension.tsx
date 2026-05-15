@@ -11,10 +11,16 @@ import {
   Select,
   useApi,
 } from "@shopify/ui-extensions-react/admin";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { thumbDataUri } from "./thumbnails";
 
 const TARGET = "admin.product-details.action.render";
+
+const APP_BACKEND_URL =
+  (typeof process !== "undefined" && process.env?.APP_BACKEND_URL) ||
+  "https://productcandy.app";
+
+type Snippet = { id: string; name: string; html: string };
 
 type Skeleton = (bg: string, text: string) => string;
 type TemplateMeta = { id: string; label: string; skeleton: Skeleton };
@@ -201,24 +207,45 @@ type Mode = "append" | "replace";
 export default reactExtension(TARGET, () => <App />);
 
 function App() {
-  const { data, query, close } = useApi(TARGET);
+  const { data, query, close, auth } = useApi(TARGET);
   const productId = (data as { selected?: { id: string }[] })?.selected?.[0]?.id;
 
   const [mode, setMode] = useState<Mode>("append");
   const [bgColor, setBgColor] = useState<string>("none");
   const [textColor, setTextColor] = useState<string>("#111827");
   const [busy, setBusy] = useState(false);
+  const [snippets, setSnippets] = useState<Snippet[] | null>(null);
   const [status, setStatus] = useState<
     | { kind: "idle" }
     | { kind: "error"; message: string }
   >({ kind: "idle" });
 
-  async function applyTemplate(t: TemplateMeta) {
+  // Pull the merchant's saved snippets on open. Fail silently — snippets are
+  // optional and we don't want to block the built-in templates if the
+  // backend is down.
+  useEffect(() => {
+    (async () => {
+      try {
+        const token = await auth.idToken();
+        if (!token) return;
+        const res = await fetch(`${APP_BACKEND_URL}/api/app/snippets`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) return;
+        const json = (await res.json()) as { snippets: Snippet[] };
+        setSnippets(json.snippets ?? []);
+      } catch {
+        // ignore
+      }
+    })();
+  }, [auth]);
+
+  async function applyHtml(skeletonHtml: string) {
     if (!productId) return;
     setBusy(true);
     setStatus({ kind: "idle" });
     try {
-      const stampHtml = `${t.skeleton(bgColor, textColor)}\n<p><br></p>`;
+      const stampHtml = `${skeletonHtml}\n<p><br></p>`;
       let nextHtml = stampHtml;
       if (mode === "append") {
         const cur = await query<{ product: { descriptionHtml: string } | null }>(
@@ -251,6 +278,14 @@ function App() {
       });
       setBusy(false);
     }
+  }
+
+  function applyTemplate(t: TemplateMeta) {
+    return applyHtml(t.skeleton(bgColor, textColor));
+  }
+
+  function applySnippet(s: Snippet) {
+    return applyHtml(s.html);
   }
 
   return (
@@ -336,6 +371,22 @@ function App() {
               ))}
             </BlockStack>
 
+            {snippets && snippets.length > 0 && (
+              <>
+                <Text fontWeight="bold">Your snippets</Text>
+                <BlockStack gap="small">
+                  {snippets.map((s) => (
+                    <Button
+                      key={s.id}
+                      onPress={() => applySnippet(s)}
+                      disabled={busy}
+                    >
+                      {s.name}
+                    </Button>
+                  ))}
+                </BlockStack>
+              </>
+            )}
           </>
         )}
       </BlockStack>
