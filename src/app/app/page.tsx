@@ -235,9 +235,8 @@ export default function EmbeddedHome() {
                   Can I undo a change?
                 </Text>
                 <Text as="p" tone="subdued">
-                  Shopify keeps version history on products. If you need to
-                  revert, open the product in the admin and use Shopify&apos;s
-                  built-in version history.
+                  Yes, you can easily delete the layout from your product
+                  description using the backspace on your keyboard.
                 </Text>
               </BlockStack>
 
