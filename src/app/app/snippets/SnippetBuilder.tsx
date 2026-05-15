@@ -33,9 +33,12 @@ import {
   type Block,
   type BlockKind,
   BLOCK_LABELS,
+  BLOCK_DESCRIPTIONS,
+  BLOCK_ORDER,
   newBlock,
   blocksToHtml,
 } from "@/lib/snippetBlocks";
+import { BlockIcon } from "./BlockIcons";
 
 export function SnippetBuilder({
   blocks,
@@ -44,7 +47,6 @@ export function SnippetBuilder({
   blocks: Block[];
   onChange: (blocks: Block[]) => void;
 }) {
-  const [addKind, setAddKind] = useState<BlockKind>("paragraph");
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const sensors = useSensors(
@@ -52,8 +54,8 @@ export function SnippetBuilder({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  function handleAdd() {
-    onChange([...blocks, newBlock(addKind)]);
+  function handleAdd(kind: BlockKind) {
+    onChange([...blocks, newBlock(kind)]);
   }
 
   function handleUpdate(id: string, patch: Partial<Block>) {
@@ -83,26 +85,64 @@ export function SnippetBuilder({
 
   return (
     <BlockStack gap="400">
-      <InlineStack gap="200" align="space-between" blockAlign="center" wrap>
-        <InlineStack gap="200" blockAlign="center">
-          <Select
-            label="Add section"
-            labelHidden
-            options={(Object.keys(BLOCK_LABELS) as BlockKind[]).map((k) => ({
-              label: BLOCK_LABELS[k],
-              value: k,
-            }))}
-            value={addKind}
-            onChange={(v) => setAddKind(v as BlockKind)}
-          />
-          <Button onClick={handleAdd} variant="primary">
-            + Add section
-          </Button>
-        </InlineStack>
-        <Button onClick={() => setPreviewOpen((o) => !o)}>
-          {previewOpen ? "Hide HTML preview" : "Generate HTML"}
-        </Button>
-      </InlineStack>
+      <Card>
+        <BlockStack gap="300">
+          <InlineStack align="space-between" blockAlign="center">
+            <Text as="h3" variant="headingSm">
+              Add a section
+            </Text>
+            <Button onClick={() => setPreviewOpen((o) => !o)}>
+              {previewOpen ? "Hide HTML preview" : "Generate HTML"}
+            </Button>
+          </InlineStack>
+          <Text as="p" tone="subdued">
+            Click any section type to add it to your snippet. Drag the grip
+            handle to reorder.
+          </Text>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+              gap: 12,
+            }}
+          >
+            {BLOCK_ORDER.map((kind) => (
+              <button
+                key={kind}
+                type="button"
+                onClick={() => handleAdd(kind)}
+                aria-label={`Add ${BLOCK_LABELS[kind]}`}
+                title={BLOCK_DESCRIPTIONS[kind]}
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: 12,
+                  border: "1px solid #e5e7eb",
+                  borderRadius: 8,
+                  background: "#fff",
+                  cursor: "pointer",
+                  transition: "all 120ms",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "#ec4899";
+                  e.currentTarget.style.background = "#fdf2f8";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "#e5e7eb";
+                  e.currentTarget.style.background = "#fff";
+                }}
+              >
+                <BlockIcon kind={kind} />
+                <span style={{ fontSize: 12, color: "#374151", textAlign: "center" }}>
+                  {BLOCK_LABELS[kind]}
+                </span>
+              </button>
+            ))}
+          </div>
+        </BlockStack>
+      </Card>
 
       {blocks.length === 0 ? (
         <Card>

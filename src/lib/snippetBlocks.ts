@@ -43,16 +43,40 @@ export type Block =
 export type BlockKind = Block["kind"];
 
 export const BLOCK_LABELS: Record<BlockKind, string> = {
-  heading: "Heading",
-  paragraph: "Paragraph",
-  list: "Bullet / numbered list",
-  "two-column": "Two columns",
-  "three-column": "Three columns",
-  "hero-cta": "Hero + CTA",
+  heading: "Title",
+  paragraph: "Paragraph of text",
+  list: "Bulleted list",
+  "two-column": "Two columns side by side",
+  "three-column": "Three columns side by side",
+  "hero-cta": "Banner with a button",
   image: "Image",
-  "spec-row": "Spec row",
-  html: "Raw HTML",
+  "spec-row": "Label and value",
+  html: "Custom code (advanced)",
 };
+
+export const BLOCK_DESCRIPTIONS: Record<BlockKind, string> = {
+  heading: "A short, bold line that introduces a section.",
+  paragraph: "A block of text. Use blank lines to make multiple paragraphs.",
+  list: "A list of bullet points or numbered steps.",
+  "two-column": "Two side-by-side blocks that stack on mobile.",
+  "three-column": "Three side-by-side blocks that stack on mobile.",
+  "hero-cta": "A big headline plus a clickable button.",
+  image: "An image from a URL with optional alt text.",
+  "spec-row": "A label/value pair for specs (e.g. Material — Cotton).",
+  html: "Drop in your own HTML if you know what you're doing.",
+};
+
+export const BLOCK_ORDER: BlockKind[] = [
+  "heading",
+  "paragraph",
+  "list",
+  "image",
+  "two-column",
+  "three-column",
+  "hero-cta",
+  "spec-row",
+  "html",
+];
 
 const newId = () =>
   typeof crypto !== "undefined" && "randomUUID" in crypto
