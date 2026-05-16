@@ -373,14 +373,14 @@ export default function SnippetsPage() {
           </Card>
         )}
 
-        {status.kind === "loading" ? (
+        {editing ? null : status.kind === "loading" ? (
           <Card>
             <InlineStack gap="200" blockAlign="center">
               <Spinner size="small" />
               <Text as="p">Loading snippets…</Text>
             </InlineStack>
           </Card>
-        ) : snippets.length === 0 && !editing ? (
+        ) : snippets.length === 0 ? (
           <Card>
             <EmptyState
               heading="No snippets yet"

@@ -153,12 +153,43 @@ export function BlockPreview({ block }: { block: Block }) {
       );
     case "html":
       return (
-        <svg {...PREVIEW} style={{ height: 70 }}>
-          <rect x="20" y="14" width="200" height="56" rx="4" fill="#f3f4f6" />
-          <text x="32" y="46" fill="#6b7280" fontFamily="monospace" fontSize="14">
-            &lt;/&gt; Custom HTML
-          </text>
-        </svg>
+        <div
+          style={{
+            position: "relative",
+            maxHeight: 160,
+            overflow: "hidden",
+            fontSize: 13,
+            lineHeight: 1.4,
+            color: "#374151",
+            padding: 4,
+          }}
+        >
+          <div
+            className="canvas-html-preview"
+            dangerouslySetInnerHTML={{ __html: block.html || "" }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 30,
+              background:
+                "linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1))",
+              pointerEvents: "none",
+            }}
+          />
+          <style jsx global>{`
+            .canvas-html-preview p { margin: 0 0 6px 0; }
+            .canvas-html-preview h2 { font-size: 1.05em; margin: 0 0 4px 0; font-weight: 600; }
+            .canvas-html-preview h3 { font-size: 1em; margin: 0 0 4px 0; font-weight: 600; }
+            .canvas-html-preview ul, .canvas-html-preview ol { padding-left: 18px; margin: 0 0 6px 0; }
+            .canvas-html-preview li { margin-bottom: 2px; }
+            .canvas-html-preview img { max-width: 100%; height: auto; border-radius: 4px; }
+            .canvas-html-preview a { color: #ec4899; text-decoration: underline; }
+          `}</style>
+        </div>
       );
   }
 }
