@@ -58,6 +58,7 @@ export default function SnippetsPage() {
   const [linkUrl, setLinkUrl] = useState("");
   const [mode, setMode] = useState<"builder" | "html">("builder");
   const [layout, setLayout] = useState<Layout>([]);
+  const [nameError, setNameError] = useState<string | undefined>(undefined);
 
   const editor = useEditor({
     extensions: [
@@ -97,6 +98,7 @@ export default function SnippetsPage() {
   function openNew() {
     setDraftName("");
     setLayout([]);
+    setNameError(undefined);
     editor?.commands.setContent("");
     setMode("builder");
     setEditing("new");
@@ -104,6 +106,7 @@ export default function SnippetsPage() {
 
   function openEdit(s: Snippet) {
     setDraftName(s.name);
+    setNameError(undefined);
     editor?.commands.setContent(s.html);
     setLayout([]);
     // Existing snippets default to HTML mode since we can't reliably parse
@@ -116,6 +119,7 @@ export default function SnippetsPage() {
     setEditing(null);
     setDraftName("");
     setLayout([]);
+    setNameError(undefined);
     editor?.commands.setContent("");
   }
 
@@ -128,7 +132,21 @@ export default function SnippetsPage() {
   async function save() {
     if (!editing || !editor) return;
     const html = mode === "builder" ? layoutToHtml(layout) : editor.getHTML();
-    if (!draftName.trim() || !html.trim() || html === "<p></p>") return;
+    if (!draftName.trim()) {
+      setNameError("Give your snippet a name before saving.");
+      return;
+    }
+    if (!html.trim() || html === "<p></p>") {
+      setStatus({
+        kind: "error",
+        message:
+          mode === "builder"
+            ? "Drag at least one section into your layout before saving."
+            : "Add some content before saving.",
+      });
+      return;
+    }
+    setNameError(undefined);
     setSaving(true);
     try {
       if (editing === "new") {
@@ -221,8 +239,12 @@ export default function SnippetsPage() {
                 label="Name"
                 autoComplete="off"
                 value={draftName}
-                onChange={setDraftName}
+                onChange={(v) => {
+                  setDraftName(v);
+                  if (nameError && v.trim()) setNameError(undefined);
+                }}
                 placeholder="e.g. Returns policy"
+                error={nameError}
               />
 
               <Select
@@ -284,7 +306,6 @@ export default function SnippetsPage() {
                   fullWidth
                   onClick={save}
                   loading={saving}
-                  disabled={!draftName.trim()}
                 >
                   {editing === "new" ? "Create snippet" : "Save"}
                 </Button>
