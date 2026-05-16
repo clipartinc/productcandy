@@ -14,10 +14,12 @@ type Common = { id: string; filled?: boolean };
  * button. (No nested columns, hero-cta, spec-row, or raw html — keeps the
  * UX simple and the structure non-recursive.)
  */
+export type ListStyle = "bulleted" | "numbered" | "none";
+
 export type SubBlock =
   | { id: string; kind: "heading"; level: 2 | 3; text: string }
   | { id: string; kind: "paragraph"; text: string }
-  | { id: string; kind: "list"; ordered: boolean; items: string[] }
+  | { id: string; kind: "list"; style: ListStyle; items: string[] }
   | { id: string; kind: "image"; url: string; alt: string }
   | { id: string; kind: "button"; label: string; url: string };
 
@@ -54,7 +56,7 @@ export function newSubBlock(kind: SubBlockKind): SubBlock {
       return {
         id: newSubId(),
         kind,
-        ordered: false,
+        style: "bulleted",
         items: ["Item 1", "Item 2", "Item 3"],
       };
     case "image":
@@ -69,7 +71,7 @@ export type ColumnContent = SubBlock[];
 export type Block =
   | (Common & { kind: "heading"; level: 2 | 3; text: string })
   | (Common & { kind: "paragraph"; text: string })
-  | (Common & { kind: "list"; ordered: boolean; items: string[] })
+  | (Common & { kind: "list"; style: ListStyle; items: string[] })
   | (Common & { kind: "columns"; count: 2 | 3 | 4; columns: ColumnContent[] })
   | (Common & {
       kind: "hero-cta";
@@ -137,7 +139,7 @@ export function newBlock(kind: BlockKind): Block {
       return {
         id: newId(),
         kind,
-        ordered: false,
+        style: "bulleted",
         items: ["First item", "Second item", "Third item"],
         filled: false,
       };
@@ -250,13 +252,17 @@ function subBlockToHtml(s: SubBlock): string {
     case "paragraph":
       return paragraphs(s.text);
     case "list": {
-      const tag = s.ordered ? "ol" : "ul";
+      const tag = s.style === "numbered" ? "ol" : "ul";
+      const listAttr =
+        s.style === "none"
+          ? ' style="list-style:none;padding-left:0;margin:0;"'
+          : "";
       const items = s.items
         .map((i) => i.trim())
         .filter(Boolean)
         .map((i) => `<li>${escapeHtml(i)}</li>`)
         .join("");
-      return `<${tag}>${items}</${tag}>`;
+      return `<${tag}${listAttr}>${items}</${tag}>`;
     }
     case "image":
       if (!s.url) return "";
@@ -280,13 +286,17 @@ function blockToHtml(b: Block): string {
     case "paragraph":
       return paragraphs(b.text);
     case "list": {
-      const tag = b.ordered ? "ol" : "ul";
+      const tag = b.style === "numbered" ? "ol" : "ul";
+      const listAttr =
+        b.style === "none"
+          ? ' style="list-style:none;padding-left:0;margin:0;"'
+          : "";
       const items = b.items
         .map((i) => i.trim())
         .filter(Boolean)
         .map((i) => `<li>${escapeHtml(i)}</li>`)
         .join("");
-      return `<${tag}>${items}</${tag}>`;
+      return `<${tag}${listAttr}>${items}</${tag}>`;
     }
     case "columns": {
       const minW = b.count === 2 ? 240 : b.count === 3 ? 200 : 160;

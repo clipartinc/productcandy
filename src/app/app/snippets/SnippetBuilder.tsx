@@ -46,6 +46,7 @@ import {
   type SubBlock,
   type SubBlockKind,
   type ColumnContent,
+  type ListStyle,
   BLOCK_LABELS,
   BLOCK_DESCRIPTIONS,
   BLOCK_ORDER,
@@ -1111,11 +1112,14 @@ function BlockEditor({
           <Select
             label="Type"
             options={[
-              { label: "Bulleted", value: "false" },
-              { label: "Numbered", value: "true" },
+              { label: "Bulleted", value: "bulleted" },
+              { label: "Numbered", value: "numbered" },
+              { label: "No bullets", value: "none" },
             ]}
-            value={String(block.ordered)}
-            onChange={(v) => onChange({ ordered: v === "true" } as Partial<Block>)}
+            value={block.style}
+            onChange={(v) =>
+              onChange({ style: v as ListStyle } as Partial<Block>)
+            }
           />
           <TextField
             label="Items (one per line)"
@@ -1388,11 +1392,14 @@ function SubBlockFields({
             label="Type"
             labelHidden
             options={[
-              { label: "Bulleted", value: "false" },
-              { label: "Numbered", value: "true" },
+              { label: "Bulleted", value: "bulleted" },
+              { label: "Numbered", value: "numbered" },
+              { label: "No bullets", value: "none" },
             ]}
-            value={String(sub.ordered)}
-            onChange={(v) => onChange({ ordered: v === "true" } as Partial<SubBlock>)}
+            value={sub.style}
+            onChange={(v) =>
+              onChange({ style: v as ListStyle } as Partial<SubBlock>)
+            }
           />
           <TextField
             label="Items"
