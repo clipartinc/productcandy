@@ -330,23 +330,43 @@ export function blocksToHtml(blocks: Block[]): string {
 }
 
 // -----------------------------------------------------------------------------
-// Rows: top-level layout container
+// Rows + Columns: top-level layout container
+// A Row is one or more Columns side-by-side. A Column is a vertical stack of
+// Blocks. Drag-and-drop wires up to both axes: drop next to a section to add a
+// new column, or drop above/below to stack inside the existing column.
 // -----------------------------------------------------------------------------
 
-export type Row = { id: string; blocks: Block[] };
+export type Column = { id: string; blocks: Block[] };
+export type Row = { id: string; columns: Column[] };
 export type Layout = Row[];
 
-export function newRow(initial?: Block[]): Row {
+export function newColumn(initial?: Block[]): Column {
   return { id: newId(), blocks: initial ?? [] };
 }
 
+export function newRow(initial?: Block[]): Row {
+  // Each initial block becomes its own single-block column (side-by-side).
+  return {
+    id: newId(),
+    columns: initial && initial.length > 0
+      ? initial.map((b) => ({ id: newId(), blocks: [b] }))
+      : [],
+  };
+}
+
+function columnToHtml(col: Column): string {
+  return col.blocks.map(blockToHtml).filter(Boolean).join("");
+}
+
 function rowToHtml(row: Row): string {
-  if (row.blocks.length === 0) return "";
-  if (row.blocks.length === 1) return blockToHtml(row.blocks[0]);
-  // Multi-block row: render each block as a flex cell
-  const minW = Math.max(120, Math.floor(720 / row.blocks.length));
-  const cells = row.blocks
-    .map((b) => `<div style="flex:1;min-width:${minW}px;">${blockToHtml(b)}</div>`)
+  const nonEmpty = row.columns.filter((c) => c.blocks.length > 0);
+  if (nonEmpty.length === 0) return "";
+  if (nonEmpty.length === 1) return columnToHtml(nonEmpty[0]);
+  const minW = Math.max(120, Math.floor(720 / nonEmpty.length));
+  const cells = nonEmpty
+    .map(
+      (c) => `<div style="flex:1;min-width:${minW}px;">${columnToHtml(c)}</div>`
+    )
     .join("");
   return `<div style="display:flex;gap:24px;flex-wrap:wrap;">${cells}</div>`;
 }

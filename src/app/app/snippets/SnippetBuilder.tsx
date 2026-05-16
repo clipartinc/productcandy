@@ -40,6 +40,7 @@ import { Fragment, useState } from "react";
 import {
   type Block,
   type BlockKind,
+  type Column,
   type Layout,
   type Row,
   type SubBlock,
@@ -51,6 +52,7 @@ import {
   SUB_BLOCK_LABELS,
   SUB_BLOCK_ORDER,
   newBlock,
+  newColumn,
   newRow,
   newSubBlock,
   layoutToHtml,
@@ -60,25 +62,38 @@ import { BlockIcon, BlockPreview } from "./BlockIcons";
 const PALETTE_PREFIX = "palette-";
 const ROW_DROP_PREFIX = "row-drop-";
 const NEW_ROW_PREFIX = "new-row-";
-const COL_INSERT_PREFIX = "col-insert-"; // col-insert-{rowId}-{index}
+// IDs use "|" as a separator since rowId/colId are UUIDs that themselves
+// contain "-". This keeps parsing trivial and unambiguous.
+const COL_INSERT_PREFIX = "col-insert|"; // col-insert|{rowId}|{index}
+const COL_DROP_PREFIX = "col-drop|"; // col-drop|{rowId}|{colId} — column body fallback
+const BLOCK_INSERT_PREFIX = "block-insert|"; // block-insert|{rowId}|{colId}|{index}
 
-// Custom collision detection: prefer column-insert slots when the pointer is
-// directly inside one (so dropping in the visible "+" gap inserts a column at
-// that position). Fall back to pointerWithin → rectIntersection → closestCenter
-// so dropping anywhere reasonable still finds a target.
+// Custom collision detection: prefer narrow insert slots when the pointer is
+// directly inside one (so dropping in the visible "+" gap inserts at that
+// exact position). Fall back to pointerWithin → rectIntersection →
+// closestCenter so dropping anywhere reasonable still finds a target.
 const detectCollisions: CollisionDetection = (args) => {
   const pointer = pointerWithin(args);
   if (pointer.length > 0) {
-    const slot = pointer.find((c) =>
+    // Highest-precision targets first: between-block (stack) > between-column
+    // (side-by-side) > between-row > everything else.
+    const blockSlot = pointer.find((c) =>
+      c.id.toString().startsWith(BLOCK_INSERT_PREFIX)
+    );
+    if (blockSlot) return [blockSlot];
+    const colSlot = pointer.find((c) =>
       c.id.toString().startsWith(COL_INSERT_PREFIX)
     );
-    if (slot) return [slot];
-    // Prefer NEW_ROW (between-row) drop over row drop when pointer is in both,
-    // so dropping in the visible gap creates a new row instead of appending.
-    const newRow = pointer.find((c) =>
+    if (colSlot) return [colSlot];
+    const newRowSlot = pointer.find((c) =>
       c.id.toString().startsWith(NEW_ROW_PREFIX)
     );
-    if (newRow) return [newRow];
+    if (newRowSlot) return [newRowSlot];
+    // Prefer a column body (more specific) over the whole row.
+    const colBody = pointer.find((c) =>
+      c.id.toString().startsWith(COL_DROP_PREFIX)
+    );
+    if (colBody) return [colBody];
     return pointer;
   }
   const rect = rectIntersection(args);
@@ -107,29 +122,32 @@ export function SnippetBuilder({
     onChange([...layout, newRow([block])]);
   }
 
-  function handleUpdateBlock(rowId: string, blockId: string, patch: Partial<Block>) {
+  function handleUpdateBlock(blockId: string, patch: Partial<Block>) {
     onChange(
-      layout.map((row) =>
-        row.id === rowId
-          ? {
-              ...row,
-              blocks: row.blocks.map((b) =>
-                b.id === blockId ? ({ ...b, ...patch } as Block) : b
-              ),
-            }
-          : row
-      )
+      layout.map((row) => ({
+        ...row,
+        columns: row.columns.map((col) => ({
+          ...col,
+          blocks: col.blocks.map((b) =>
+            b.id === blockId ? ({ ...b, ...patch } as Block) : b
+          ),
+        })),
+      }))
     );
   }
 
-  function handleDeleteBlock(rowId: string, blockId: string) {
+  function handleDeleteBlock(blockId: string) {
     const next = layout
-      .map((row) =>
-        row.id === rowId
-          ? { ...row, blocks: row.blocks.filter((b) => b.id !== blockId) }
-          : row
-      )
-      .filter((row) => row.blocks.length > 0);
+      .map((row) => ({
+        ...row,
+        columns: row.columns
+          .map((col) => ({
+            ...col,
+            blocks: col.blocks.filter((b) => b.id !== blockId),
+          }))
+          .filter((col) => col.blocks.length > 0),
+      }))
+      .filter((row) => row.columns.length > 0);
     onChange(next);
     if (expandedId === blockId) setExpandedId(null);
   }
@@ -161,18 +179,55 @@ export function SnippetBuilder({
         return;
       }
 
-      if (overId.startsWith(COL_INSERT_PREFIX)) {
-        // Drop next to a specific block → insert as a new column at that position
-        const rest = overId.slice(COL_INSERT_PREFIX.length);
-        const sep = rest.lastIndexOf("-");
-        const rowId = rest.slice(0, sep);
-        const index = Number(rest.slice(sep + 1));
+      if (overId.startsWith(BLOCK_INSERT_PREFIX)) {
+        // Drop above/below a block in a column → insert into that column's
+        // stack at the given index.
+        const [, rowId, colId, idxStr] = overId.split("|");
+        const index = Number(idxStr);
         onChange(
           layout.map((row) => {
             if (row.id !== rowId) return row;
-            const next = row.blocks.slice();
-            next.splice(index, 0, block);
-            return { ...row, blocks: next };
+            return {
+              ...row,
+              columns: row.columns.map((col) => {
+                if (col.id !== colId) return col;
+                const next = col.blocks.slice();
+                next.splice(index, 0, block);
+                return { ...col, blocks: next };
+              }),
+            };
+          })
+        );
+        return;
+      }
+
+      if (overId.startsWith(COL_INSERT_PREFIX)) {
+        // Drop next to a column → insert a new single-block column at that position.
+        const [, rowId, idxStr] = overId.split("|");
+        const index = Number(idxStr);
+        onChange(
+          layout.map((row) => {
+            if (row.id !== rowId) return row;
+            const next = row.columns.slice();
+            next.splice(index, 0, newColumn([block]));
+            return { ...row, columns: next };
+          })
+        );
+        return;
+      }
+
+      if (overId.startsWith(COL_DROP_PREFIX)) {
+        // Drop on a column body → append to that column's stack.
+        const [, rowId, colId] = overId.split("|");
+        onChange(
+          layout.map((row) => {
+            if (row.id !== rowId) return row;
+            return {
+              ...row,
+              columns: row.columns.map((col) =>
+                col.id === colId ? { ...col, blocks: [...col.blocks, block] } : col
+              ),
+            };
           })
         );
         return;
@@ -180,14 +235,16 @@ export function SnippetBuilder({
 
       // Drop on the row body — could be the row-drop droppable OR the row's
       // sortable droppable (which shares the same id as the row). Both mean
-      // "append as a new column at the end of this row".
+      // "append as a new single-block column at the end of this row".
       const rowId = overId.startsWith(ROW_DROP_PREFIX)
         ? overId.slice(ROW_DROP_PREFIX.length)
         : layout.find((r) => r.id === overId)?.id;
       if (rowId) {
         onChange(
           layout.map((row) =>
-            row.id === rowId ? { ...row, blocks: [...row.blocks, block] } : row
+            row.id === rowId
+              ? { ...row, columns: [...row.columns, newColumn([block])] }
+              : row
           )
         );
         return;
@@ -207,7 +264,7 @@ export function SnippetBuilder({
   }
 
   const html = layoutToHtml(layout);
-  const allBlocks = layout.flatMap((r) => r.blocks);
+  const allBlocks = layout.flatMap((r) => r.columns.flatMap((c) => c.blocks));
 
   return (
     <DndContext
@@ -230,7 +287,8 @@ export function SnippetBuilder({
             </InlineStack>
             <Text as="p" tone="subdued">
               Drag a section into the canvas to add a new row. Drop it next to
-              an existing section to add it as a new column at that spot.
+              a section to add a new column, or above/below a section to stack
+              it in the same column.
             </Text>
             <div
               style={{
@@ -382,8 +440,8 @@ function Canvas({
   expandedId: string | null;
   isPaletteDragging: boolean;
   onExpand: (id: string | null) => void;
-  onUpdateBlock: (rowId: string, blockId: string, patch: Partial<Block>) => void;
-  onDeleteBlock: (rowId: string, blockId: string) => void;
+  onUpdateBlock: (blockId: string, patch: Partial<Block>) => void;
+  onDeleteBlock: (blockId: string) => void;
 }) {
   return (
     <Card>
@@ -408,8 +466,8 @@ function Canvas({
                     expandedId={expandedId}
                     isPaletteDragging={isPaletteDragging}
                     onExpand={onExpand}
-                    onUpdateBlock={(blockId, patch) => onUpdateBlock(row.id, blockId, patch)}
-                    onDeleteBlock={(blockId) => onDeleteBlock(row.id, blockId)}
+                    onUpdateBlock={onUpdateBlock}
+                    onDeleteBlock={onDeleteBlock}
                   />
                 </div>
               ))}
@@ -480,7 +538,7 @@ function ColumnInsertSlot({
   active: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({
-    id: `${COL_INSERT_PREFIX}${rowId}-${index}`,
+    id: `${COL_INSERT_PREFIX}${rowId}|${index}`,
   });
   // Idle: invisible 4px gap. Palette dragging: visible 48px target.
   // Hover: pink-filled 64px target with label.
@@ -589,9 +647,7 @@ function RowItem({
             ⋮⋮ row
           </button>
           <Text as="span" tone="subdued">
-            {row.blocks.length === 1
-              ? "1 section"
-              : `${row.blocks.length} sections side-by-side`}
+            {rowSummary(row)}
           </Text>
         </InlineStack>
 
@@ -605,23 +661,22 @@ function RowItem({
           }}
         >
           <ColumnInsertSlot rowId={row.id} index={0} active={isPaletteDragging} />
-          {row.blocks.map((block, i) => (
-            <Fragment key={block.id}>
+          {row.columns.map((col, i) => (
+            <Fragment key={col.id}>
               <div
                 style={{
                   flex: 1,
-                  // flex:1 already makes a lone block fill the row. Avoid
-                  // minWidth:100% — it forces wrapping when the column-insert
-                  // slots are visible during a palette drag.
-                  minWidth: row.blocks.length > 1 ? 220 : 0,
+                  minWidth: row.columns.length > 1 ? 220 : 0,
                 }}
               >
-                <CanvasBlock
-                  block={block}
-                  expanded={expandedId === block.id}
-                  onExpand={() => onExpand(expandedId === block.id ? null : block.id)}
-                  onUpdate={(patch) => onUpdateBlock(block.id, patch)}
-                  onDelete={() => onDeleteBlock(block.id)}
+                <ColumnItem
+                  rowId={row.id}
+                  column={col}
+                  expandedId={expandedId}
+                  isPaletteDragging={isPaletteDragging}
+                  onExpand={onExpand}
+                  onUpdateBlock={onUpdateBlock}
+                  onDeleteBlock={onDeleteBlock}
                 />
               </div>
               <ColumnInsertSlot
@@ -633,6 +688,121 @@ function RowItem({
           ))}
         </div>
       </div>
+    </div>
+  );
+}
+
+function rowSummary(row: Row): string {
+  const totalBlocks = row.columns.reduce((n, c) => n + c.blocks.length, 0);
+  const cols = row.columns.length;
+  if (cols === 1) {
+    return totalBlocks === 1 ? "1 section" : `${totalBlocks} stacked sections`;
+  }
+  return `${cols} columns · ${totalBlocks} sections`;
+}
+
+function ColumnItem({
+  rowId,
+  column,
+  expandedId,
+  isPaletteDragging,
+  onExpand,
+  onUpdateBlock,
+  onDeleteBlock,
+}: {
+  rowId: string;
+  column: Column;
+  expandedId: string | null;
+  isPaletteDragging: boolean;
+  onExpand: (id: string | null) => void;
+  onUpdateBlock: (blockId: string, patch: Partial<Block>) => void;
+  onDeleteBlock: (blockId: string) => void;
+}) {
+  // The whole column body is a fallback drop zone — drops anywhere not on
+  // a between-block slot append to this column's stack.
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${COL_DROP_PREFIX}${rowId}|${column.id}`,
+  });
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        border: isOver ? "1px dashed #ec4899" : "1px dashed transparent",
+        borderRadius: 8,
+        padding: 2,
+        transition: "border-color 120ms",
+        height: "100%",
+      }}
+    >
+      <BlockInsertSlot
+        rowId={rowId}
+        colId={column.id}
+        index={0}
+        active={isPaletteDragging}
+      />
+      {column.blocks.map((block, i) => (
+        <Fragment key={block.id}>
+          <CanvasBlock
+            block={block}
+            expanded={expandedId === block.id}
+            onExpand={() => onExpand(expandedId === block.id ? null : block.id)}
+            onUpdate={(patch) => onUpdateBlock(block.id, patch)}
+            onDelete={() => onDeleteBlock(block.id)}
+          />
+          <BlockInsertSlot
+            rowId={rowId}
+            colId={column.id}
+            index={i + 1}
+            active={isPaletteDragging}
+          />
+        </Fragment>
+      ))}
+    </div>
+  );
+}
+
+function BlockInsertSlot({
+  rowId,
+  colId,
+  index,
+  active,
+}: {
+  rowId: string;
+  colId: string;
+  index: number;
+  active: boolean;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${BLOCK_INSERT_PREFIX}${rowId}|${colId}|${index}`,
+  });
+  // Idle: invisible 4px gap. Palette dragging: visible 32px horizontal target.
+  // Hover: 48px filled target with label.
+  const height = isOver ? 48 : active ? 32 : 4;
+  return (
+    <div
+      ref={setNodeRef}
+      aria-hidden
+      style={{
+        height,
+        margin: active ? "4px 0" : "2px 0",
+        borderRadius: 6,
+        background: isOver ? "#fdf2f8" : active ? "#fef7fb" : "transparent",
+        border: isOver
+          ? "2px dashed #ec4899"
+          : active
+          ? "2px dashed #f9a8d4"
+          : "none",
+        transition: "all 120ms",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: isOver ? 11 : 14,
+        fontWeight: 600,
+        color: "#ec4899",
+        pointerEvents: "auto",
+      }}
+    >
+      {active && (isOver ? "↓ Stack here" : "+")}
     </div>
   );
 }
