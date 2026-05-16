@@ -487,10 +487,10 @@ function EmptyDropzone() {
       ref={setNodeRef}
       style={{
         minHeight: 180,
-        border: `2px dashed ${isOver ? "#ec4899" : "#d1d5db"}`,
+        border: `2px dashed ${isOver ? "#65a30d" : "#d1d5db"}`,
         borderRadius: 8,
         padding: 24,
-        background: isOver ? "#fdf2f8" : "transparent",
+        background: isOver ? "#ecfccb" : "transparent",
         transition: "background 120ms, border-color 120ms",
         display: "flex",
         alignItems: "center",
@@ -512,15 +512,15 @@ function NewRowDropZone({ index }: { index: number }) {
       style={{
         height: isOver ? 36 : 16,
         margin: "2px 0",
-        border: isOver ? "2px dashed #ec4899" : "2px dashed transparent",
+        border: isOver ? "2px dashed #65a30d" : "2px dashed transparent",
         borderRadius: 6,
-        background: isOver ? "#fdf2f8" : "transparent",
+        background: isOver ? "#ecfccb" : "transparent",
         transition: "all 120ms",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         fontSize: 11,
-        color: "#ec4899",
+        color: "#65a30d",
       }}
     >
       {isOver && "↓ New row here"}
@@ -552,11 +552,11 @@ function ColumnInsertSlot({
         alignSelf: "stretch",
         margin: active ? "0 4px" : 0,
         borderRadius: 6,
-        background: isOver ? "#fdf2f8" : active ? "#fef7fb" : "transparent",
+        background: isOver ? "#ecfccb" : active ? "#f7fee7" : "transparent",
         border: isOver
-          ? "2px dashed #ec4899"
+          ? "2px dashed #65a30d"
           : active
-          ? "2px dashed #f9a8d4"
+          ? "2px dashed #bef264"
           : "none",
         transition: "all 120ms",
         position: "relative",
@@ -573,7 +573,7 @@ function ColumnInsertSlot({
             justifyContent: "center",
             fontSize: isOver ? 11 : 18,
             fontWeight: 600,
-            color: "#ec4899",
+            color: "#65a30d",
             writingMode: isOver ? "vertical-rl" : "horizontal-tb",
             transform: isOver ? "rotate(180deg)" : "none",
             whiteSpace: "nowrap",
@@ -620,10 +620,10 @@ function RowItem({
       <div
         ref={setDropRef}
         style={{
-          border: isOver ? "2px solid #ec4899" : "1px solid #e5e7eb",
+          border: isOver ? "2px solid #65a30d" : "1px solid #e5e7eb",
           borderRadius: 10,
           padding: 8,
-          background: isOver ? "#fdf2f8" : "#fff",
+          background: isOver ? "#ecfccb" : "#fff",
           transition: "all 120ms",
         }}
       >
@@ -727,7 +727,7 @@ function ColumnItem({
     <div
       ref={setNodeRef}
       style={{
-        border: isOver ? "1px dashed #ec4899" : "1px dashed transparent",
+        border: isOver ? "1px dashed #65a30d" : "1px dashed transparent",
         borderRadius: 8,
         padding: 2,
         transition: "border-color 120ms",
@@ -786,11 +786,11 @@ function BlockInsertSlot({
         height,
         margin: active ? "4px 0" : "2px 0",
         borderRadius: 6,
-        background: isOver ? "#fdf2f8" : active ? "#fef7fb" : "transparent",
+        background: isOver ? "#ecfccb" : active ? "#f7fee7" : "transparent",
         border: isOver
-          ? "2px dashed #ec4899"
+          ? "2px dashed #65a30d"
           : active
-          ? "2px dashed #f9a8d4"
+          ? "2px dashed #bef264"
           : "none",
         transition: "all 120ms",
         display: "flex",
@@ -798,7 +798,7 @@ function BlockInsertSlot({
         justifyContent: "center",
         fontSize: isOver ? 11 : 14,
         fontWeight: 600,
-        color: "#ec4899",
+        color: "#65a30d",
         pointerEvents: "auto",
       }}
     >
