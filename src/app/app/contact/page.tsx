@@ -181,8 +181,8 @@ export default function ContactPage() {
 
             <Text as="p" tone="subdued">
               Prefer email? Reach us at{" "}
-              <a href="mailto:support@productcandy.app">
-                support@productcandy.app
+              <a href="mailto:support@vectorize.com">
+                support@vectorize.com
               </a>
               .
             </Text>
