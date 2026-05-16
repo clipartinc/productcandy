@@ -347,26 +347,28 @@ export default function SnippetsPage() {
                 <Box key={s.id}>
                   {i > 0 && <Divider />}
                   <Box padding="400">
-                    <InlineStack gap="400" align="space-between" blockAlign="start">
-                      <BlockStack gap="100">
+                    <BlockStack gap="300">
+                      <InlineStack
+                        gap="400"
+                        align="space-between"
+                        blockAlign="center"
+                      >
                         <Text as="h3" variant="headingSm">
                           {s.name}
                         </Text>
-                        <Text as="p" tone="subdued" truncate>
-                          {previewText(s.html)}
-                        </Text>
-                      </BlockStack>
-                      <InlineStack gap="200">
-                        <Button onClick={() => openEdit(s)}>Edit</Button>
-                        <Button
-                          tone="critical"
-                          variant="tertiary"
-                          onClick={() => setConfirmDelete(s)}
-                        >
-                          Delete
-                        </Button>
+                        <InlineStack gap="200">
+                          <Button onClick={() => openEdit(s)}>Edit</Button>
+                          <Button
+                            tone="critical"
+                            variant="tertiary"
+                            onClick={() => setConfirmDelete(s)}
+                          >
+                            Delete
+                          </Button>
+                        </InlineStack>
                       </InlineStack>
-                    </InlineStack>
+                      <SnippetPreview html={s.html} />
+                    </BlockStack>
                   </Box>
                 </Box>
               ))}
@@ -519,7 +521,55 @@ function Toolbar({
   );
 }
 
-function previewText(html: string): string {
-  const stripped = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-  return stripped.length > 140 ? stripped.slice(0, 140) + "…" : stripped;
+function SnippetPreview({ html }: { html: string }) {
+  // Render the saved HTML scaled down behind a max-height + fade so each
+  // snippet card stays a consistent size regardless of content length.
+  // dangerouslySetInnerHTML is fine here — the HTML came from the same
+  // merchant and is only ever rendered back to them in the admin.
+  return (
+    <Box
+      padding="300"
+      background="bg-surface-secondary"
+      borderRadius="200"
+      borderColor="border"
+      borderWidth="025"
+    >
+      <div
+        style={{
+          position: "relative",
+          maxHeight: 140,
+          overflow: "hidden",
+          fontSize: 13,
+          lineHeight: 1.4,
+          color: "#374151",
+        }}
+      >
+        <div
+          className="snippet-preview-html"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+        <div
+          style={{
+            position: "absolute",
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 40,
+            background:
+              "linear-gradient(to bottom, rgba(241,242,243,0), rgba(241,242,243,1))",
+            pointerEvents: "none",
+          }}
+        />
+      </div>
+      <style jsx global>{`
+        .snippet-preview-html p { margin: 0 0 6px 0; }
+        .snippet-preview-html h2 { font-size: 1.1em; margin: 0 0 6px 0; font-weight: 600; }
+        .snippet-preview-html h3 { font-size: 1em; margin: 0 0 4px 0; font-weight: 600; }
+        .snippet-preview-html ul, .snippet-preview-html ol { padding-left: 18px; margin: 0 0 6px 0; }
+        .snippet-preview-html li { margin-bottom: 2px; }
+        .snippet-preview-html img { max-width: 100%; height: auto; border-radius: 4px; }
+        .snippet-preview-html a { color: #ec4899; text-decoration: underline; }
+      `}</style>
+    </Box>
+  );
 }
