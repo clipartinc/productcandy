@@ -710,11 +710,11 @@ function ColumnInsertSlot({
         alignSelf: "stretch",
         margin: active ? "0 4px" : 0,
         borderRadius: 6,
-        background: isOver ? "#ecfccb" : active ? "#f7fee7" : "transparent",
+        background: isOver ? "#ecfccb" : active ? "#fef7fb" : "transparent",
         border: isOver
           ? "2px dashed #65a30d"
           : active
-          ? "2px dashed #bef264"
+          ? "2px dashed #f9a8d4"
           : "none",
         transition: "all 120ms",
         position: "relative",
@@ -731,7 +731,7 @@ function ColumnInsertSlot({
             justifyContent: "center",
             fontSize: isOver ? 11 : 18,
             fontWeight: 600,
-            color: "#65a30d",
+            color: isOver ? "#65a30d" : "#ec4899",
             writingMode: isOver ? "vertical-rl" : "horizontal-tb",
             transform: isOver ? "rotate(180deg)" : "none",
             whiteSpace: "nowrap",
@@ -950,11 +950,11 @@ function BlockInsertSlot({
         height,
         margin: active ? "4px 0" : "2px 0",
         borderRadius: 6,
-        background: isOver ? "#ecfccb" : active ? "#f7fee7" : "transparent",
+        background: isOver ? "#ecfccb" : active ? "#fef7fb" : "transparent",
         border: isOver
           ? "2px dashed #65a30d"
           : active
-          ? "2px dashed #bef264"
+          ? "2px dashed #f9a8d4"
           : "none",
         transition: "all 120ms",
         display: "flex",
@@ -962,7 +962,7 @@ function BlockInsertSlot({
         justifyContent: "center",
         fontSize: isOver ? 11 : 14,
         fontWeight: 600,
-        color: "#65a30d",
+        color: isOver ? "#65a30d" : "#ec4899",
         pointerEvents: "auto",
       }}
     >
