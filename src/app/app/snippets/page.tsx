@@ -367,7 +367,14 @@ export default function SnippetsPage() {
                           </Button>
                         </InlineStack>
                       </InlineStack>
-                      <SnippetPreview html={s.html} />
+                      <button
+                        type="button"
+                        onClick={() => openEdit(s)}
+                        aria-label={`Edit ${s.name}`}
+                        className="snippet-preview-button"
+                      >
+                        <SnippetPreview html={s.html} />
+                      </button>
                     </BlockStack>
                   </Box>
                 </Box>
@@ -569,6 +576,24 @@ function SnippetPreview({ html }: { html: string }) {
         .snippet-preview-html li { margin-bottom: 2px; }
         .snippet-preview-html img { max-width: 100%; height: auto; border-radius: 4px; }
         .snippet-preview-html a { color: #ec4899; text-decoration: underline; }
+        .snippet-preview-button {
+          display: block;
+          width: 100%;
+          padding: 0;
+          border: none;
+          background: transparent;
+          text-align: left;
+          cursor: pointer;
+          border-radius: 8px;
+          transition: box-shadow 120ms, transform 120ms;
+        }
+        .snippet-preview-button:hover {
+          box-shadow: 0 0 0 2px #ec4899;
+        }
+        .snippet-preview-button:focus-visible {
+          outline: none;
+          box-shadow: 0 0 0 2px #ec4899;
+        }
       `}</style>
     </Box>
   );
