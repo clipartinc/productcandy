@@ -30,7 +30,13 @@ export async function GET(req: NextRequest) {
     const snippets = await prisma.descriptionTemplate.findMany({
       where: { shopId: shop.id },
       orderBy: { updatedAt: "desc" },
-      select: { id: true, name: true, html: true, updatedAt: true },
+      select: {
+        id: true,
+        name: true,
+        html: true,
+        layout: true,
+        updatedAt: true,
+      },
     });
     return NextResponse.json({ snippets }, { headers: CORS_HEADERS });
   } catch (e) {
@@ -44,7 +50,11 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const shop = await shopFor(req);
-    const { name, html } = (await req.json()) as { name?: string; html?: string };
+    const { name, html, layout } = (await req.json()) as {
+      name?: string;
+      html?: string;
+      layout?: unknown;
+    };
     if (!name?.trim() || !html?.trim()) {
       return NextResponse.json(
         { error: "name and html are required" },
@@ -52,8 +62,19 @@ export async function POST(req: NextRequest) {
       );
     }
     const snippet = await prisma.descriptionTemplate.create({
-      data: { shopId: shop.id, name: name.trim(), html },
-      select: { id: true, name: true, html: true, updatedAt: true },
+      data: {
+        shopId: shop.id,
+        name: name.trim(),
+        html,
+        layout: (layout ?? null) as never,
+      },
+      select: {
+        id: true,
+        name: true,
+        html: true,
+        layout: true,
+        updatedAt: true,
+      },
     });
     return NextResponse.json({ snippet }, { status: 201, headers: CORS_HEADERS });
   } catch (e) {

@@ -39,6 +39,7 @@ type Snippet = {
   id: string;
   name: string;
   html: string;
+  layout: Layout | null;
   updatedAt: string;
 };
 
@@ -108,31 +109,36 @@ export default function SnippetsPage() {
     setDraftName(s.name);
     setNameError(undefined);
     editor?.commands.setContent(s.html);
-    // Wrap the existing HTML in a single 'html' block so the visual builder
-    // has something to start from while letting the merchant add new blocks
-    // around it via drag-and-drop. They can switch to HTML mode any time.
-    const id = () =>
-      typeof crypto !== "undefined" && "randomUUID" in crypto
-        ? crypto.randomUUID()
-        : Math.random().toString(36).slice(2);
-    setLayout([
-      {
-        id: id(),
-        columns: [
-          {
-            id: id(),
-            blocks: [
-              {
-                id: id(),
-                kind: "html",
-                html: s.html,
-                filled: true,
-              },
-            ],
-          },
-        ],
-      },
-    ]);
+    // Prefer the saved layout so blocks come back as themselves (heading,
+    // paragraph, list, …). For snippets saved before we persisted layout,
+    // fall back to wrapping the rendered HTML in a single 'html' block —
+    // the merchant can edit the raw HTML inline or rebuild from scratch.
+    if (s.layout && Array.isArray(s.layout) && s.layout.length > 0) {
+      setLayout(s.layout);
+    } else {
+      const id = () =>
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : Math.random().toString(36).slice(2);
+      setLayout([
+        {
+          id: id(),
+          columns: [
+            {
+              id: id(),
+              blocks: [
+                {
+                  id: id(),
+                  kind: "html",
+                  html: s.html,
+                  filled: true,
+                },
+              ],
+            },
+          ],
+        },
+      ]);
+    }
     setMode("builder");
     setEditing(s);
   }
@@ -170,12 +176,20 @@ export default function SnippetsPage() {
     }
     setNameError(undefined);
     setSaving(true);
+    // Only persist a layout when the merchant used the visual builder.
+    // HTML-mode edits can't be reverse-engineered into blocks, so leave
+    // layout null and let edit fall back to the html-block wrapper.
+    const layoutPayload = mode === "builder" ? layout : null;
     try {
       if (editing === "new") {
         const res = await appBridgeFetch("/api/app/snippets", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: draftName, html }),
+          body: JSON.stringify({
+            name: draftName,
+            html,
+            layout: layoutPayload,
+          }),
         });
         if (!res.ok) throw new Error((await res.json()).error ?? "Save failed");
       } else {
@@ -184,7 +198,11 @@ export default function SnippetsPage() {
           {
             method: "PUT",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ name: draftName, html }),
+            body: JSON.stringify({
+              name: draftName,
+              html,
+              layout: layoutPayload,
+            }),
           }
         );
         if (!res.ok) throw new Error((await res.json()).error ?? "Save failed");

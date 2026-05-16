@@ -39,7 +39,11 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
         { status: 404, headers: CORS_HEADERS }
       );
     }
-    const { name, html } = (await req.json()) as { name?: string; html?: string };
+    const { name, html, layout } = (await req.json()) as {
+      name?: string;
+      html?: string;
+      layout?: unknown;
+    };
     if (!name?.trim() || !html?.trim()) {
       return NextResponse.json(
         { error: "name and html are required" },
@@ -48,8 +52,18 @@ export async function PUT(req: NextRequest, ctx: RouteContext) {
     }
     const snippet = await prisma.descriptionTemplate.update({
       where: { id },
-      data: { name: name.trim(), html },
-      select: { id: true, name: true, html: true, updatedAt: true },
+      data: {
+        name: name.trim(),
+        html,
+        layout: (layout ?? null) as never,
+      },
+      select: {
+        id: true,
+        name: true,
+        html: true,
+        layout: true,
+        updatedAt: true,
+      },
     });
     return NextResponse.json({ snippet }, { headers: CORS_HEADERS });
   } catch (e) {

@@ -42,6 +42,10 @@ model DescriptionTemplate {
   shop      Shop     @relation(fields: [shopId], references: [id], onDelete: Cascade)
   name      String
   html      String
+  // Serialized visual-builder layout (Row[] / Column[] / Block[]). Saved so
+  // the editor can restore the structured blocks for editing; the rendered
+  // `html` column is what gets stamped into product descriptions.
+  layout    Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
