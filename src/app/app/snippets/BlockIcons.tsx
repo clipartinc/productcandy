@@ -47,14 +47,6 @@ export function BlockIcon({ kind }: { kind: BlockKind }) {
           <path d="M6 30 L18 20 L26 26 L34 16 L50 30 Z" fill="#ec4899" fillOpacity="0.5" stroke="none" />
         </svg>
       );
-    case "columns":
-      return (
-        <svg {...COMMON}>
-          <rect x="6" y="6" width="13" height="28" rx="2" fill="#e5e7eb" stroke="none" />
-          <rect x="21.5" y="6" width="13" height="28" rx="2" fill="#e5e7eb" stroke="none" />
-          <rect x="37" y="6" width="13" height="28" rx="2" fill="#e5e7eb" stroke="none" />
-        </svg>
-      );
     case "hero-cta":
       return (
         <svg {...COMMON}>
@@ -140,28 +132,6 @@ export function BlockPreview({ block }: { block: Block }) {
           <polygon points="20,110 60,70 100,90 160,50 220,110" fill="#ec4899" opacity="0.4" />
         </svg>
       );
-    case "columns": {
-      const count = block.count;
-      const gap = 8;
-      const totalGap = gap * (count - 1);
-      const colWidth = (200 - totalGap) / count;
-      return (
-        <svg {...PREVIEW} style={{ height: 100 }}>
-          {Array.from({ length: count }).map((_, i) => {
-            const x = 20 + i * (colWidth + gap);
-            return (
-              <g key={i}>
-                <rect x={x} y="10" width={colWidth} height="100" rx="4" fill="#e5e7eb" />
-                <rect x={x + 6} y="18" width={colWidth - 12} height="6" rx="2" fill="#ec4899" />
-                <rect x={x + 6} y="32" width={colWidth - 18} height="4" rx="1" fill="#9ca3af" />
-                <rect x={x + 6} y="42" width={colWidth - 14} height="4" rx="1" fill="#9ca3af" />
-                <rect x={x + 6} y="52" width={colWidth - 20} height="4" rx="1" fill="#9ca3af" />
-              </g>
-            );
-          })}
-        </svg>
-      );
-    }
     case "hero-cta":
       return (
         <svg {...PREVIEW} style={{ height: 110 }}>

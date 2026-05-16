@@ -8,71 +8,12 @@
 
 type Common = { id: string; filled?: boolean };
 
-/**
- * Sub-blocks live inside a Column. They're the same shape as top-level Blocks
- * but only the kinds that make sense nested: heading, paragraph, list, image,
- * button. (No nested columns, hero-cta, spec-row, or raw html — keeps the
- * UX simple and the structure non-recursive.)
- */
 export type ListStyle = "bulleted" | "numbered" | "none";
-
-export type SubBlock =
-  | { id: string; kind: "heading"; level: 2 | 3; text: string }
-  | { id: string; kind: "paragraph"; text: string }
-  | { id: string; kind: "list"; style: ListStyle; items: string[] }
-  | { id: string; kind: "image"; url: string; alt: string }
-  | { id: string; kind: "button"; label: string; url: string };
-
-export type SubBlockKind = SubBlock["kind"];
-
-export const SUB_BLOCK_LABELS: Record<SubBlockKind, string> = {
-  heading: "Heading",
-  paragraph: "Paragraph",
-  list: "List",
-  image: "Image",
-  button: "Button",
-};
-
-export const SUB_BLOCK_ORDER: SubBlockKind[] = [
-  "heading",
-  "paragraph",
-  "list",
-  "image",
-  "button",
-];
-
-const newSubId = () =>
-  typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : Math.random().toString(36).slice(2);
-
-export function newSubBlock(kind: SubBlockKind): SubBlock {
-  switch (kind) {
-    case "heading":
-      return { id: newSubId(), kind, level: 3, text: "Heading" };
-    case "paragraph":
-      return { id: newSubId(), kind, text: "Paragraph text." };
-    case "list":
-      return {
-        id: newSubId(),
-        kind,
-        style: "bulleted",
-        items: ["Item 1", "Item 2", "Item 3"],
-      };
-    case "image":
-      return { id: newSubId(), kind, url: "", alt: "" };
-    case "button":
-      return { id: newSubId(), kind, label: "Button", url: "#" };
-  }
-}
-
-export type ColumnContent = SubBlock[];
 
 export type Block =
   | (Common & { kind: "heading"; level: 2 | 3; text: string })
   | (Common & { kind: "paragraph"; text: string })
   | (Common & { kind: "list"; style: ListStyle; items: string[] })
-  | (Common & { kind: "columns"; count: 2 | 3 | 4; columns: ColumnContent[] })
   | (Common & {
       kind: "hero-cta";
       headline: string;
@@ -93,7 +34,6 @@ export const BLOCK_LABELS: Record<BlockKind, string> = {
   heading: "Title",
   paragraph: "Paragraph of text",
   list: "Bulleted list",
-  columns: "Columns side by side",
   "hero-cta": "Banner with a button",
   image: "Image",
   "spec-row": "Label and value",
@@ -104,7 +44,6 @@ export const BLOCK_DESCRIPTIONS: Record<BlockKind, string> = {
   heading: "A short, bold line that introduces a section.",
   paragraph: "A block of text. Use blank lines to make multiple paragraphs.",
   list: "A list of bullet points or numbered steps.",
-  columns: "Side-by-side blocks (2, 3, or 4) that stack on mobile.",
   "hero-cta": "A big headline plus a clickable button.",
   image: "An image from a URL with optional alt text.",
   "spec-row": "A label/value pair for specs (e.g. Material — Cotton).",
@@ -116,7 +55,6 @@ export const BLOCK_ORDER: BlockKind[] = [
   "paragraph",
   "list",
   "image",
-  "columns",
   "hero-cta",
   "spec-row",
   "html",
@@ -146,28 +84,6 @@ export function newBlock(kind: BlockKind): Block {
         items: ["First item", "Second item", "Third item"],
         filled: false,
       };
-    case "columns": {
-      const defaultCol = (i: number): ColumnContent => [
-        {
-          id: newSubId(),
-          kind: "heading",
-          level: 3,
-          text: `Column ${i + 1} heading`,
-        },
-        {
-          id: newSubId(),
-          kind: "paragraph",
-          text: `Column ${i + 1} text.`,
-        },
-      ];
-      return {
-        id: newId(),
-        kind,
-        count: 2,
-        columns: [defaultCol(0), defaultCol(1)],
-        filled: false,
-      };
-    }
     case "hero-cta":
       return {
         id: newId(),
@@ -226,16 +142,6 @@ function placeholderHtml(b: Block): string {
       return `<div ${PH_BLOCK}>Paragraph placeholder — click to edit.</div>`;
     case "list":
       return `<div ${PH_BLOCK}>List placeholder — one item per line.</div>`;
-    case "columns": {
-      const minW = b.count === 2 ? 240 : b.count === 3 ? 200 : 160;
-      const cells = Array.from({ length: b.count })
-        .map(
-          (_, i) =>
-            `<div style="flex:1;min-width:${minW}px;"><div ${PH_BLOCK}>Column ${i + 1} placeholder</div></div>`
-        )
-        .join("");
-      return `<div style="display:flex;gap:20px;flex-wrap:wrap;">${cells}</div>`;
-    }
     case "hero-cta":
       return `<div ${PH_BLOCK}>Hero headline placeholder</div><div ${PH_BLOCK}>Body text placeholder</div><div ${PH_BLOCK}>Button placeholder</div>`;
     case "image":
@@ -244,39 +150,6 @@ function placeholderHtml(b: Block): string {
       return `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:120px;"><div ${PH_BLOCK}>Spec name</div></div><div style="flex:2;min-width:200px;"><div ${PH_BLOCK}>Spec value</div></div></div>`;
     case "html":
       return `<div ${PH_BLOCK}>Custom HTML placeholder</div>`;
-  }
-}
-
-function subBlockToHtml(s: SubBlock): string {
-  switch (s.kind) {
-    case "heading":
-      return `<h${s.level}>${escapeHtml(s.text)}</h${s.level}>`;
-    case "paragraph":
-      return paragraphs(s.text);
-    case "list": {
-      const tag = s.style === "numbered" ? "ol" : "ul";
-      const listAttr =
-        s.style === "none"
-          ? ' style="list-style:none;padding-left:0;margin:0;"'
-          : "";
-      const items = s.items
-        .map((i) => i.trim())
-        .filter(Boolean)
-        .map((i) => `<li>${escapeHtml(i)}</li>`)
-        .join("");
-      return `<${tag}${listAttr}>${items}</${tag}>`;
-    }
-    case "image":
-      if (!s.url) return "";
-      return `<p><img src="${escapeAttr(s.url)}" alt="${escapeAttr(
-        s.alt
-      )}" style="max-width:100%;height:auto;border-radius:6px;" /></p>`;
-    case "button":
-      return `<p><a href="${escapeAttr(
-        s.url || "#"
-      )}" style="display:inline-block;background:#ec4899;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:600;">${escapeHtml(
-        s.label
-      )}</a></p>`;
   }
 }
 
@@ -299,23 +172,6 @@ function blockToHtml(b: Block): string {
         .map((i) => `<li>${escapeHtml(i)}</li>`)
         .join("");
       return `<${tag}${listAttr}>${items}</${tag}>`;
-    }
-    case "columns": {
-      const minW = b.count === 2 ? 240 : b.count === 3 ? 200 : 160;
-      const cells = b.columns
-        .map((col) => {
-          const inner = Array.isArray(col)
-            ? col.map(subBlockToHtml).filter(Boolean).join("")
-            : // Backward-compat with old { heading, text } shape
-              `<h3>${escapeHtml(
-                (col as unknown as { heading?: string }).heading ?? ""
-              )}</h3>${paragraphs(
-                (col as unknown as { text?: string }).text ?? ""
-              )}`;
-          return `<div style="flex:1;min-width:${minW}px;">${inner}</div>`;
-        })
-        .join("");
-      return `<div style="display:flex;gap:20px;flex-wrap:wrap;">${cells}</div>`;
     }
     case "hero-cta":
       return `<h2>${escapeHtml(b.headline)}</h2>${paragraphs(
