@@ -86,71 +86,185 @@ export function BlockIcon({ kind }: { kind: BlockKind }) {
  * the structure of what they're building at a glance — much more readable
  * than a tiny icon + label.
  */
-const PREVIEW = {
-  width: "100%",
-  viewBox: "0 0 240 120",
-  fill: "none",
-  preserveAspectRatio: "xMidYMid meet" as const,
-  xmlns: "http://www.w3.org/2000/svg",
+const previewBaseStyle: React.CSSProperties = {
+  fontSize: 13,
+  lineHeight: 1.4,
+  color: "#374151",
+  padding: "2px 4px",
 };
+
+const placeholderStyle: React.CSSProperties = {
+  ...previewBaseStyle,
+  color: "#9ca3af",
+  fontStyle: "italic",
+};
+
+function truncate(text: string, max = 240): string {
+  const t = text.trim();
+  return t.length > max ? t.slice(0, max) + "…" : t;
+}
 
 export function BlockPreview({ block }: { block: Block }) {
   switch (block.kind) {
-    case "heading":
+    case "heading": {
+      const text = block.text?.trim();
+      const fontSize = block.level === 2 ? 18 : 15;
+      if (!text) {
+        return (
+          <div style={placeholderStyle}>
+            (Empty {block.level === 2 ? "H2" : "H3"} heading)
+          </div>
+        );
+      }
       return (
-        <svg {...PREVIEW} style={{ height: 60 }}>
-          <rect x="20" y="20" width={block.level === 2 ? 200 : 160} height={block.level === 2 ? 14 : 10} rx="2" fill="#374151" />
-          <rect x="20" y={block.level === 2 ? 42 : 36} width="120" height="4" rx="1" fill="#d1d5db" />
-        </svg>
+        <div
+          style={{
+            ...previewBaseStyle,
+            fontSize,
+            fontWeight: 600,
+            color: "#111827",
+          }}
+        >
+          {truncate(text)}
+        </div>
       );
-    case "paragraph":
+    }
+    case "paragraph": {
+      const text = block.text?.trim();
+      if (!text) {
+        return <div style={placeholderStyle}>(Empty paragraph)</div>;
+      }
       return (
-        <svg {...PREVIEW} style={{ height: 80 }}>
-          <rect x="20" y="14" width="200" height="6" rx="2" fill="#9ca3af" />
-          <rect x="20" y="26" width="200" height="6" rx="2" fill="#9ca3af" />
-          <rect x="20" y="38" width="200" height="6" rx="2" fill="#9ca3af" />
-          <rect x="20" y="50" width="180" height="6" rx="2" fill="#9ca3af" />
-          <rect x="20" y="62" width="140" height="6" rx="2" fill="#9ca3af" />
-        </svg>
+        <div style={{ ...previewBaseStyle, whiteSpace: "pre-wrap" }}>
+          {truncate(text, 360)}
+        </div>
       );
-    case "list":
+    }
+    case "list": {
+      const items = block.items.map((i) => i.trim()).filter(Boolean);
+      if (items.length === 0) {
+        return <div style={placeholderStyle}>(Empty list)</div>;
+      }
+      const Tag = block.style === "numbered" ? "ol" : "ul";
+      const listStyleType =
+        block.style === "numbered"
+          ? "decimal"
+          : block.style === "none"
+          ? "none"
+          : "disc";
       return (
-        <svg {...PREVIEW} style={{ height: 100 }}>
-          {Array.from({ length: block.items.length || 4 }).map((_, i) => (
-            <g key={i}>
-              <circle cx="28" cy={18 + i * 18} r="3" fill="#ec4899" />
-              <rect x="36" y={15 + i * 18} width={160 - i * 12} height="6" rx="2" fill="#9ca3af" />
-            </g>
+        <Tag
+          style={{
+            ...previewBaseStyle,
+            margin: 0,
+            paddingLeft: block.style === "none" ? 0 : 22,
+            listStyleType,
+          }}
+        >
+          {items.slice(0, 6).map((it, i) => (
+            <li key={i}>{truncate(it, 140)}</li>
           ))}
-        </svg>
+          {items.length > 6 && (
+            <li style={{ listStyleType: "none", color: "#9ca3af" }}>
+              … +{items.length - 6} more
+            </li>
+          )}
+        </Tag>
       );
-    case "image":
+    }
+    case "image": {
+      if (!block.url) {
+        return <div style={placeholderStyle}>(No image URL)</div>;
+      }
       return (
-        <svg {...PREVIEW} style={{ height: 80 }}>
-          <rect x="20" y="10" width="200" height="100" rx="6" fill="#fbcfe8" stroke="#ec4899" strokeWidth="1" />
-          <circle cx="50" cy="40" r="8" fill="#ec4899" opacity="0.6" />
-          <polygon points="20,110 60,70 100,90 160,50 220,110" fill="#ec4899" opacity="0.4" />
-        </svg>
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={block.url}
+          alt={block.alt || ""}
+          style={{
+            maxWidth: "100%",
+            maxHeight: 160,
+            height: "auto",
+            borderRadius: 4,
+            display: "block",
+            margin: "2px auto",
+          }}
+        />
       );
+    }
     case "hero-cta":
       return (
-        <svg {...PREVIEW} style={{ height: 110 }}>
-          <rect x="20" y="14" width="180" height="14" rx="3" fill="#374151" />
-          <rect x="20" y="34" width="140" height="14" rx="3" fill="#374151" />
-          <rect x="20" y="60" width="200" height="5" rx="2" fill="#9ca3af" />
-          <rect x="20" y="70" width="160" height="5" rx="2" fill="#9ca3af" />
-          <rect x="20" y="88" width="100" height="22" rx="6" fill="#ec4899" />
-          <rect x="40" y="96" width="60" height="6" rx="2" fill="#ffffff" />
-        </svg>
+        <div style={previewBaseStyle}>
+          <div
+            style={{
+              fontSize: 18,
+              fontWeight: 600,
+              color: "#111827",
+              marginBottom: 4,
+            }}
+          >
+            {truncate(block.headline?.trim() || "(Empty headline)")}
+          </div>
+          <div style={{ marginBottom: 8, whiteSpace: "pre-wrap" }}>
+            {truncate(block.body?.trim() || "(Empty body)", 240)}
+          </div>
+          <span
+            style={{
+              display: "inline-block",
+              background: "#ec4899",
+              color: "#fff",
+              padding: "4px 12px",
+              borderRadius: 4,
+              fontSize: 12,
+              fontWeight: 600,
+            }}
+          >
+            {truncate(block.ctaLabel?.trim() || "Button", 40)}
+          </span>
+        </div>
       );
-    case "spec-row":
+    case "spec-row": {
+      const entries = block.entries.filter(
+        (e) => e.label.trim() || e.value.trim()
+      );
+      if (entries.length === 0) {
+        return <div style={placeholderStyle}>(No rows)</div>;
+      }
       return (
-        <svg {...PREVIEW} style={{ height: 60 }}>
-          <rect x="20" y="20" width="50" height="8" rx="2" fill="#374151" />
-          <rect x="80" y="22" width="140" height="6" rx="2" fill="#9ca3af" />
-          <line x1="20" y1="42" x2="220" y2="42" stroke="#e5e7eb" strokeWidth="1" />
-        </svg>
+        <div style={previewBaseStyle}>
+          {entries.slice(0, 6).map((e, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                gap: 12,
+                padding: "4px 0",
+                borderBottom: "1px solid #e5e7eb",
+              }}
+            >
+              <div
+                style={{
+                  flex: "1 1 30%",
+                  minWidth: 80,
+                  fontWeight: 600,
+                  color: "#111827",
+                }}
+              >
+                {truncate(e.label.trim() || "—", 60)}
+              </div>
+              <div style={{ flex: "1 1 70%" }}>
+                {truncate(e.value.trim() || "—", 120)}
+              </div>
+            </div>
+          ))}
+          {entries.length > 6 && (
+            <div style={{ color: "#9ca3af", padding: "4px 0" }}>
+              … +{entries.length - 6} more
+            </div>
+          )}
+        </div>
       );
+    }
     case "html":
       return (
         <div
