@@ -33,7 +33,7 @@ import {
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import {
   type Block,
   type BlockKind,
@@ -57,6 +57,7 @@ import { BlockIcon, BlockPreview } from "./BlockIcons";
 const PALETTE_PREFIX = "palette-";
 const ROW_DROP_PREFIX = "row-drop-";
 const NEW_ROW_PREFIX = "new-row-";
+const COL_INSERT_PREFIX = "col-insert-"; // col-insert-{rowId}-{index}
 
 export function SnippetBuilder({
   layout,
@@ -133,6 +134,23 @@ export function SnippetBuilder({
         return;
       }
 
+      if (overId.startsWith(COL_INSERT_PREFIX)) {
+        // Drop next to a specific block → insert as a new column at that position
+        const rest = overId.slice(COL_INSERT_PREFIX.length);
+        const sep = rest.lastIndexOf("-");
+        const rowId = rest.slice(0, sep);
+        const index = Number(rest.slice(sep + 1));
+        onChange(
+          layout.map((row) => {
+            if (row.id !== rowId) return row;
+            const next = row.blocks.slice();
+            next.splice(index, 0, block);
+            return { ...row, blocks: next };
+          })
+        );
+        return;
+      }
+
       if (overId.startsWith(ROW_DROP_PREFIX)) {
         // Drop on a row's "add to row" zone → append to that row
         const rowId = overId.slice(ROW_DROP_PREFIX.length);
@@ -180,9 +198,8 @@ export function SnippetBuilder({
               </Button>
             </InlineStack>
             <Text as="p" tone="subdued">
-              Drag a section into the canvas to add a new row. Drop it into an
-              existing row to put it side-by-side with the other sections in
-              that row.
+              Drag a section into the canvas to add a new row. Drop it next to
+              an existing section to add it as a new column at that spot.
             </Text>
             <div
               style={{
@@ -202,6 +219,7 @@ export function SnippetBuilder({
         <Canvas
           layout={layout}
           expandedId={expandedId}
+          isPaletteDragging={draggingKind !== null}
           onExpand={setExpandedId}
           onUpdateBlock={handleUpdateBlock}
           onDeleteBlock={handleDeleteBlock}
@@ -324,12 +342,14 @@ function PaletteItem({
 function Canvas({
   layout,
   expandedId,
+  isPaletteDragging,
   onExpand,
   onUpdateBlock,
   onDeleteBlock,
 }: {
   layout: Layout;
   expandedId: string | null;
+  isPaletteDragging: boolean;
   onExpand: (id: string | null) => void;
   onUpdateBlock: (rowId: string, blockId: string, patch: Partial<Block>) => void;
   onDeleteBlock: (rowId: string, blockId: string) => void;
@@ -355,6 +375,7 @@ function Canvas({
                   <RowItem
                     row={row}
                     expandedId={expandedId}
+                    isPaletteDragging={isPaletteDragging}
                     onExpand={onExpand}
                     onUpdateBlock={(blockId, patch) => onUpdateBlock(row.id, blockId, patch)}
                     onDeleteBlock={(blockId) => onDeleteBlock(row.id, blockId)}
@@ -418,15 +439,71 @@ function NewRowDropZone({ index }: { index: number }) {
   );
 }
 
+function ColumnInsertSlot({
+  rowId,
+  index,
+  active,
+}: {
+  rowId: string;
+  index: number;
+  active: boolean;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${COL_INSERT_PREFIX}${rowId}-${index}`,
+  });
+  const width = isOver ? 32 : active ? 12 : 8;
+  return (
+    <div
+      ref={setNodeRef}
+      aria-hidden
+      style={{
+        flex: `0 0 ${width}px`,
+        alignSelf: "stretch",
+        margin: "0 2px",
+        borderRadius: 6,
+        background: isOver ? "#fdf2f8" : "transparent",
+        border: isOver
+          ? "2px dashed #ec4899"
+          : active
+          ? "1px dashed #f9a8d4"
+          : "1px dashed transparent",
+        transition: "all 120ms",
+        position: "relative",
+      }}
+    >
+      {isOver && (
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 10,
+            color: "#ec4899",
+            writingMode: "vertical-rl",
+            transform: "rotate(180deg)",
+            whiteSpace: "nowrap",
+          }}
+        >
+          New column
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RowItem({
   row,
   expandedId,
+  isPaletteDragging,
   onExpand,
   onUpdateBlock,
   onDeleteBlock,
 }: {
   row: Row;
   expandedId: string | null;
+  isPaletteDragging: boolean;
   onExpand: (id: string | null) => void;
   onUpdateBlock: (blockId: string, patch: Partial<Block>) => void;
   onDeleteBlock: (blockId: string) => void;
@@ -486,26 +563,34 @@ function RowItem({
           style={{
             marginTop: 8,
             display: "flex",
-            gap: 8,
+            gap: 0,
             flexWrap: "wrap",
+            alignItems: "stretch",
           }}
         >
-          {row.blocks.map((block) => (
-            <div
-              key={block.id}
-              style={{
-                flex: 1,
-                minWidth: row.blocks.length === 1 ? "100%" : 220,
-              }}
-            >
-              <CanvasBlock
-                block={block}
-                expanded={expandedId === block.id}
-                onExpand={() => onExpand(expandedId === block.id ? null : block.id)}
-                onUpdate={(patch) => onUpdateBlock(block.id, patch)}
-                onDelete={() => onDeleteBlock(block.id)}
+          <ColumnInsertSlot rowId={row.id} index={0} active={isPaletteDragging} />
+          {row.blocks.map((block, i) => (
+            <Fragment key={block.id}>
+              <div
+                style={{
+                  flex: 1,
+                  minWidth: row.blocks.length === 1 ? "100%" : 220,
+                }}
+              >
+                <CanvasBlock
+                  block={block}
+                  expanded={expandedId === block.id}
+                  onExpand={() => onExpand(expandedId === block.id ? null : block.id)}
+                  onUpdate={(patch) => onUpdateBlock(block.id, patch)}
+                  onDelete={() => onDeleteBlock(block.id)}
+                />
+              </div>
+              <ColumnInsertSlot
+                rowId={row.id}
+                index={i + 1}
+                active={isPaletteDragging}
               />
-            </div>
+            </Fragment>
           ))}
         </div>
       </div>
