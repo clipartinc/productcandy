@@ -123,12 +123,44 @@ function parsePlaceholderDiv(el: Element): Block {
   return { id: id(), kind: "paragraph", text, filled: true };
 }
 
+const STRUCTURAL_TAGS = new Set([
+  "H1",
+  "H2",
+  "H3",
+  "H4",
+  "H5",
+  "H6",
+  "P",
+  "UL",
+  "OL",
+]);
+
 function parseBlock(el: Element): Block {
   // Placeholder divs emitted by placeholderHtml() take precedence over the
   // tag-based fallbacks below, since they're always wrapped in a styled
   // <div data-pc-placeholder="1">.
   if (el.tagName === "DIV" && el.hasAttribute("data-pc-placeholder")) {
     return parsePlaceholderDiv(el);
+  }
+
+  // Unwrap generic divs (no flex layout, no spec-row border, no placeholder
+  // marker) that contain exactly one structural child — handles content
+  // like `<div><h2>Title</h2></div>` that Tiptap or other editors emit.
+  if (
+    el.tagName === "DIV" &&
+    el.children.length === 1 &&
+    !el.hasAttribute("data-pc-placeholder")
+  ) {
+    const style = styleNoWs(el);
+    if (
+      !style.includes("display:flex") &&
+      !style.includes("border-bottom")
+    ) {
+      const child = el.children[0];
+      if (STRUCTURAL_TAGS.has(child.tagName)) {
+        return parseBlock(child);
+      }
+    }
   }
 
   switch (el.tagName) {
@@ -236,6 +268,28 @@ function parseMultiColumnRow(el: Element): Row {
   return { id: id(), columns: cols };
 }
 
+function flattenTopLevel(elements: Element[]): Element[] {
+  const out: Element[] = [];
+  for (const el of elements) {
+    if (
+      el.tagName === "DIV" &&
+      !el.hasAttribute("data-pc-placeholder") &&
+      el.children.length > 0
+    ) {
+      const style = styleNoWs(el);
+      const isLayoutDiv =
+        (style.includes("display:flex") && style.includes("flex-wrap:wrap")) ||
+        style.includes("border-bottom");
+      if (!isLayoutDiv) {
+        out.push(...flattenTopLevel(Array.from(el.children)));
+        continue;
+      }
+    }
+    out.push(el);
+  }
+  return out;
+}
+
 export function htmlToLayout(html: string): Layout {
   if (typeof DOMParser === "undefined") {
     // Server-side fallback: keep the whole HTML in one block.
@@ -248,7 +302,10 @@ export function htmlToLayout(html: string): Layout {
   const root = doc.getElementById("__root__");
   if (!root) return [wrapAsHtmlRow(html)];
 
-  const top = Array.from(root.children);
+  // Flatten generic wrapper divs at the top level so a snippet wrapped in
+  // <div>...</div> (or similar) still parses each structural child into its
+  // own block instead of becoming one giant html block.
+  const top = flattenTopLevel(Array.from(root.children));
   if (top.length === 0) return [wrapAsHtmlRow(html)];
 
   const rows: Row[] = [];
