@@ -210,6 +210,10 @@ export default function SnippetsPage() {
       );
       if (!res.ok) throw new Error((await res.json()).error ?? "Delete failed");
       setConfirmDelete(null);
+      // If the deleted snippet was the one being edited, close the editor.
+      if (editing && editing !== "new" && editing.id === s.id) {
+        closeEditor();
+      }
       await load();
     } catch (e) {
       setStatus({
@@ -331,10 +335,20 @@ export default function SnippetsPage() {
                 >
                   {editing === "new" ? "Create snippet" : "Save"}
                 </Button>
-                <InlineStack align="center">
+                <InlineStack align="center" gap="200">
                   <Button variant="tertiary" onClick={closeEditor} disabled={saving}>
                     Cancel
                   </Button>
+                  {editing !== "new" && (
+                    <Button
+                      variant="tertiary"
+                      tone="critical"
+                      onClick={() => setConfirmDelete(editing)}
+                      disabled={saving}
+                    >
+                      Delete snippet
+                    </Button>
+                  )}
                 </InlineStack>
               </BlockStack>
             </BlockStack>
