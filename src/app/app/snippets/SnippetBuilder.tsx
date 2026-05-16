@@ -70,10 +70,9 @@ const NEW_ROW_PREFIX = "new-row-";
 const COL_INSERT_PREFIX = "col-insert|"; // col-insert|{rowId}|{index}
 const COL_DROP_PREFIX = "col-drop|"; // col-drop|{rowId}|{colId} — column body fallback
 const BLOCK_INSERT_PREFIX = "block-insert|"; // block-insert|{rowId}|{colId}|{index}
-// block-side|{rowId}|{insertIdx}|{side}|{blockId} — per-block side-by-side
-// drop targets. Functionally equivalent to dropping on the parent column's
-// COL_INSERT slot at index `insertIdx`, but rendered alongside each block so
-// the user can target side-by-side without hunting for the row-edge strip.
+// block-side|{side}|{blockId} — per-block side-by-side drop target.
+// When dropped, the target block's column is split so the dropped block lands
+// genuinely beside the target block (not beside the whole stacked column).
 const BLOCK_SIDE_PREFIX = "block-side|";
 
 // Custom collision detection: prefer narrow insert slots when the pointer is
@@ -166,6 +165,71 @@ export function SnippetBuilder({
     if (expandedId === blockId) setExpandedId(null);
   }
 
+  // When the user drops next to a specific block in a stacked single-column
+  // row, split the column so the new block sits genuinely beside that block
+  // (not beside the whole column). Multi-column rows fall back to adding a
+  // sibling column at the target column's edge, since splitting one column
+  // out of many would leave the others in an undefined position.
+  function applyBlockSideDrop(
+    sourceLayout: Layout,
+    targetBlockId: string,
+    side: "left" | "right",
+    blockToInsert: Block
+  ): Layout | null {
+    let rIdx = -1;
+    let cIdx = -1;
+    let bIdx = -1;
+    outer: for (let r = 0; r < sourceLayout.length; r++) {
+      for (let c = 0; c < sourceLayout[r].columns.length; c++) {
+        const i = sourceLayout[r].columns[c].blocks.findIndex(
+          (b) => b.id === targetBlockId
+        );
+        if (i >= 0) {
+          rIdx = r;
+          cIdx = c;
+          bIdx = i;
+          break outer;
+        }
+      }
+    }
+    if (rIdx < 0) return null;
+
+    const row = sourceLayout[rIdx];
+    const col = row.columns[cIdx];
+
+    if (row.columns.length === 1 && col.blocks.length > 1) {
+      const blocksBefore = col.blocks.slice(0, bIdx);
+      const target = col.blocks[bIdx];
+      const blocksAfter = col.blocks.slice(bIdx + 1);
+
+      const sideCols =
+        side === "left"
+          ? [newColumn([blockToInsert]), newColumn([target])]
+          : [newColumn([target]), newColumn([blockToInsert])];
+
+      const newRows: Row[] = [];
+      if (blocksBefore.length > 0) {
+        newRows.push({ ...newRow(), columns: [newColumn(blocksBefore)] });
+      }
+      newRows.push({ ...newRow(), columns: sideCols });
+      if (blocksAfter.length > 0) {
+        newRows.push({ ...newRow(), columns: [newColumn(blocksAfter)] });
+      }
+
+      const next = sourceLayout.slice();
+      next.splice(rIdx, 1, ...newRows);
+      return next;
+    }
+
+    const insertIdx = side === "left" ? cIdx : cIdx + 1;
+    return sourceLayout.map((r) => {
+      if (r.id !== row.id) return r;
+      const cols = r.columns.slice();
+      cols.splice(insertIdx, 0, newColumn([blockToInsert]));
+      return { ...r, columns: cols };
+    });
+  }
+
   function handleDragStart(event: DragStartEvent) {
     const id = event.active.id.toString();
     if (id.startsWith(PALETTE_PREFIX)) {
@@ -223,10 +287,21 @@ export function SnippetBuilder({
         return;
       }
 
-      if (
-        overId.startsWith(COL_INSERT_PREFIX) ||
-        overId.startsWith(BLOCK_SIDE_PREFIX)
-      ) {
+      if (overId.startsWith(BLOCK_SIDE_PREFIX)) {
+        // Drop beside a specific block — split the column if it's a stack so
+        // the new block ends up genuinely beside the target block.
+        const [, side, targetBlockId] = overId.split("|");
+        const next = applyBlockSideDrop(
+          layout,
+          targetBlockId,
+          side as "left" | "right",
+          block
+        );
+        if (next) onChange(next);
+        return;
+      }
+
+      if (overId.startsWith(COL_INSERT_PREFIX)) {
         // Drop next to a column → insert a new single-block column at that position.
         const [, rowId, idxStr] = overId.split("|");
         const index = Number(idxStr);
@@ -371,10 +446,20 @@ export function SnippetBuilder({
       return;
     }
 
-    if (
-      overId.startsWith(COL_INSERT_PREFIX) ||
-      overId.startsWith(BLOCK_SIDE_PREFIX)
-    ) {
+    if (overId.startsWith(BLOCK_SIDE_PREFIX)) {
+      const [, side, targetBlockId] = overId.split("|");
+      if (targetBlockId === blockId) return; // dropped onto the source block's own side
+      const next = applyBlockSideDrop(
+        withoutSrc,
+        targetBlockId,
+        side as "left" | "right",
+        block
+      );
+      if (next) onChange(next);
+      return;
+    }
+
+    if (overId.startsWith(COL_INSERT_PREFIX)) {
       const [, rowId, idxStr] = overId.split("|");
       if (!withoutSrc.some((r) => r.id === rowId)) return;
       let index = Number(idxStr);
@@ -860,7 +945,6 @@ function RowItem({
                 <ColumnItem
                   rowId={row.id}
                   column={col}
-                  columnIndex={i}
                   expandedId={expandedId}
                   isItemDragging={isItemDragging}
                   draggingBlockId={draggingBlockId}
@@ -894,7 +978,6 @@ function rowSummary(row: Row): string {
 function ColumnItem({
   rowId,
   column,
-  columnIndex,
   expandedId,
   isItemDragging,
   draggingBlockId,
@@ -904,7 +987,6 @@ function ColumnItem({
 }: {
   rowId: string;
   column: Column;
-  columnIndex: number;
   expandedId: string | null;
   isItemDragging: boolean;
   draggingBlockId: string | null;
@@ -939,8 +1021,6 @@ function ColumnItem({
         <Fragment key={block.id}>
           <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
             <BlockSideDrop
-              rowId={rowId}
-              insertIndex={columnIndex}
               side="left"
               blockId={block.id}
               active={isItemDragging}
@@ -956,8 +1036,6 @@ function ColumnItem({
               />
             </div>
             <BlockSideDrop
-              rowId={rowId}
-              insertIndex={columnIndex + 1}
               side="right"
               blockId={block.id}
               active={isItemDragging}
@@ -1024,20 +1102,16 @@ function BlockInsertSlot({
 }
 
 function BlockSideDrop({
-  rowId,
-  insertIndex,
   side,
   blockId,
   active,
 }: {
-  rowId: string;
-  insertIndex: number;
   side: "left" | "right";
   blockId: string;
   active: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({
-    id: `${BLOCK_SIDE_PREFIX}${rowId}|${insertIndex}|${side}|${blockId}`,
+    id: `${BLOCK_SIDE_PREFIX}${side}|${blockId}`,
   });
   // Idle (no drag): collapsed to 0 so the block reads at normal width.
   // Drag-active: a slim pink strip beside each block, with a "+" on hover.
