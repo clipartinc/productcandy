@@ -24,10 +24,12 @@ const LAYOUT_THUMBS = [
   { id: "faq", label: "FAQ block" },
   { id: "two-column", label: "Two columns" },
   { id: "three-column", label: "Three columns" },
-  { id: "hero-cta", label: "Hero + CTA" },
+  { id: "hero-cta", label: "Banner with button" },
   { id: "image-text", label: "Image + text" },
   { id: "text-image", label: "Text + image" },
   { id: "gallery-3", label: "Image gallery (3)" },
+  { id: "label-value", label: "Label and value" },
+  { id: "bullet-list", label: "Bullet list" },
 ];
 
 export default function EmbeddedHome() {

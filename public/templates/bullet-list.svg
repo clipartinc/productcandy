@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 180" width="240" height="180">
+  <rect width="240" height="180" fill="#ffffff" stroke="#d1d5db" stroke-width="1" rx="8"/>
+  <!-- heading -->
+  <rect x="20" y="22" width="120" height="9" rx="3" fill="#374151"/>
+  <!-- bullet 1 -->
+  <circle cx="28" cy="56" r="4" fill="#ec4899"/>
+  <rect x="40" y="53" width="170" height="6" rx="2" fill="#9ca3af"/>
+  <!-- bullet 2 -->
+  <circle cx="28" cy="80" r="4" fill="#ec4899"/>
+  <rect x="40" y="77" width="150" height="6" rx="2" fill="#9ca3af"/>
+  <!-- bullet 3 -->
+  <circle cx="28" cy="104" r="4" fill="#ec4899"/>
+  <rect x="40" y="101" width="180" height="6" rx="2" fill="#9ca3af"/>
+  <!-- bullet 4 -->
+  <circle cx="28" cy="128" r="4" fill="#ec4899"/>
+  <rect x="40" y="125" width="140" height="6" rx="2" fill="#9ca3af"/>
+  <!-- bullet 5 -->
+  <circle cx="28" cy="152" r="4" fill="#ec4899"/>
+  <rect x="40" y="149" width="160" height="6" rx="2" fill="#9ca3af"/>
+</svg>
