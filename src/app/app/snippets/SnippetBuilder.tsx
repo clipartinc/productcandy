@@ -151,9 +151,13 @@ export function SnippetBuilder({
         return;
       }
 
-      if (overId.startsWith(ROW_DROP_PREFIX)) {
-        // Drop on a row's "add to row" zone → append to that row
-        const rowId = overId.slice(ROW_DROP_PREFIX.length);
+      // Drop on the row body — could be the row-drop droppable OR the row's
+      // sortable droppable (which shares the same id as the row). Both mean
+      // "append as a new column at the end of this row".
+      const rowId = overId.startsWith(ROW_DROP_PREFIX)
+        ? overId.slice(ROW_DROP_PREFIX.length)
+        : layout.find((r) => r.id === overId)?.id;
+      if (rowId) {
         onChange(
           layout.map((row) =>
             row.id === rowId ? { ...row, blocks: [...row.blocks, block] } : row
@@ -451,7 +455,9 @@ function ColumnInsertSlot({
   const { setNodeRef, isOver } = useDroppable({
     id: `${COL_INSERT_PREFIX}${rowId}-${index}`,
   });
-  const width = isOver ? 32 : active ? 12 : 8;
+  // Idle: invisible 4px gap. Palette dragging: visible 48px target.
+  // Hover: pink-filled 64px target with label.
+  const width = isOver ? 64 : active ? 48 : 4;
   return (
     <div
       ref={setNodeRef}
@@ -459,19 +465,20 @@ function ColumnInsertSlot({
       style={{
         flex: `0 0 ${width}px`,
         alignSelf: "stretch",
-        margin: "0 2px",
+        margin: active ? "0 4px" : 0,
         borderRadius: 6,
-        background: isOver ? "#fdf2f8" : "transparent",
+        background: isOver ? "#fdf2f8" : active ? "#fef7fb" : "transparent",
         border: isOver
           ? "2px dashed #ec4899"
           : active
-          ? "1px dashed #f9a8d4"
-          : "1px dashed transparent",
+          ? "2px dashed #f9a8d4"
+          : "none",
         transition: "all 120ms",
         position: "relative",
+        minHeight: active ? 80 : 0,
       }}
     >
-      {isOver && (
+      {active && (
         <div
           style={{
             position: "absolute",
@@ -479,14 +486,16 @@ function ColumnInsertSlot({
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 10,
+            fontSize: isOver ? 11 : 18,
+            fontWeight: 600,
             color: "#ec4899",
-            writingMode: "vertical-rl",
-            transform: "rotate(180deg)",
+            writingMode: isOver ? "vertical-rl" : "horizontal-tb",
+            transform: isOver ? "rotate(180deg)" : "none",
             whiteSpace: "nowrap",
+            pointerEvents: "none",
           }}
         >
-          New column
+          {isOver ? "New column" : "+"}
         </div>
       )}
     </div>
