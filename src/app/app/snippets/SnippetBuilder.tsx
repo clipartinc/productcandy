@@ -55,6 +55,21 @@ import {
 } from "@/lib/snippetBlocks";
 import { BlockIcon, BlockPreview } from "./BlockIcons";
 
+const freshId = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : Math.random().toString(36).slice(2);
+
+function cloneRowDeep(row: Row): Row {
+  return {
+    id: freshId(),
+    columns: row.columns.map((col) => ({
+      id: freshId(),
+      blocks: col.blocks.map((b) => ({ ...b, id: freshId() })),
+    })),
+  };
+}
+
 const PALETTE_PREFIX = "palette-";
 const EXISTING_PREFIX = "existing-"; // existing-{blockId} — for canvas blocks the user is rearranging
 const ROW_DROP_PREFIX = "row-drop-";
@@ -182,6 +197,18 @@ export function SnippetBuilder({
       .filter((row) => row.columns.length > 0);
     onChange(next);
     if (expandedId === blockId) setExpandedId(null);
+  }
+
+  function handleDuplicateRow(rowId: string) {
+    const idx = layout.findIndex((r) => r.id === rowId);
+    if (idx < 0) return;
+    const next = layout.slice();
+    next.splice(idx + 1, 0, cloneRowDeep(layout[idx]));
+    onChange(next);
+  }
+
+  function handleDeleteRow(rowId: string) {
+    onChange(layout.filter((r) => r.id !== rowId));
   }
 
   // When the user drops next to a specific block in a stacked single-column
@@ -598,6 +625,8 @@ export function SnippetBuilder({
           onExpand={setExpandedId}
           onUpdateBlock={handleUpdateBlock}
           onDeleteBlock={handleDeleteBlock}
+          onDuplicateRow={handleDuplicateRow}
+          onDeleteRow={handleDeleteRow}
         />
 
         {previewOpen && (
@@ -719,6 +748,8 @@ function Canvas({
   onExpand,
   onUpdateBlock,
   onDeleteBlock,
+  onDuplicateRow,
+  onDeleteRow,
 }: {
   layout: Layout;
   expandedId: string | null;
@@ -727,6 +758,8 @@ function Canvas({
   onExpand: (id: string | null) => void;
   onUpdateBlock: (blockId: string, patch: Partial<Block>) => void;
   onDeleteBlock: (blockId: string) => void;
+  onDuplicateRow: (rowId: string) => void;
+  onDeleteRow: (rowId: string) => void;
 }) {
   return (
     <Card>
@@ -754,6 +787,8 @@ function Canvas({
                     onExpand={onExpand}
                     onUpdateBlock={onUpdateBlock}
                     onDeleteBlock={onDeleteBlock}
+                    onDuplicateRow={onDuplicateRow}
+                    onDeleteRow={onDeleteRow}
                   />
                 </div>
               ))}
@@ -885,6 +920,8 @@ function RowItem({
   onExpand,
   onUpdateBlock,
   onDeleteBlock,
+  onDuplicateRow,
+  onDeleteRow,
 }: {
   row: Row;
   expandedId: string | null;
@@ -893,6 +930,8 @@ function RowItem({
   onExpand: (id: string | null) => void;
   onUpdateBlock: (blockId: string, patch: Partial<Block>) => void;
   onDeleteBlock: (blockId: string) => void;
+  onDuplicateRow: (rowId: string) => void;
+  onDeleteRow: (rowId: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: row.id });
@@ -919,28 +958,44 @@ function RowItem({
           transition: "all 120ms",
         }}
       >
-        <InlineStack gap="100" align="space-between" blockAlign="center">
-          <button
-            type="button"
-            {...attributes}
-            {...listeners}
-            aria-label="Drag row to reorder"
-            style={{
-              cursor: "grab",
-              background: "transparent",
-              border: "1px solid #d1d5db",
-              borderRadius: 6,
-              padding: "2px 8px",
-              fontSize: 12,
-              lineHeight: 1,
-              color: "#6b7280",
-            }}
-          >
-            ⋮⋮ row
-          </button>
-          <Text as="span" tone="subdued">
-            {rowSummary(row)}
-          </Text>
+        <InlineStack gap="200" align="space-between" blockAlign="center">
+          <InlineStack gap="200" blockAlign="center">
+            <button
+              type="button"
+              {...attributes}
+              {...listeners}
+              aria-label="Drag row to reorder"
+              style={{
+                cursor: "grab",
+                background: "transparent",
+                border: "1px solid #d1d5db",
+                borderRadius: 6,
+                padding: "2px 8px",
+                fontSize: 12,
+                lineHeight: 1,
+                color: "#6b7280",
+              }}
+            >
+              ⋮⋮ row
+            </button>
+            <Text as="span" tone="subdued">
+              {rowSummary(row)}
+            </Text>
+          </InlineStack>
+          <InlineStack gap="100">
+            <Button size="micro" onClick={() => onDuplicateRow(row.id)}>
+              + Duplicate row
+            </Button>
+            <Button
+              size="micro"
+              tone="critical"
+              variant="tertiary"
+              onClick={() => onDeleteRow(row.id)}
+              accessibilityLabel="Delete row"
+            >
+              ✕
+            </Button>
+          </InlineStack>
         </InlineStack>
 
         <div

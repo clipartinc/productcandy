@@ -108,10 +108,32 @@ export default function SnippetsPage() {
     setDraftName(s.name);
     setNameError(undefined);
     editor?.commands.setContent(s.html);
-    setLayout([]);
-    // Existing snippets default to HTML mode since we can't reliably parse
-    // arbitrary HTML back into our block model.
-    setMode("html");
+    // Wrap the existing HTML in a single 'html' block so the visual builder
+    // has something to start from while letting the merchant add new blocks
+    // around it via drag-and-drop. They can switch to HTML mode any time.
+    const id = () =>
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : Math.random().toString(36).slice(2);
+    setLayout([
+      {
+        id: id(),
+        columns: [
+          {
+            id: id(),
+            blocks: [
+              {
+                id: id(),
+                kind: "html",
+                html: s.html,
+                filled: true,
+              },
+            ],
+          },
+        ],
+      },
+    ]);
+    setMode("builder");
     setEditing(s);
   }
 
