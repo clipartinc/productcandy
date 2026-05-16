@@ -70,6 +70,11 @@ const NEW_ROW_PREFIX = "new-row-";
 const COL_INSERT_PREFIX = "col-insert|"; // col-insert|{rowId}|{index}
 const COL_DROP_PREFIX = "col-drop|"; // col-drop|{rowId}|{colId} — column body fallback
 const BLOCK_INSERT_PREFIX = "block-insert|"; // block-insert|{rowId}|{colId}|{index}
+// block-side|{rowId}|{insertIdx}|{side}|{blockId} — per-block side-by-side
+// drop targets. Functionally equivalent to dropping on the parent column's
+// COL_INSERT slot at index `insertIdx`, but rendered alongside each block so
+// the user can target side-by-side without hunting for the row-edge strip.
+const BLOCK_SIDE_PREFIX = "block-side|";
 
 // Custom collision detection: prefer narrow insert slots when the pointer is
 // directly inside one (so dropping in the visible "+" gap inserts at that
@@ -78,8 +83,13 @@ const BLOCK_INSERT_PREFIX = "block-insert|"; // block-insert|{rowId}|{colId}|{in
 const detectCollisions: CollisionDetection = (args) => {
   const pointer = pointerWithin(args);
   if (pointer.length > 0) {
-    // Highest-precision targets first: between-block (stack) > between-column
-    // (side-by-side) > between-row > everything else.
+    // Highest-precision targets first: per-block side strip (side-by-side at
+    // this block) > between-block (stack) > between-column (side-by-side at
+    // row edge) > between-row > column body > row body.
+    const blockSide = pointer.find((c) =>
+      c.id.toString().startsWith(BLOCK_SIDE_PREFIX)
+    );
+    if (blockSide) return [blockSide];
     const blockSlot = pointer.find((c) =>
       c.id.toString().startsWith(BLOCK_INSERT_PREFIX)
     );
@@ -213,7 +223,10 @@ export function SnippetBuilder({
         return;
       }
 
-      if (overId.startsWith(COL_INSERT_PREFIX)) {
+      if (
+        overId.startsWith(COL_INSERT_PREFIX) ||
+        overId.startsWith(BLOCK_SIDE_PREFIX)
+      ) {
         // Drop next to a column → insert a new single-block column at that position.
         const [, rowId, idxStr] = overId.split("|");
         const index = Number(idxStr);
@@ -358,7 +371,10 @@ export function SnippetBuilder({
       return;
     }
 
-    if (overId.startsWith(COL_INSERT_PREFIX)) {
+    if (
+      overId.startsWith(COL_INSERT_PREFIX) ||
+      overId.startsWith(BLOCK_SIDE_PREFIX)
+    ) {
       const [, rowId, idxStr] = overId.split("|");
       if (!withoutSrc.some((r) => r.id === rowId)) return;
       let index = Number(idxStr);
@@ -844,6 +860,7 @@ function RowItem({
                 <ColumnItem
                   rowId={row.id}
                   column={col}
+                  columnIndex={i}
                   expandedId={expandedId}
                   isItemDragging={isItemDragging}
                   draggingBlockId={draggingBlockId}
@@ -877,6 +894,7 @@ function rowSummary(row: Row): string {
 function ColumnItem({
   rowId,
   column,
+  columnIndex,
   expandedId,
   isItemDragging,
   draggingBlockId,
@@ -886,6 +904,7 @@ function ColumnItem({
 }: {
   rowId: string;
   column: Column;
+  columnIndex: number;
   expandedId: string | null;
   isItemDragging: boolean;
   draggingBlockId: string | null;
@@ -918,14 +937,32 @@ function ColumnItem({
       />
       {column.blocks.map((block, i) => (
         <Fragment key={block.id}>
-          <CanvasBlock
-            block={block}
-            expanded={expandedId === block.id}
-            isBeingDragged={draggingBlockId === block.id}
-            onExpand={() => onExpand(expandedId === block.id ? null : block.id)}
-            onUpdate={(patch) => onUpdateBlock(block.id, patch)}
-            onDelete={() => onDeleteBlock(block.id)}
-          />
+          <div style={{ display: "flex", alignItems: "stretch", gap: 0 }}>
+            <BlockSideDrop
+              rowId={rowId}
+              insertIndex={columnIndex}
+              side="left"
+              blockId={block.id}
+              active={isItemDragging}
+            />
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <CanvasBlock
+                block={block}
+                expanded={expandedId === block.id}
+                isBeingDragged={draggingBlockId === block.id}
+                onExpand={() => onExpand(expandedId === block.id ? null : block.id)}
+                onUpdate={(patch) => onUpdateBlock(block.id, patch)}
+                onDelete={() => onDeleteBlock(block.id)}
+              />
+            </div>
+            <BlockSideDrop
+              rowId={rowId}
+              insertIndex={columnIndex + 1}
+              side="right"
+              blockId={block.id}
+              active={isItemDragging}
+            />
+          </div>
           <BlockInsertSlot
             rowId={rowId}
             colId={column.id}
@@ -982,6 +1019,59 @@ function BlockInsertSlot({
       }}
     >
       {active && (isOver ? "↓ Stack here" : "+")}
+    </div>
+  );
+}
+
+function BlockSideDrop({
+  rowId,
+  insertIndex,
+  side,
+  blockId,
+  active,
+}: {
+  rowId: string;
+  insertIndex: number;
+  side: "left" | "right";
+  blockId: string;
+  active: boolean;
+}) {
+  const { setNodeRef, isOver } = useDroppable({
+    id: `${BLOCK_SIDE_PREFIX}${rowId}|${insertIndex}|${side}|${blockId}`,
+  });
+  // Idle (no drag): collapsed to 0 so the block reads at normal width.
+  // Drag-active: a slim pink strip beside each block, with a "+" on hover.
+  // isOver: thick green strip with explicit "Side-by-side" hint.
+  const width = isOver ? 56 : active ? 28 : 0;
+  return (
+    <div
+      ref={setNodeRef}
+      aria-hidden
+      style={{
+        flex: `0 0 ${width}px`,
+        alignSelf: "stretch",
+        margin: active ? "0 4px" : 0,
+        borderRadius: 6,
+        background: isOver ? "#ecfccb" : active ? "#fef7fb" : "transparent",
+        border: isOver
+          ? "2px dashed #65a30d"
+          : active
+          ? "2px dashed #f9a8d4"
+          : "none",
+        transition: "background 120ms, border-color 120ms, color 120ms",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: isOver ? 10 : 14,
+        fontWeight: 600,
+        color: isOver ? "#65a30d" : "#ec4899",
+        writingMode: isOver ? "vertical-rl" : "horizontal-tb",
+        transform: isOver ? "rotate(180deg)" : "none",
+        whiteSpace: "nowrap",
+        pointerEvents: "auto",
+      }}
+    >
+      {active && (isOver ? `Side-by-side` : "+")}
     </div>
   );
 }
