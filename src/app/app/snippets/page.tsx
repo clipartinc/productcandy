@@ -277,19 +277,23 @@ export default function SnippetsPage() {
                 </>
               )}
 
-              <InlineStack gap="200" align="end">
-                <Button onClick={closeEditor} disabled={saving}>
-                  Cancel
-                </Button>
+              <BlockStack gap="200">
                 <Button
                   variant="primary"
+                  size="large"
+                  fullWidth
                   onClick={save}
                   loading={saving}
                   disabled={!draftName.trim()}
                 >
                   {editing === "new" ? "Create snippet" : "Save"}
                 </Button>
-              </InlineStack>
+                <InlineStack align="center">
+                  <Button variant="tertiary" onClick={closeEditor} disabled={saving}>
+                    Cancel
+                  </Button>
+                </InlineStack>
+              </BlockStack>
             </BlockStack>
           </Card>
         )}
