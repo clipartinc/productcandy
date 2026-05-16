@@ -1406,10 +1406,66 @@ function BlockEditor({
       );
     case "spec-row":
       return (
-        <InlineStack gap="200" wrap>
-          <TextField label="Spec name" autoComplete="off" value={block.key} onChange={(v) => onChange({ key: v } as Partial<Block>)} />
-          <TextField label="Spec value" autoComplete="off" value={block.value} onChange={(v) => onChange({ value: v } as Partial<Block>)} />
-        </InlineStack>
+        <BlockStack gap="200">
+          {block.entries.map((entry, i) => (
+            <InlineStack key={i} gap="200" blockAlign="end" wrap={false}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <TextField
+                  label={i === 0 ? "Label" : ""}
+                  labelHidden={i !== 0}
+                  autoComplete="off"
+                  value={entry.label}
+                  onChange={(v) => {
+                    const next = block.entries.map((e, j) =>
+                      j === i ? { ...e, label: v } : e
+                    );
+                    onChange({ entries: next } as Partial<Block>);
+                  }}
+                />
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <TextField
+                  label={i === 0 ? "Value" : ""}
+                  labelHidden={i !== 0}
+                  autoComplete="off"
+                  value={entry.value}
+                  onChange={(v) => {
+                    const next = block.entries.map((e, j) =>
+                      j === i ? { ...e, value: v } : e
+                    );
+                    onChange({ entries: next } as Partial<Block>);
+                  }}
+                />
+              </div>
+              <Button
+                size="micro"
+                tone="critical"
+                variant="tertiary"
+                disabled={block.entries.length === 1}
+                onClick={() => {
+                  const next = block.entries.filter((_, j) => j !== i);
+                  onChange({ entries: next } as Partial<Block>);
+                }}
+                accessibilityLabel="Remove row"
+              >
+                ✕
+              </Button>
+            </InlineStack>
+          ))}
+          <InlineStack>
+            <Button
+              onClick={() => {
+                const next = [
+                  ...block.entries,
+                  { label: "", value: "" },
+                ];
+                onChange({ entries: next } as Partial<Block>);
+              }}
+            >
+              + Add row
+            </Button>
+          </InlineStack>
+        </BlockStack>
       );
     case "html":
       return (

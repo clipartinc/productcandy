@@ -81,7 +81,10 @@ export type Block =
       ctaUrl: string;
     })
   | (Common & { kind: "image"; url: string; alt: string })
-  | (Common & { kind: "spec-row"; key: string; value: string })
+  | (Common & {
+      kind: "spec-row";
+      entries: { label: string; value: string }[];
+    })
   | (Common & { kind: "html"; html: string });
 
 export type BlockKind = Block["kind"];
@@ -181,8 +184,7 @@ export function newBlock(kind: BlockKind): Block {
       return {
         id: newId(),
         kind,
-        key: "Spec name",
-        value: "Spec value",
+        entries: [{ label: "Spec name", value: "Spec value" }],
         filled: false,
       };
     case "html":
@@ -327,9 +329,16 @@ function blockToHtml(b: Block): string {
         b.alt
       )}" style="max-width:100%;height:auto;border-radius:6px;" /></p>`;
     case "spec-row":
-      return `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:120px;font-weight:600;">${escapeHtml(
-        b.key
-      )}</div><div style="flex:2;min-width:200px;">${escapeHtml(b.value)}</div></div>`;
+      return b.entries
+        .map(
+          (e) =>
+            `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:120px;font-weight:600;">${escapeHtml(
+              e.label
+            )}</div><div style="flex:2;min-width:200px;">${escapeHtml(
+              e.value
+            )}</div></div>`
+        )
+        .join("");
     case "html":
       return b.html;
   }
