@@ -15,12 +15,15 @@ import {
   DndContext,
   DragOverlay,
   closestCenter,
+  pointerWithin,
+  rectIntersection,
   KeyboardSensor,
   PointerSensor,
   useDraggable,
   useDroppable,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
@@ -58,6 +61,30 @@ const PALETTE_PREFIX = "palette-";
 const ROW_DROP_PREFIX = "row-drop-";
 const NEW_ROW_PREFIX = "new-row-";
 const COL_INSERT_PREFIX = "col-insert-"; // col-insert-{rowId}-{index}
+
+// Custom collision detection: prefer column-insert slots when the pointer is
+// directly inside one (so dropping in the visible "+" gap inserts a column at
+// that position). Fall back to pointerWithin → rectIntersection → closestCenter
+// so dropping anywhere reasonable still finds a target.
+const detectCollisions: CollisionDetection = (args) => {
+  const pointer = pointerWithin(args);
+  if (pointer.length > 0) {
+    const slot = pointer.find((c) =>
+      c.id.toString().startsWith(COL_INSERT_PREFIX)
+    );
+    if (slot) return [slot];
+    // Prefer NEW_ROW (between-row) drop over row drop when pointer is in both,
+    // so dropping in the visible gap creates a new row instead of appending.
+    const newRow = pointer.find((c) =>
+      c.id.toString().startsWith(NEW_ROW_PREFIX)
+    );
+    if (newRow) return [newRow];
+    return pointer;
+  }
+  const rect = rectIntersection(args);
+  if (rect.length > 0) return rect;
+  return closestCenter(args);
+};
 
 export function SnippetBuilder({
   layout,
@@ -185,7 +212,7 @@ export function SnippetBuilder({
   return (
     <DndContext
       sensors={sensors}
-      collisionDetection={closestCenter}
+      collisionDetection={detectCollisions}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
@@ -583,7 +610,10 @@ function RowItem({
               <div
                 style={{
                   flex: 1,
-                  minWidth: row.blocks.length === 1 ? "100%" : 220,
+                  // flex:1 already makes a lone block fill the row. Avoid
+                  // minWidth:100% — it forces wrapping when the column-insert
+                  // slots are visible during a palette drag.
+                  minWidth: row.blocks.length > 1 ? 220 : 0,
                 }}
               >
                 <CanvasBlock
