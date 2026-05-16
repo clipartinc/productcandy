@@ -97,14 +97,39 @@ const detectCollisions: CollisionDetection = (args) => {
       c.id.toString().startsWith(COL_INSERT_PREFIX)
     );
     if (colSlot) return [colSlot];
+
+    // Near-miss snap: pointer is in the column body but close to a side
+    // strip. Pull the over target to the nearest BlockSideDrop within 28px
+    // of the pointer, so the user doesn't have to land exactly on the strip.
+    const colBody = pointer.find((c) =>
+      c.id.toString().startsWith(COL_DROP_PREFIX)
+    );
+    if (colBody && args.pointerCoordinates) {
+      const px = args.pointerCoordinates.x;
+      const py = args.pointerCoordinates.y;
+      const snapDist = 28;
+      let best: { id: string; dist: number } | null = null;
+      for (const container of args.droppableContainers) {
+        const id = container.id.toString();
+        if (!id.startsWith(BLOCK_SIDE_PREFIX)) continue;
+        const rect = container.rect.current;
+        if (!rect || rect.width === 0 || rect.height === 0) continue;
+        const dx =
+          px < rect.left ? rect.left - px : px > rect.right ? px - rect.right : 0;
+        const dy =
+          py < rect.top ? rect.top - py : py > rect.bottom ? py - rect.bottom : 0;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        if (dist <= snapDist && (!best || dist < best.dist)) {
+          best = { id, dist };
+        }
+      }
+      if (best) return [{ id: best.id }];
+    }
+
     const newRowSlot = pointer.find((c) =>
       c.id.toString().startsWith(NEW_ROW_PREFIX)
     );
     if (newRowSlot) return [newRowSlot];
-    // Prefer a column body (more specific) over the whole row.
-    const colBody = pointer.find((c) =>
-      c.id.toString().startsWith(COL_DROP_PREFIX)
-    );
     if (colBody) return [colBody];
     return pointer;
   }
@@ -1114,17 +1139,19 @@ function BlockSideDrop({
     id: `${BLOCK_SIDE_PREFIX}${side}|${blockId}`,
   });
   // Idle (no drag): collapsed to 0 so the block reads at normal width.
-  // Drag-active: a slim pink strip beside each block, with a "+" on hover.
-  // isOver: thick green strip with explicit "Side-by-side" hint.
-  const width = isOver ? 56 : active ? 28 : 0;
+  // Drag-active: a generous 56px strip beside each block, "+" centred.
+  // isOver: 80px filled target with explicit "Side-by-side" hint.
+  const width = isOver ? 80 : active ? 56 : 0;
   return (
     <div
       ref={setNodeRef}
+      data-block-side={`${side}|${blockId}`}
       aria-hidden
       style={{
         flex: `0 0 ${width}px`,
         alignSelf: "stretch",
-        margin: active ? "0 4px" : 0,
+        margin: active ? "0 6px" : 0,
+        minHeight: active ? 60 : 0,
         borderRadius: 6,
         background: isOver ? "#ecfccb" : active ? "#fef7fb" : "transparent",
         border: isOver
@@ -1136,16 +1163,14 @@ function BlockSideDrop({
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        fontSize: isOver ? 10 : 14,
+        fontSize: isOver ? 11 : 22,
         fontWeight: 600,
         color: isOver ? "#65a30d" : "#ec4899",
-        writingMode: isOver ? "vertical-rl" : "horizontal-tb",
-        transform: isOver ? "rotate(180deg)" : "none",
         whiteSpace: "nowrap",
         pointerEvents: "auto",
       }}
     >
-      {active && (isOver ? `Side-by-side` : "+")}
+      {active && (isOver ? "Side-by-side" : "+")}
     </div>
   );
 }
