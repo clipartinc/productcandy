@@ -60,6 +60,7 @@ import {
 import { BlockIcon, BlockPreview } from "./BlockIcons";
 
 const PALETTE_PREFIX = "palette-";
+const EXISTING_PREFIX = "existing-"; // existing-{blockId} — for canvas blocks the user is rearranging
 const ROW_DROP_PREFIX = "row-drop-";
 const NEW_ROW_PREFIX = "new-row-";
 // IDs use "|" as a separator since rowId/colId are UUIDs that themselves
@@ -110,6 +111,7 @@ export function SnippetBuilder({
 }) {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [draggingKind, setDraggingKind] = useState<BlockKind | null>(null);
+  const [draggingBlockId, setDraggingBlockId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const sensors = useSensors(
@@ -156,15 +158,23 @@ export function SnippetBuilder({
     const id = event.active.id.toString();
     if (id.startsWith(PALETTE_PREFIX)) {
       setDraggingKind(id.slice(PALETTE_PREFIX.length) as BlockKind);
+    } else if (id.startsWith(EXISTING_PREFIX)) {
+      setDraggingBlockId(id.slice(EXISTING_PREFIX.length));
     }
   }
 
   function handleDragEnd(event: DragEndEvent) {
     setDraggingKind(null);
+    setDraggingBlockId(null);
     const { active, over } = event;
     if (!over) return;
     const activeId = active.id.toString();
     const overId = over.id.toString();
+
+    if (activeId.startsWith(EXISTING_PREFIX)) {
+      handleExistingBlockDrop(activeId.slice(EXISTING_PREFIX.length), overId);
+      return;
+    }
 
     if (activeId.startsWith(PALETTE_PREFIX)) {
       const kind = activeId.slice(PALETTE_PREFIX.length) as BlockKind;
@@ -263,8 +273,155 @@ export function SnippetBuilder({
     }
   }
 
+  // Move an existing canvas block to a new position. We capture the source
+  // location in the original layout, build a layout with the source removed
+  // (collapsing empty cols/rows), then insert the block at the target. Index
+  // adjustments handle the case where the source's removal shifts the target.
+  function handleExistingBlockDrop(blockId: string, overId: string) {
+    let srcRowIdx = -1;
+    let srcColIdx = -1;
+    let srcBlockIdx = -1;
+    outer: for (let r = 0; r < layout.length; r++) {
+      for (let c = 0; c < layout[r].columns.length; c++) {
+        const idx = layout[r].columns[c].blocks.findIndex((b) => b.id === blockId);
+        if (idx >= 0) {
+          srcRowIdx = r;
+          srcColIdx = c;
+          srcBlockIdx = idx;
+          break outer;
+        }
+      }
+    }
+    if (srcRowIdx < 0) return;
+    const srcRow = layout[srcRowIdx];
+    const srcCol = srcRow.columns[srcColIdx];
+    const block = srcCol.blocks[srcBlockIdx];
+
+    const withoutSrc: Layout = layout
+      .map((row) =>
+        row.id !== srcRow.id
+          ? row
+          : {
+              ...row,
+              columns: row.columns
+                .map((col) =>
+                  col.id !== srcCol.id
+                    ? col
+                    : { ...col, blocks: col.blocks.filter((b) => b.id !== blockId) }
+                )
+                .filter((col) => col.blocks.length > 0),
+            }
+      )
+      .filter((row) => row.columns.length > 0);
+
+    const srcRowStillThere = withoutSrc.some((r) => r.id === srcRow.id);
+    const srcColStillThere = srcRowStillThere
+      ? withoutSrc
+          .find((r) => r.id === srcRow.id)!
+          .columns.some((c) => c.id === srcCol.id)
+      : false;
+
+    if (overId.startsWith(NEW_ROW_PREFIX)) {
+      let idx = Number(overId.slice(NEW_ROW_PREFIX.length));
+      if (!srcRowStillThere && idx > srcRowIdx) idx -= 1;
+      const next = [...withoutSrc];
+      next.splice(idx, 0, newRow([block]));
+      onChange(next);
+      return;
+    }
+
+    if (overId.startsWith(BLOCK_INSERT_PREFIX)) {
+      const [, rowId, colId, idxStr] = overId.split("|");
+      const targetRow = withoutSrc.find((r) => r.id === rowId);
+      const targetCol = targetRow?.columns.find((c) => c.id === colId);
+      if (!targetRow || !targetCol) return; // source was the only thing here — no-op
+      let index = Number(idxStr);
+      if (srcRow.id === rowId && srcCol.id === colId && index > srcBlockIdx) {
+        index -= 1;
+      }
+      onChange(
+        withoutSrc.map((row) => {
+          if (row.id !== rowId) return row;
+          return {
+            ...row,
+            columns: row.columns.map((col) => {
+              if (col.id !== colId) return col;
+              const next = col.blocks.slice();
+              next.splice(index, 0, block);
+              return { ...col, blocks: next };
+            }),
+          };
+        })
+      );
+      return;
+    }
+
+    if (overId.startsWith(COL_INSERT_PREFIX)) {
+      const [, rowId, idxStr] = overId.split("|");
+      if (!withoutSrc.some((r) => r.id === rowId)) return;
+      let index = Number(idxStr);
+      if (srcRow.id === rowId && !srcColStillThere && index > srcColIdx) {
+        index -= 1;
+      }
+      onChange(
+        withoutSrc.map((row) => {
+          if (row.id !== rowId) return row;
+          const next = row.columns.slice();
+          next.splice(index, 0, newColumn([block]));
+          return { ...row, columns: next };
+        })
+      );
+      return;
+    }
+
+    if (overId.startsWith(COL_DROP_PREFIX)) {
+      const [, rowId, colId] = overId.split("|");
+      const targetRow = withoutSrc.find((r) => r.id === rowId);
+      const targetCol = targetRow?.columns.find((c) => c.id === colId);
+      if (!targetRow || !targetCol) return;
+      onChange(
+        withoutSrc.map((row) => {
+          if (row.id !== rowId) return row;
+          return {
+            ...row,
+            columns: row.columns.map((col) =>
+              col.id === colId ? { ...col, blocks: [...col.blocks, block] } : col
+            ),
+          };
+        })
+      );
+      return;
+    }
+
+    const targetRowId = overId.startsWith(ROW_DROP_PREFIX)
+      ? overId.slice(ROW_DROP_PREFIX.length)
+      : withoutSrc.find((r) => r.id === overId)?.id;
+    if (targetRowId && withoutSrc.some((r) => r.id === targetRowId)) {
+      onChange(
+        withoutSrc.map((row) =>
+          row.id === targetRowId
+            ? { ...row, columns: [...row.columns, newColumn([block])] }
+            : row
+        )
+      );
+      return;
+    }
+
+    // Fallback: only append a new row if the source actually moved somewhere
+    // (i.e., we didn't lose the target by collapsing the source's location).
+    if (withoutSrc.length !== layout.length || srcRowStillThere) {
+      onChange([...withoutSrc, newRow([block])]);
+    }
+  }
+
   const html = layoutToHtml(layout);
   const allBlocks = layout.flatMap((r) => r.columns.flatMap((c) => c.blocks));
+  const draggingExistingBlock =
+    draggingBlockId !== null
+      ? allBlocks.find((b) => b.id === draggingBlockId) ?? null
+      : null;
+  const isItemDragging =
+    draggingKind !== null || draggingExistingBlock !== null;
 
   return (
     <DndContext
@@ -308,7 +465,8 @@ export function SnippetBuilder({
         <Canvas
           layout={layout}
           expandedId={expandedId}
-          isPaletteDragging={draggingKind !== null}
+          isItemDragging={isItemDragging}
+          draggingBlockId={draggingBlockId}
           onExpand={setExpandedId}
           onUpdateBlock={handleUpdateBlock}
           onDeleteBlock={handleDeleteBlock}
@@ -350,7 +508,7 @@ export function SnippetBuilder({
       </BlockStack>
 
       <DragOverlay>
-        {draggingKind && (
+        {(draggingKind || draggingExistingBlock) && (
           <div
             style={{
               padding: 12,
@@ -365,16 +523,13 @@ export function SnippetBuilder({
               width: 150,
             }}
           >
-            <BlockIcon kind={draggingKind} />
+            <BlockIcon kind={draggingKind ?? draggingExistingBlock!.kind} />
             <span style={{ fontSize: 12, color: "#374151" }}>
-              {BLOCK_LABELS[draggingKind]}
+              {BLOCK_LABELS[draggingKind ?? draggingExistingBlock!.kind]}
             </span>
           </div>
         )}
       </DragOverlay>
-
-      {/* Suppress unused-var warning for allBlocks (handy for future features) */}
-      <span style={{ display: "none" }}>{allBlocks.length}</span>
     </DndContext>
   );
 }
@@ -431,14 +586,16 @@ function PaletteItem({
 function Canvas({
   layout,
   expandedId,
-  isPaletteDragging,
+  isItemDragging,
+  draggingBlockId,
   onExpand,
   onUpdateBlock,
   onDeleteBlock,
 }: {
   layout: Layout;
   expandedId: string | null;
-  isPaletteDragging: boolean;
+  isItemDragging: boolean;
+  draggingBlockId: string | null;
   onExpand: (id: string | null) => void;
   onUpdateBlock: (blockId: string, patch: Partial<Block>) => void;
   onDeleteBlock: (blockId: string) => void;
@@ -464,7 +621,8 @@ function Canvas({
                   <RowItem
                     row={row}
                     expandedId={expandedId}
-                    isPaletteDragging={isPaletteDragging}
+                    isItemDragging={isItemDragging}
+                    draggingBlockId={draggingBlockId}
                     onExpand={onExpand}
                     onUpdateBlock={onUpdateBlock}
                     onDeleteBlock={onDeleteBlock}
@@ -590,14 +748,16 @@ function ColumnInsertSlot({
 function RowItem({
   row,
   expandedId,
-  isPaletteDragging,
+  isItemDragging,
+  draggingBlockId,
   onExpand,
   onUpdateBlock,
   onDeleteBlock,
 }: {
   row: Row;
   expandedId: string | null;
-  isPaletteDragging: boolean;
+  isItemDragging: boolean;
+  draggingBlockId: string | null;
   onExpand: (id: string | null) => void;
   onUpdateBlock: (blockId: string, patch: Partial<Block>) => void;
   onDeleteBlock: (blockId: string) => void;
@@ -660,7 +820,7 @@ function RowItem({
             alignItems: "stretch",
           }}
         >
-          <ColumnInsertSlot rowId={row.id} index={0} active={isPaletteDragging} />
+          <ColumnInsertSlot rowId={row.id} index={0} active={isItemDragging} />
           {row.columns.map((col, i) => (
             <Fragment key={col.id}>
               <div
@@ -673,7 +833,8 @@ function RowItem({
                   rowId={row.id}
                   column={col}
                   expandedId={expandedId}
-                  isPaletteDragging={isPaletteDragging}
+                  isItemDragging={isItemDragging}
+                  draggingBlockId={draggingBlockId}
                   onExpand={onExpand}
                   onUpdateBlock={onUpdateBlock}
                   onDeleteBlock={onDeleteBlock}
@@ -682,7 +843,7 @@ function RowItem({
               <ColumnInsertSlot
                 rowId={row.id}
                 index={i + 1}
-                active={isPaletteDragging}
+                active={isItemDragging}
               />
             </Fragment>
           ))}
@@ -705,7 +866,8 @@ function ColumnItem({
   rowId,
   column,
   expandedId,
-  isPaletteDragging,
+  isItemDragging,
+  draggingBlockId,
   onExpand,
   onUpdateBlock,
   onDeleteBlock,
@@ -713,7 +875,8 @@ function ColumnItem({
   rowId: string;
   column: Column;
   expandedId: string | null;
-  isPaletteDragging: boolean;
+  isItemDragging: boolean;
+  draggingBlockId: string | null;
   onExpand: (id: string | null) => void;
   onUpdateBlock: (blockId: string, patch: Partial<Block>) => void;
   onDeleteBlock: (blockId: string) => void;
@@ -738,13 +901,14 @@ function ColumnItem({
         rowId={rowId}
         colId={column.id}
         index={0}
-        active={isPaletteDragging}
+        active={isItemDragging}
       />
       {column.blocks.map((block, i) => (
         <Fragment key={block.id}>
           <CanvasBlock
             block={block}
             expanded={expandedId === block.id}
+            isBeingDragged={draggingBlockId === block.id}
             onExpand={() => onExpand(expandedId === block.id ? null : block.id)}
             onUpdate={(patch) => onUpdateBlock(block.id, patch)}
             onDelete={() => onDeleteBlock(block.id)}
@@ -753,7 +917,7 @@ function ColumnItem({
             rowId={rowId}
             colId={column.id}
             index={i + 1}
-            active={isPaletteDragging}
+            active={isItemDragging}
           />
         </Fragment>
       ))}
@@ -810,24 +974,31 @@ function BlockInsertSlot({
 function CanvasBlock({
   block,
   expanded,
+  isBeingDragged,
   onExpand,
   onUpdate,
   onDelete,
 }: {
   block: Block;
   expanded: boolean;
+  isBeingDragged: boolean;
   onExpand: () => void;
   onUpdate: (patch: Partial<Block>) => void;
   onDelete: () => void;
 }) {
   const isPlaceholder = block.filled === false;
+  const { attributes, listeners, setNodeRef } = useDraggable({
+    id: `${EXISTING_PREFIX}${block.id}`,
+  });
   return (
     <div
+      ref={setNodeRef}
       style={{
         background: "#fff",
         border: isPlaceholder ? "1px dashed #d1d5db" : "1px solid #ec4899",
         borderRadius: 8,
         overflow: "hidden",
+        opacity: isBeingDragged ? 0.4 : 1,
       }}
     >
       <div
@@ -838,14 +1009,35 @@ function CanvasBlock({
         }}
       >
         <InlineStack gap="100" align="space-between" blockAlign="center">
-          <span style={{ fontSize: 12, color: "#374151", fontWeight: 600 }}>
-            {BLOCK_LABELS[block.kind]}
-            {!isPlaceholder && (
-              <span style={{ marginLeft: 6, fontSize: 10, color: "#10b981" }}>
-                ✓
-              </span>
-            )}
-          </span>
+          <InlineStack gap="100" blockAlign="center">
+            <button
+              type="button"
+              {...attributes}
+              {...listeners}
+              aria-label="Drag section to reorder"
+              title="Drag to move this section"
+              style={{
+                cursor: "grab",
+                background: "transparent",
+                border: "1px solid #d1d5db",
+                borderRadius: 4,
+                padding: "0 6px",
+                fontSize: 12,
+                lineHeight: 1.4,
+                color: "#6b7280",
+              }}
+            >
+              ⋮⋮
+            </button>
+            <span style={{ fontSize: 12, color: "#374151", fontWeight: 600 }}>
+              {BLOCK_LABELS[block.kind]}
+              {!isPlaceholder && (
+                <span style={{ marginLeft: 6, fontSize: 10, color: "#10b981" }}>
+                  ✓
+                </span>
+              )}
+            </span>
+          </InlineStack>
           <InlineStack gap="100">
             <Button size="micro" onClick={onExpand}>
               {expanded ? "Done" : isPlaceholder ? "Add content" : "Edit"}
