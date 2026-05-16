@@ -14,6 +14,7 @@ import {
 import {
   DndContext,
   DragOverlay,
+  MeasuringStrategy,
   closestCenter,
   pointerWithin,
   rectIntersection,
@@ -428,6 +429,12 @@ export function SnippetBuilder({
     <DndContext
       sensors={sensors}
       collisionDetection={detectCollisions}
+      // Remeasure droppable rects on every state change so the drop slots that
+      // grow from 4px to 32/48px when a drag starts are picked up correctly —
+      // dnd-kit's default WhileDragging strategy caches rects at drag start
+      // and leaves the bottom-of-column slot stale until another droppable
+      // forces a re-check.
+      measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
@@ -717,7 +724,11 @@ function ColumnInsertSlot({
           : active
           ? "2px dashed #f9a8d4"
           : "none",
-        transition: "all 120ms",
+        // Don't transition width/minHeight — dnd-kit caches rects at drag
+        // start and won't re-measure mid-transition, so animating the slot
+        // size would leave the hit area stale until another droppable steals
+        // focus.
+        transition: "background 120ms, border-color 120ms, color 120ms",
         position: "relative",
         minHeight: active ? 80 : 0,
       }}
@@ -891,10 +902,11 @@ function ColumnItem({
     <div
       ref={setNodeRef}
       style={{
-        border: isOver ? "1px dashed #65a30d" : "1px dashed transparent",
+        border: isOver ? "2px dashed #65a30d" : "1px dashed transparent",
         borderRadius: 8,
         padding: 2,
-        transition: "border-color 120ms",
+        background: isOver ? "rgba(132, 204, 22, 0.08)" : "transparent",
+        transition: "background 120ms, border-color 120ms",
         height: "100%",
       }}
     >
@@ -957,7 +969,9 @@ function BlockInsertSlot({
           : active
           ? "2px dashed #f9a8d4"
           : "none",
-        transition: "all 120ms",
+        // Skip transitioning height — dnd-kit caches the slot's bounding
+        // rect, so animating size leaves the hit area stale on first hover.
+        transition: "background 120ms, border-color 120ms, color 120ms",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
