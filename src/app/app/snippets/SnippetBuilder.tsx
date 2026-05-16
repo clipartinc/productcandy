@@ -856,21 +856,19 @@ function CanvasBlock({
           </InlineStack>
         </InlineStack>
       </div>
-      <div style={{ padding: "8px 10px" }}>
-        <BlockPreview block={block} />
-      </div>
-      {expanded && (
+      {expanded ? (
         <Box padding="300">
-          <BlockStack gap="200">
-            <Divider />
-            <BlockEditor
-              block={block}
-              onChange={(patch) =>
-                onUpdate({ ...patch, filled: true } as Partial<Block>)
-              }
-            />
-          </BlockStack>
+          <BlockEditor
+            block={block}
+            onChange={(patch) =>
+              onUpdate({ ...patch, filled: true } as Partial<Block>)
+            }
+          />
         </Box>
+      ) : (
+        <div style={{ padding: "8px 10px" }}>
+          <BlockPreview block={block} />
+        </div>
       )}
     </div>
   );
