@@ -47,3 +47,19 @@ model DescriptionTemplate {
 
   @@index([shopId])
 }
+
+// Submissions from the in-app contact form. Logged for support follow-up;
+// linked to the originating shop via domain (kept as a plain string so we
+// can store messages from shops that aren't yet in the Shop table).
+model ContactMessage {
+  id          String   @id @default(cuid())
+  shopDomain  String
+  name        String
+  email       String
+  subject     String
+  message     String
+  createdAt   DateTime @default(now())
+
+  @@index([shopDomain])
+  @@index([createdAt])
+}

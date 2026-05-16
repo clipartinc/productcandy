@@ -1,4 +1,5 @@
 import { Providers } from "../providers";
+import { NavMenu } from "./NavMenu";
 
 // App Bridge script is loaded in the root layout (src/app/layout.tsx) — it
 // has to be the FIRST <script> tag in the document with no async/defer for
@@ -8,5 +9,10 @@ export default function EmbeddedLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <Providers>{children}</Providers>;
+  return (
+    <Providers>
+      <NavMenu />
+      {children}
+    </Providers>
+  );
 }
