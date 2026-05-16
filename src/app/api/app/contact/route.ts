@@ -20,7 +20,7 @@ const MAX_SUBJECT = 200;
 const MAX_MESSAGE = 5000;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-const COMM_HUB_URL = "https://vectorize.com/api/comm-hub/submit";
+const DEFAULT_COMM_HUB_URL = "https://vectorize.com/comm-hub";
 const SOURCE_APP = "product-candy";
 
 // Map the form's category dropdown to a Comm Hub category slug. Anything
@@ -72,24 +72,17 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const url = process.env.COMM_HUB_URL ?? DEFAULT_COMM_HUB_URL;
     const secret = process.env.COMM_HUB_INGEST_SECRET;
-    if (!secret) {
-      console.error(
-        "[contact] COMM_HUB_INGEST_SECRET is not set — message dropped",
-        { shop, email }
-      );
-      return NextResponse.json(
-        { error: "Contact endpoint isn't configured. Try again later." },
-        { status: 503, headers: CORS_HEADERS }
-      );
-    }
 
-    const upstream = await fetch(COMM_HUB_URL, {
+    const upstreamHeaders: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (secret) upstreamHeaders.Authorization = `Bearer ${secret}`;
+
+    const upstream = await fetch(url, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${secret}`,
-        "Content-Type": "application/json",
-      },
+      headers: upstreamHeaders,
       body: JSON.stringify({
         category: categoryFor(subject),
         sourceApp: SOURCE_APP,
@@ -105,14 +98,14 @@ export async function POST(req: NextRequest) {
       const text = await upstream.text().catch(() => "");
       console.error(
         `[contact] Comm Hub responded ${upstream.status} — ${text}`,
-        { shop, email }
+        { shop, email, url }
       );
       const msg =
         upstream.status === 401
           ? "Contact endpoint rejected our credentials."
           : upstream.status === 503
           ? "Contact endpoint is temporarily unavailable."
-          : "Couldn't deliver your message. Please try again.";
+          : `Couldn't deliver your message (${upstream.status}). Please try again.`;
       return NextResponse.json(
         { error: msg },
         { status: 502, headers: CORS_HEADERS }
