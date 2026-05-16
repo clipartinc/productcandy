@@ -26,6 +26,7 @@ import { STARTERS } from "@/lib/snippetStarters";
 import { Div } from "@/lib/tiptapDiv";
 import { SnippetBuilder } from "./SnippetBuilder";
 import { type Layout, layoutToHtml } from "@/lib/snippetBlocks";
+import { htmlToLayout } from "@/lib/snippetParser";
 
 const TWO_COL_INSERT = `<div style="display:flex;gap:24px;flex-wrap:wrap;"><div style="flex:1;min-width:240px;"><h3>Column 1 heading</h3><p>Add column 1 text here.</p></div><div style="flex:1;min-width:240px;"><h3>Column 2 heading</h3><p>Add column 2 text here.</p></div></div><p></p>`;
 
@@ -111,33 +112,12 @@ export default function SnippetsPage() {
     editor?.commands.setContent(s.html);
     // Prefer the saved layout so blocks come back as themselves (heading,
     // paragraph, list, …). For snippets saved before we persisted layout,
-    // fall back to wrapping the rendered HTML in a single 'html' block —
-    // the merchant can edit the raw HTML inline or rebuild from scratch.
+    // parse the rendered HTML into the closest matching blocks — anything
+    // we can't recognise falls through as a raw-HTML block per element.
     if (s.layout && Array.isArray(s.layout) && s.layout.length > 0) {
       setLayout(s.layout);
     } else {
-      const id = () =>
-        typeof crypto !== "undefined" && "randomUUID" in crypto
-          ? crypto.randomUUID()
-          : Math.random().toString(36).slice(2);
-      setLayout([
-        {
-          id: id(),
-          columns: [
-            {
-              id: id(),
-              blocks: [
-                {
-                  id: id(),
-                  kind: "html",
-                  html: s.html,
-                  filled: true,
-                },
-              ],
-            },
-          ],
-        },
-      ]);
+      setLayout(htmlToLayout(s.html));
     }
     setMode("builder");
     setEditing(s);
