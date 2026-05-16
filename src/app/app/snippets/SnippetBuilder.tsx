@@ -790,6 +790,9 @@ function Canvas({
                     onDuplicateRow={onDuplicateRow}
                     onDeleteRow={onDeleteRow}
                   />
+                  <DuplicateRowButton
+                    onClick={() => onDuplicateRow(row.id)}
+                  />
                 </div>
               ))}
               <NewRowDropZone index={layout.length} />
@@ -845,6 +848,54 @@ function NewRowDropZone({ index }: { index: number }) {
       }}
     >
       {isOver && "↓ New row here"}
+    </div>
+  );
+}
+
+function DuplicateRowButton({ onClick }: { onClick: () => void }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        margin: "6px 0 2px 0",
+      }}
+    >
+      <button
+        type="button"
+        onClick={onClick}
+        title="Duplicate this row below"
+        aria-label="Duplicate this row below"
+        style={{
+          width: 30,
+          height: 30,
+          borderRadius: 999,
+          border: "1px solid #d1d5db",
+          background: "#fff",
+          color: "#6b7280",
+          fontSize: 18,
+          lineHeight: 1,
+          fontWeight: 600,
+          cursor: "pointer",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 0,
+          transition: "background 120ms, border-color 120ms, color 120ms",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.borderColor = "#ec4899";
+          e.currentTarget.style.background = "#fdf2f8";
+          e.currentTarget.style.color = "#ec4899";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.borderColor = "#d1d5db";
+          e.currentTarget.style.background = "#fff";
+          e.currentTarget.style.color = "#6b7280";
+        }}
+      >
+        +
+      </button>
     </div>
   );
 }
@@ -983,9 +1034,6 @@ function RowItem({
             </Text>
           </InlineStack>
           <InlineStack gap="100">
-            <Button size="micro" onClick={() => onDuplicateRow(row.id)}>
-              + Duplicate row
-            </Button>
             <Button
               size="micro"
               tone="critical"

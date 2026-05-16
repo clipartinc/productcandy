@@ -74,7 +74,63 @@ function extractListItems(el: Element): string[] {
   );
 }
 
+// Reverse the placeholderHtml output in snippetBlocks.ts. The placeholders
+// always emit `data-pc-placeholder="1"` and a known default phrase per kind,
+// so we can pick the right block type from the visible text. Custom text
+// inside a placeholder div (user-edited, or content we don't recognise) is
+// preserved as a paragraph so nothing gets dropped.
+function parsePlaceholderDiv(el: Element): Block {
+  const text = el.textContent?.trim() ?? "";
+  if (text === "Heading placeholder" || text === "Hero headline placeholder") {
+    return {
+      id: id(),
+      kind: "heading",
+      level: 2,
+      text: "Heading text",
+      filled: false,
+    };
+  }
+  if (text.startsWith("Paragraph placeholder") || text === "Body text placeholder") {
+    return {
+      id: id(),
+      kind: "paragraph",
+      text: "Add your paragraph text here.",
+      filled: false,
+    };
+  }
+  if (text.startsWith("List placeholder")) {
+    return {
+      id: id(),
+      kind: "list",
+      style: "bulleted",
+      items: ["First item", "Second item", "Third item"],
+      filled: false,
+    };
+  }
+  if (text.startsWith("Image placeholder")) {
+    return { id: id(), kind: "image", url: "", alt: "", filled: false };
+  }
+  if (text === "Custom HTML placeholder") {
+    return {
+      id: id(),
+      kind: "html",
+      html: "<p>Custom HTML here</p>",
+      filled: false,
+    };
+  }
+  // Anything else (e.g. user-typed text that still has placeholder styling)
+  // becomes a paragraph with that text.
+  return { id: id(), kind: "paragraph", text, filled: true };
+}
+
 function parseBlock(el: Element): Block {
+  // Placeholder divs emitted by placeholderHtml() take precedence over the
+  // tag-based fallbacks below, since they're always wrapped in a styled
+  // <div data-pc-placeholder="1">.
+  if (el.tagName === "DIV" && el.hasAttribute("data-pc-placeholder")) {
+    return parsePlaceholderDiv(el);
+  }
+
   switch (el.tagName) {
     case "H1":
     case "H2":
