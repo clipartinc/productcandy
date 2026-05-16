@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
 import { authenticateExtensionRequest } from "@/lib/sessionToken";
 
 export const runtime = "nodejs";
@@ -19,8 +18,20 @@ const MAX_NAME = 200;
 const MAX_EMAIL = 320;
 const MAX_SUBJECT = 200;
 const MAX_MESSAGE = 5000;
-
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const COMM_HUB_URL = "https://vectorize.com/api/comm-hub/submit";
+const SOURCE_APP = "product-candy";
+
+// Map the form's category dropdown to a Comm Hub category slug. Anything
+// we don't recognise falls through as "feedback".
+function categoryFor(subject: string): string {
+  const s = subject.toLowerCase();
+  if (s.includes("bug")) return "bug";
+  if (s.includes("feature")) return "feature";
+  if (s.includes("billing")) return "billing";
+  return "feedback";
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -61,21 +72,52 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    await prisma.contactMessage.create({
-      data: {
-        shopDomain: shop,
-        name,
-        email,
-        subject: subject || "(no subject)",
-        message,
+    const secret = process.env.COMM_HUB_INGEST_SECRET;
+    if (!secret) {
+      console.error(
+        "[contact] COMM_HUB_INGEST_SECRET is not set — message dropped",
+        { shop, email }
+      );
+      return NextResponse.json(
+        { error: "Contact endpoint isn't configured. Try again later." },
+        { status: 503, headers: CORS_HEADERS }
+      );
+    }
+
+    const upstream = await fetch(COMM_HUB_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${secret}`,
+        "Content-Type": "application/json",
       },
+      body: JSON.stringify({
+        category: categoryFor(subject),
+        sourceApp: SOURCE_APP,
+        subject: subject || "(no subject)",
+        body: message,
+        contactEmail: email,
+        contactName: name,
+        metadata: { shopDomain: shop },
+      }),
     });
 
-    // Surface in server logs so the operator sees fresh submissions even
-    // without an email integration wired up.
-    console.log(
-      `[contact] ${shop} — ${name} <${email}> — ${subject || "(no subject)"}`
-    );
+    if (!upstream.ok) {
+      const text = await upstream.text().catch(() => "");
+      console.error(
+        `[contact] Comm Hub responded ${upstream.status} — ${text}`,
+        { shop, email }
+      );
+      const msg =
+        upstream.status === 401
+          ? "Contact endpoint rejected our credentials."
+          : upstream.status === 503
+          ? "Contact endpoint is temporarily unavailable."
+          : "Couldn't deliver your message. Please try again.";
+      return NextResponse.json(
+        { error: msg },
+        { status: 502, headers: CORS_HEADERS }
+      );
+    }
 
     return NextResponse.json({ ok: true }, { headers: CORS_HEADERS });
   } catch (e) {
