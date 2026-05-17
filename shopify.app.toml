@@ -24,27 +24,21 @@ api_version = "2026-04"
   topics = [ "app_subscriptions/update" ]
   uri = "/api/webhooks/app-subscriptions"
 
-  # GDPR + lifecycle. shop/redact must be implemented for App Store
-  # submission; app/uninstalled is best-practice so we can stop the
-  # paywall checks immediately and clean up cached billing state.
+  # Lifecycle — best-practice so we can flip the entitlement gate the
+  # instant a merchant uninstalls (storefront snippet block goes dark,
+  # cached billing status clears) without waiting on the 5-min refresh.
   [[webhooks.subscriptions]]
   topics = [ "app/uninstalled" ]
   uri = "/api/webhooks/app-uninstalled"
 
-  [[webhooks.subscriptions]]
-  topics = [ "shop/redact" ]
-  uri = "/api/webhooks/shop-redact"
-  compliance_topics = [ "shop/redact" ]
-
-  [[webhooks.subscriptions]]
-  topics = [ "customers/data_request" ]
-  uri = "/api/webhooks/customers-data-request"
-  compliance_topics = [ "customers/data_request" ]
-
-  [[webhooks.subscriptions]]
-  topics = [ "customers/redact" ]
-  uri = "/api/webhooks/customers-redact"
-  compliance_topics = [ "customers/redact" ]
+# GDPR-mandatory privacy compliance topics. Shopify validates these
+# under a dedicated [webhooks.privacy_compliance] block rather than
+# the regular [[webhooks.subscriptions]] form — listing them as plain
+# subscription topics is rejected as "invalid topic".
+[webhooks.privacy_compliance]
+customer_data_request_url = "https://productcandy.app/api/webhooks/customers-data-request"
+customer_deletion_url     = "https://productcandy.app/api/webhooks/customers-redact"
+shop_deletion_url         = "https://productcandy.app/api/webhooks/shop-redact"
 
 # App proxy — lets storefronts fetch from
 # https://{shop}.myshopify.com/apps/product-candy/snippets/:id
