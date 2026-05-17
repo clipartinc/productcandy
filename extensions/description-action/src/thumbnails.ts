@@ -8,8 +8,15 @@
  * Shopify's sandbox supports for the Image component.
  */
 
-const THUMB_BASE_URL = "https://productcandy.app/templates";
+const TEMPLATE_BASE_URL = "https://productcandy.app/templates";
+const SNIPPET_THUMB_BASE_URL = "https://productcandy.app/api/snippets";
 
 export function thumbDataUri(id: string): string {
-  return `${THUMB_BASE_URL}/${id}.svg`;
+  return `${TEMPLATE_BASE_URL}/${id}.svg`;
+}
+
+// Per-snippet wireframe SVG rendered server-side from the saved Layout
+// (see src/lib/snippetThumb.ts). Public endpoint, cuid-keyed.
+export function snippetThumbUri(id: string): string {
+  return `${SNIPPET_THUMB_BASE_URL}/${encodeURIComponent(id)}/thumb.svg`;
 }

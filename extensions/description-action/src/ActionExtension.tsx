@@ -13,7 +13,7 @@ import {
   useApi,
 } from "@shopify/ui-extensions-react/admin";
 import { useEffect, useState } from "react";
-import { thumbDataUri } from "./thumbnails";
+import { thumbDataUri, snippetThumbUri } from "./thumbnails";
 
 const TARGET = "admin.product-details.action.render";
 
@@ -371,46 +371,32 @@ function App() {
               </Banner>
             )}
 
-            <BlockStack gap="base">
-              {chunk(TEMPLATES, 3).map((row, i) => (
-                <InlineStack key={i} gap="base">
-                  {row.map((t) => (
-                    <BlockStack key={t.id} gap="small" inlineAlignment="center">
-                      <BlockStack gap="none" inlineAlignment="center">
-                        <Pressable
-                          onPress={() => applyTemplate(t)}
-                          disabled={busy}
-                          padding="none"
-                          accessibilityLabel={`Apply ${t.label} layout`}
-                        >
-                          <Image source={thumbDataUri(t.id)} alt={t.label} />
-                        </Pressable>
-                        <Button
-                          variant="primary"
-                          onPress={() => applyTemplate(t)}
-                          disabled={busy}
-                        >
-                          Apply Layout
-                        </Button>
-                      </BlockStack>
-                      <Text>{t.label}</Text>
-                    </BlockStack>
-                  ))}
-                </InlineStack>
-              ))}
-            </BlockStack>
-
             <Text fontWeight="bold">Your snippets</Text>
             {snippets && snippets.length > 0 ? (
-              <BlockStack gap="small">
-                {snippets.map((s) => (
-                  <Button
-                    key={s.id}
-                    onPress={() => applySnippet(s)}
-                    disabled={busy}
-                  >
-                    {s.name}
-                  </Button>
+              <BlockStack gap="base">
+                {chunk(snippets, 3).map((row, i) => (
+                  <InlineStack key={`s-${i}`} gap="base">
+                    {row.map((s) => (
+                      <BlockStack key={s.id} gap="none" inlineAlignment="center">
+                        <Pressable
+                          onPress={() => applySnippet(s)}
+                          disabled={busy}
+                          padding="none"
+                          accessibilityLabel={`Apply snippet ${s.name}`}
+                        >
+                          <Image source={snippetThumbUri(s.id)} alt={s.name} />
+                        </Pressable>
+                        <Text>{s.name}</Text>
+                        <Button
+                          variant="primary"
+                          onPress={() => applySnippet(s)}
+                          disabled={busy}
+                        >
+                          Apply Snippet
+                        </Button>
+                      </BlockStack>
+                    ))}
+                  </InlineStack>
                 ))}
               </BlockStack>
             ) : (
@@ -424,6 +410,34 @@ function App() {
                 + Add new snippet
               </Link>
             </InlineStack>
+
+            <Text fontWeight="bold">Built-in layouts</Text>
+            <BlockStack gap="base">
+              {chunk(TEMPLATES, 3).map((row, i) => (
+                <InlineStack key={i} gap="base">
+                  {row.map((t) => (
+                    <BlockStack key={t.id} gap="none" inlineAlignment="center">
+                      <Pressable
+                        onPress={() => applyTemplate(t)}
+                        disabled={busy}
+                        padding="none"
+                        accessibilityLabel={`Apply ${t.label} layout`}
+                      >
+                        <Image source={thumbDataUri(t.id)} alt={t.label} />
+                      </Pressable>
+                      <Text>{t.label}</Text>
+                      <Button
+                        variant="primary"
+                        onPress={() => applyTemplate(t)}
+                        disabled={busy}
+                      >
+                        Apply Layout
+                      </Button>
+                    </BlockStack>
+                  ))}
+                </InlineStack>
+              ))}
+            </BlockStack>
           </>
         )}
       </BlockStack>
