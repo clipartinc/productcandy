@@ -233,26 +233,37 @@ function columnToHtml(col: Column): string {
   return col.blocks.map(blockToHtml).filter(Boolean).join("");
 }
 
-// Inline <style> + .pc-snippet-row/.pc-snippet-col classes give the row a
-// viewport-based responsive switch that inline flex-wrap can't express on
-// its own: inline min-width only triggers wrap when the *parent container*
-// is narrow, which a wide PDP container on a phone may not be. The @media
-// rule flips the row to a single vertical stack on any viewport ≤ 600px,
-// regardless of how the theme sizes the description container. flex-wrap +
-// min-width below is the fallback for sanitisers that strip <style> tags.
-export const SNIPPET_RESPONSIVE_STYLE = `<style>@media (max-width:600px){.pc-snippet-row{flex-direction:column !important;}.pc-snippet-row > .pc-snippet-col{flex-basis:100% !important;min-width:0 !important;width:100% !important;}}</style>`;
+// Stacking on mobile is done with **container queries** + a viewport
+// @media fallback. The container query is the primary mechanism because:
+// it asks "is the box my row sits in narrower than X?" — which is the
+// actual layout question — whereas @media asks "is the viewport narrower
+// than X?", and Shopify themes routinely render the description in
+// contexts (Horizon's `<rte-formatter>` cell, theme-editor "mobile"
+// previews, app-block iframes) where the viewport check doesn't match
+// the actual container width.
+//
+// Both @container and @media target `.pc-snippet-wrap .pc-snippet-row`
+// rather than `.pc-snippet-row` alone so we win specificity vs theme
+// rules like `.rte div { ... }`. !important is belt-and-suspenders for
+// the inline-style override (inline beats normal author CSS, but author
+// !important beats inline).
+//
+// The container itself is a wrapper div with `container-type:inline-size`
+// — required because @container queries an *ancestor* container, not
+// the element itself. The wrapper takes the parent's available width.
+const STACK_BREAKPOINT = 700; // px — covers phones and small tablets
+export const SNIPPET_RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{container-type:inline-size;}@container (max-width:${STACK_BREAKPOINT}px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}@media (max-width:${STACK_BREAKPOINT}px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}</style>`;
 
 function rowToHtml(row: Row): string {
   const nonEmpty = row.columns.filter((c) => c.blocks.length > 0);
   if (nonEmpty.length === 0) return "";
   if (nonEmpty.length === 1) return columnToHtml(nonEmpty[0]);
-  // ~440px total → 2 cols get 220, 3 get 146, 4 get 110. flex-wrap + the
-  // per-cell min-width keeps the row side-by-side on tablet+desktop
-  // containers and is a fallback stack on very narrow parents; the @media
-  // rule above is the primary mobile-stack mechanism (covers the case
-  // where a phone-viewport PDP still gives the description container >
-  // 440px, which keeps inline flex-wrap from firing).
-  const minW = Math.max(120, Math.floor(440 / nonEmpty.length));
+  // Inline flex-wrap + per-cell min-width is the *last-ditch* fallback
+  // for the case where a sanitiser strips both <style> blocks AND class
+  // attributes. min-width 280 (2 cols) / 180 (3) / 130 (4) means a 2-col
+  // row needs >576px of parent space to stay side-by-side, so on any
+  // phone-width container it wraps naturally.
+  const minW = Math.max(120, Math.floor(580 / nonEmpty.length));
   const cells = nonEmpty
     .map(
       (c) =>
@@ -262,8 +273,11 @@ function rowToHtml(row: Row): string {
   return `<div class="pc-snippet-row" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">${cells}</div>`;
 }
 
+// Every layout is wrapped in `.pc-snippet-wrap` so the @container query
+// has an ancestor to size against. The wrapper is invisible (width:100%
+// of its parent) but provides the containment context.
 export function layoutToHtml(layout: Layout): string {
   const body = layout.map(rowToHtml).filter(Boolean).join("\n");
   if (!body) return "";
-  return `${SNIPPET_RESPONSIVE_STYLE}\n${body}`;
+  return `${SNIPPET_RESPONSIVE_STYLE}\n<div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;">\n${body}\n</div>`;
 }

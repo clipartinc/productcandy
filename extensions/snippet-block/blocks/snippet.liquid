@@ -26,15 +26,35 @@
   /* Responsive stacking: even if the saved snippet HTML's own <style> tag
      gets stripped by a sanitiser somewhere up the chain, this wrapper-
      scoped rule still flips multi-column rows to a single column on
-     phones. The .pc-snippet-row / .pc-snippet-col classes are stamped by
-     the snippet builder onto every multi-column row. */
-  @media (max-width: 600px) {
+     phones / narrow containers. The .pc-snippet-row / .pc-snippet-col
+     classes are stamped by the snippet builder onto every multi-column
+     row. .product-candy-snippet itself becomes a container so we can
+     query the *actual* block width (not the viewport, which lies inside
+     theme-editor mobile previews and iframes). */
+  .product-candy-snippet { container-type: inline-size; }
+  @container (max-width: 700px) {
     .product-candy-snippet .pc-snippet-row {
       flex-direction: column !important;
+      flex-wrap: nowrap !important;
     }
     .product-candy-snippet .pc-snippet-row > .pc-snippet-col {
+      flex: 0 0 100% !important;
       flex-basis: 100% !important;
       min-width: 0 !important;
+      max-width: 100% !important;
+      width: 100% !important;
+    }
+  }
+  @media (max-width: 700px) {
+    .product-candy-snippet .pc-snippet-row {
+      flex-direction: column !important;
+      flex-wrap: nowrap !important;
+    }
+    .product-candy-snippet .pc-snippet-row > .pc-snippet-col {
+      flex: 0 0 100% !important;
+      flex-basis: 100% !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
       width: 100% !important;
     }
   }

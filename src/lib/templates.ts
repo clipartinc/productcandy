@@ -43,11 +43,13 @@ export type TemplateId =
 
 const THUMB = (id: string) => `/templates/${id}.svg`;
 
-// @media rule that forces multi-column rows to stack on mobile viewports.
-// Paired with .pc-snippet-row / .pc-snippet-col classes on the wrappers
-// below so inline flex-wrap (which only fires when the parent container is
-// narrow) isn't the only stacking mechanism on phones.
-const RESPONSIVE_STYLE = `<style>@media (max-width:600px){.pc-snippet-row{flex-direction:column !important;}.pc-snippet-row > .pc-snippet-col{flex-basis:100% !important;min-width:0 !important;width:100% !important;}}</style>`;
+// Stacks multi-column rows on small screens. Container query is primary
+// (matches the actual cell width); @media is fallback. See snippetBlocks
+// for the long-form rationale.
+const RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{container-type:inline-size;}@container (max-width:700px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}@media (max-width:700px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}</style>`;
+
+const WRAP_OPEN = `<div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;">`;
+const WRAP_CLOSE = `</div>`;
 
 function escapeHtml(s: string): string {
   return s
@@ -175,10 +177,12 @@ export const TEMPLATES: Record<TemplateId, Template> = {
     render: (v) =>
       `
 ${RESPONSIVE_STYLE}
+${WRAP_OPEN}
 <div class="pc-snippet-row" style="display:flex;gap:24px;flex-wrap:wrap;">
-  <div class="pc-snippet-col" style="flex:1;min-width:240px;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
-  <div class="pc-snippet-col" style="flex:1;min-width:240px;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
-</div>`.trim(),
+  <div class="pc-snippet-col" style="flex:1;min-width:280px;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
+  <div class="pc-snippet-col" style="flex:1;min-width:280px;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
+</div>
+${WRAP_CLOSE}`.trim(),
   },
   "three-column": {
     id: "three-column",
@@ -196,11 +200,13 @@ ${RESPONSIVE_STYLE}
     render: (v) =>
       `
 ${RESPONSIVE_STYLE}
+${WRAP_OPEN}
 <div class="pc-snippet-row" style="display:flex;gap:20px;flex-wrap:wrap;">
-  <div class="pc-snippet-col" style="flex:1;min-width:200px;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
-  <div class="pc-snippet-col" style="flex:1;min-width:200px;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
-  <div class="pc-snippet-col" style="flex:1;min-width:200px;"><h3>${escapeHtml(v.h3 ?? "")}</h3>${paragraphs(v.c3)}</div>
-</div>`.trim(),
+  <div class="pc-snippet-col" style="flex:1;min-width:180px;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
+  <div class="pc-snippet-col" style="flex:1;min-width:180px;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
+  <div class="pc-snippet-col" style="flex:1;min-width:180px;"><h3>${escapeHtml(v.h3 ?? "")}</h3>${paragraphs(v.c3)}</div>
+</div>
+${WRAP_CLOSE}`.trim(),
   },
   "hero-cta": {
     id: "hero-cta",
@@ -237,10 +243,12 @@ ${RESPONSIVE_STYLE}
       const img = findImage(v, "img", images);
       return `
 ${RESPONSIVE_STYLE}
+${WRAP_OPEN}
 <div class="pc-snippet-row" style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
-  <div class="pc-snippet-col" style="flex:1;min-width:240px;">${imgTag(img)}</div>
-  <div class="pc-snippet-col" style="flex:1;min-width:240px;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
-</div>`.trim();
+  <div class="pc-snippet-col" style="flex:1;min-width:280px;">${imgTag(img)}</div>
+  <div class="pc-snippet-col" style="flex:1;min-width:280px;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
+</div>
+${WRAP_CLOSE}`.trim();
     },
   },
   "text-image": {
@@ -257,10 +265,12 @@ ${RESPONSIVE_STYLE}
       const img = findImage(v, "img", images);
       return `
 ${RESPONSIVE_STYLE}
+${WRAP_OPEN}
 <div class="pc-snippet-row" style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
-  <div class="pc-snippet-col" style="flex:1;min-width:240px;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
-  <div class="pc-snippet-col" style="flex:1;min-width:240px;">${imgTag(img)}</div>
-</div>`.trim();
+  <div class="pc-snippet-col" style="flex:1;min-width:280px;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
+  <div class="pc-snippet-col" style="flex:1;min-width:280px;">${imgTag(img)}</div>
+</div>
+${WRAP_CLOSE}`.trim();
     },
   },
   "gallery-3": {
@@ -285,7 +295,7 @@ ${RESPONSIVE_STYLE}
         .map(([imgKey, capKey]) => {
           const img = findImage(v, imgKey, images);
           if (!img) return "";
-          return `<div class="pc-snippet-col" style="flex:1;min-width:200px;">${imgTag(img)}${
+          return `<div class="pc-snippet-col" style="flex:1;min-width:180px;">${imgTag(img)}${
             v[capKey]
               ? `<p style="margin-top:8px;text-align:center;font-size:0.9em;color:#6b7280;">${escapeHtml(v[capKey])}</p>`
               : ""
@@ -293,7 +303,7 @@ ${RESPONSIVE_STYLE}
         })
         .filter(Boolean)
         .join("");
-      return `${RESPONSIVE_STYLE}<div class="pc-snippet-row" style="display:flex;gap:16px;flex-wrap:wrap;">${cells}</div>`;
+      return `${RESPONSIVE_STYLE}${WRAP_OPEN}<div class="pc-snippet-row" style="display:flex;gap:16px;flex-wrap:wrap;">${cells}</div>${WRAP_CLOSE}`;
     },
   },
 };

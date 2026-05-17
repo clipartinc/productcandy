@@ -54,13 +54,17 @@ function ph(label: string, bg: string, text: string): string {
   return `<div data-pc-placeholder="1" style="background-color:${bg};color:${text};border:1px dashed #d1d5db;border-radius:8px;padding:12px 16px;margin:8px 0;font-style:italic;">${label}</div>`;
 }
 
-// Inline @media rule that flips multi-column rows to a single vertical
-// stack on viewports ≤600px. Inline min-width alone isn't enough — themes
-// often size the description container wider than the viewport on phones
-// (or wrap it in flex parents that resist shrinking), so flex-wrap never
-// fires. The class hooks below (.pc-snippet-row / .pc-snippet-col) are
-// added to every multi-column skeleton so this rule can target them.
-const RESPONSIVE_STYLE = `<style>@media (max-width:600px){.pc-snippet-row{flex-direction:column !important;}.pc-snippet-row > .pc-snippet-col{flex-basis:100% !important;min-width:0 !important;width:100% !important;}}</style>`;
+// Stacks multi-column rows on small screens via a CSS container query
+// (primary) + viewport @media (fallback). See snippetBlocks.ts for the
+// long-form rationale — short version: themes like Horizon render the
+// description inside an `<rte-formatter>` cell whose width on a phone
+// doesn't equal the viewport, so viewport-only @media doesn't always
+// fire when we'd want it to. The container query asks the actual cell
+// width via the .pc-snippet-wrap div's `container-type:inline-size`.
+const RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{container-type:inline-size;}@container (max-width:700px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}@media (max-width:700px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}</style>`;
+
+const WRAP_OPEN = `<div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;">`;
+const WRAP_CLOSE = `</div>`;
 
 // Inline placeholder (used for headings, short labels)
 function phInline(label: string, bg: string, text: string): string {
@@ -125,36 +129,40 @@ const TEMPLATES: TemplateMeta[] = [
     label: "Two columns",
     skeleton: (bg, text) => `
 ${RESPONSIVE_STYLE}
+${WRAP_OPEN}
 <div class="pc-snippet-row" data-pc-template="two-column" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">
+  <div class="pc-snippet-col" style="flex:1 1 280px;min-width:280px;">
     <h3>${phInline("Column 1 heading", bg, text)}</h3>
     ${ph("Click here to write column 1 text…", bg, text)}
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">
+  <div class="pc-snippet-col" style="flex:1 1 280px;min-width:280px;">
     <h3>${phInline("Column 2 heading", bg, text)}</h3>
     ${ph("Click here to write column 2 text…", bg, text)}
   </div>
-</div>`.trim(),
+</div>
+${WRAP_CLOSE}`.trim(),
   },
   {
     id: "three-column",
     label: "Three columns",
     skeleton: (bg, text) => `
 ${RESPONSIVE_STYLE}
+${WRAP_OPEN}
 <div class="pc-snippet-row" data-pc-template="three-column" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 146px;min-width:146px;">
+  <div class="pc-snippet-col" style="flex:1 1 180px;min-width:180px;">
     <h3>${phInline("Column 1 heading", bg, text)}</h3>
     ${ph("Click to write…", bg, text)}
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 146px;min-width:146px;">
+  <div class="pc-snippet-col" style="flex:1 1 180px;min-width:180px;">
     <h3>${phInline("Column 2 heading", bg, text)}</h3>
     ${ph("Click to write…", bg, text)}
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 146px;min-width:146px;">
+  <div class="pc-snippet-col" style="flex:1 1 180px;min-width:180px;">
     <h3>${phInline("Column 3 heading", bg, text)}</h3>
     ${ph("Click to write…", bg, text)}
   </div>
-</div>`.trim(),
+</div>
+${WRAP_CLOSE}`.trim(),
   },
   {
     id: "hero-cta",
@@ -173,46 +181,52 @@ ${RESPONSIVE_STYLE}
     label: "Image + text",
     skeleton: (bg, text) => `
 ${RESPONSIVE_STYLE}
+${WRAP_OPEN}
 <div class="pc-snippet-row" data-pc-template="image-text" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;align-items:flex-start;">
-  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
-  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">
+  <div class="pc-snippet-col" style="flex:1 1 280px;min-width:280px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
+  <div class="pc-snippet-col" style="flex:1 1 280px;min-width:280px;">
     <h3>${phInline("Headline", bg, text)}</h3>
     ${ph("Click here to write your supporting text…", bg, text)}
   </div>
-</div>`.trim(),
+</div>
+${WRAP_CLOSE}`.trim(),
   },
   {
     id: "text-image",
     label: "Text + image",
     skeleton: (bg, text) => `
 ${RESPONSIVE_STYLE}
+${WRAP_OPEN}
 <div class="pc-snippet-row" data-pc-template="text-image" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;align-items:flex-start;">
-  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">
+  <div class="pc-snippet-col" style="flex:1 1 280px;min-width:280px;">
     <h3>${phInline("Headline", bg, text)}</h3>
     ${ph("Click here to write your supporting text…", bg, text)}
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
-</div>`.trim(),
+  <div class="pc-snippet-col" style="flex:1 1 280px;min-width:280px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
+</div>
+${WRAP_CLOSE}`.trim(),
   },
   {
     id: "gallery-3",
     label: "Image gallery (3)",
     skeleton: (bg, text) => `
 ${RESPONSIVE_STYLE}
+${WRAP_OPEN}
 <div class="pc-snippet-row" data-pc-template="gallery-3" style="display:flex;gap:16px;flex-wrap:wrap;">
-  <div class="pc-snippet-col" style="flex:1;min-width:200px;">
+  <div class="pc-snippet-col" style="flex:1;min-width:180px;">
     ${ph("Image 1 placeholder", bg, text)}
     ${ph("Caption 1", bg, text)}
   </div>
-  <div class="pc-snippet-col" style="flex:1;min-width:200px;">
+  <div class="pc-snippet-col" style="flex:1;min-width:180px;">
     ${ph("Image 2 placeholder", bg, text)}
     ${ph("Caption 2", bg, text)}
   </div>
-  <div class="pc-snippet-col" style="flex:1;min-width:200px;">
+  <div class="pc-snippet-col" style="flex:1;min-width:180px;">
     ${ph("Image 3 placeholder", bg, text)}
     ${ph("Caption 3", bg, text)}
   </div>
-</div>`.trim(),
+</div>
+${WRAP_CLOSE}`.trim(),
   },
 ];
 
