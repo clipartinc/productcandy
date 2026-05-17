@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
+import { getShopify, sessionStorage } from "@/lib/shopify";
+import { checkEntitlement } from "@/lib/billing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,6 +46,25 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
     where: { domain: verified.shop },
   });
   if (!shop) return new NextResponse("", { status: 200 });
+
+  // Entitlement gate — free / lapsed merchants get an empty response
+  // so the storefront snippet block renders nothing. Dev stores and
+  // active subscribers pass through. The Shopify Admin session for
+  // this shop is cached from the install / token-exchange flow and
+  // lets checkEntitlement refresh from Admin GraphQL if stale.
+  const shopify = getShopify();
+  const offlineId = shopify.session.getOfflineId(verified.shop);
+  const session = (await sessionStorage.loadSession(offlineId)) ?? undefined;
+  const ent = await checkEntitlement(shop, session);
+  if (!ent.entitled) {
+    return new NextResponse("", {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "public, max-age=60",
+      },
+    });
+  }
 
   const snippet = await prisma.descriptionTemplate.findFirst({
     where: { id, shopId: shop.id },

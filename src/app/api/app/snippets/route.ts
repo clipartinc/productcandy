@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticateExtensionRequest } from "@/lib/sessionToken";
+import { checkEntitlement } from "@/lib/billing";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -15,30 +16,40 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-async function shopFor(req: NextRequest) {
-  const { shop: domain } = await authenticateExtensionRequest(req);
-  return prisma.shop.upsert({
+async function shopAndSessionFor(req: NextRequest) {
+  const { shop: domain, session } = await authenticateExtensionRequest(req);
+  const shop = await prisma.shop.upsert({
     where: { domain },
     update: {},
     create: { domain },
   });
+  return { shop, session };
 }
 
 export async function GET(req: NextRequest) {
   try {
-    const shop = await shopFor(req);
-    const snippets = await prisma.descriptionTemplate.findMany({
-      where: { shopId: shop.id },
-      orderBy: { updatedAt: "desc" },
-      select: {
-        id: true,
-        name: true,
-        html: true,
-        layout: true,
-        updatedAt: true,
-      },
-    });
-    return NextResponse.json({ snippets }, { headers: CORS_HEADERS });
+    const { shop, session } = await shopAndSessionFor(req);
+    const [snippets, entitlement] = await Promise.all([
+      prisma.descriptionTemplate.findMany({
+        where: { shopId: shop.id },
+        orderBy: { updatedAt: "desc" },
+        select: {
+          id: true,
+          name: true,
+          html: true,
+          layout: true,
+          updatedAt: true,
+        },
+      }),
+      checkEntitlement(shop, session),
+    ]);
+    // Returning entitlement alongside snippets lets the action
+    // extension render the subscribe banner without a second round-trip
+    // and the dashboard reflect the live status on every refresh.
+    return NextResponse.json(
+      { snippets, entitlement },
+      { headers: CORS_HEADERS }
+    );
   } catch (e) {
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Unknown error" },
@@ -49,7 +60,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const shop = await shopFor(req);
+    const { shop } = await shopAndSessionFor(req);
     const { name, html, layout } = (await req.json()) as {
       name?: string;
       html?: string;

@@ -63,6 +63,7 @@ export default function SnippetsPage() {
   const [mode, setMode] = useState<"builder" | "html">("builder");
   const [layout, setLayout] = useState<Layout>([]);
   const [nameError, setNameError] = useState<string | undefined>(undefined);
+  const [entitled, setEntitled] = useState<boolean | null>(null);
 
   const editor = useEditor({
     extensions: [
@@ -86,6 +87,7 @@ export default function SnippetsPage() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? "Load failed");
       setSnippets(json.snippets);
+      setEntitled(json.entitlement?.entitled ?? null);
       setStatus({ kind: "ready" });
     } catch (e) {
       setStatus({
@@ -244,6 +246,22 @@ export default function SnippetsPage() {
       }
     >
       <BlockStack gap="400">
+        {entitled === false && (
+          <Banner
+            tone="info"
+            title="Building snippets is free — applying them needs a subscription"
+            action={{ content: "View billing", url: "/app/billing" }}
+          >
+            <p>
+              You can create, edit, and save as many custom snippets as you
+              like on the free plan. The $4.99/month Custom Snippets add-on
+              unlocks <strong>applying snippets to product descriptions</strong>{" "}
+              from the action extension and <strong>rendering them on your
+              storefront</strong> via the Product Candy snippet theme block.
+            </p>
+          </Banner>
+        )}
+
         {status.kind === "error" && (
           <Banner
             tone="critical"

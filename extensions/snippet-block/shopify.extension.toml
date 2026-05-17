@@ -1,4 +1,5 @@
 api_version = "2025-07"
+uid = "e8b2631a-df74-6a1a-2662-986fce4cdb5b16bc040a"
 
 [[extensions]]
 type = "theme"

@@ -17,6 +17,9 @@ export function NavMenu() {
     <a key="snippets" href="/app/snippets">
       Custom Snippets
     </a>,
+    <a key="billing" href="/app/billing">
+      Billing
+    </a>,
     <a key="contact" href="/app/contact">
       Contact
     </a>
