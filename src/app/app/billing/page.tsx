@@ -12,7 +12,7 @@ import {
   List,
   Badge,
 } from "@shopify/polaris";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { appBridgeFetch } from "@/lib/appBridgeFetch";
 
@@ -24,7 +24,19 @@ type Status = {
   plan: { name: string; priceUsd: number; test: boolean };
 };
 
+// Next.js App Router requires components that call useSearchParams() to
+// be wrapped in <Suspense> so the prerender pass can bail out of static
+// generation for the page without erroring. Outer default export is the
+// boundary; the inner client component does the actual work.
 export default function BillingPage() {
+  return (
+    <Suspense fallback={null}>
+      <BillingPageInner />
+    </Suspense>
+  );
+}
+
+function BillingPageInner() {
   const params = useSearchParams();
   const justSubscribed = params.get("subscribed") === "1";
 

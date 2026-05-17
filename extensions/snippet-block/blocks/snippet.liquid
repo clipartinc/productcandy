@@ -23,14 +23,14 @@
 -%}
 
 <style>
-  /* Responsive stacking: even if the saved snippet HTML's own <style> tag
-     gets stripped by a sanitiser somewhere up the chain, this wrapper-
-     scoped rule still flips multi-column rows to a single column on
-     phones / narrow containers. The .pc-snippet-row / .pc-snippet-col
-     classes are stamped by the snippet builder onto every multi-column
-     row. .product-candy-snippet itself becomes a container so we can
-     query the *actual* block width (not the viewport, which lies inside
-     theme-editor mobile previews and iframes). */
+  /* Responsive stacking: even if the saved snippet HTML's own inline
+     style tag gets stripped by a sanitiser somewhere up the chain,
+     this wrapper-scoped rule still flips multi-column rows to a single
+     column on phones / narrow containers. The .pc-snippet-row /
+     .pc-snippet-col classes are stamped by the snippet builder onto
+     every multi-column row. .product-candy-snippet itself becomes a
+     container so we can query the actual block width (not the viewport,
+     which lies inside theme-editor mobile previews and iframes). */
   .product-candy-snippet { container-type: inline-size; }
   @container (max-width: 480px) {
     .product-candy-snippet .pc-snippet-row {
