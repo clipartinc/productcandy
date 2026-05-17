@@ -49,6 +49,14 @@ function styleNoWs(el: Element): string {
 
 function isMultiColumnRow(el: Element): boolean {
   if (el.tagName !== "DIV") return false;
+  // The `pc-snippet-row` class is the canonical marker; older saved
+  // snippets used `display:flex;flex-wrap:wrap` as the only hint, so
+  // accept either to keep backwards compatibility with stamped HTML
+  // that pre-dates the class.
+  const classes = el.getAttribute("class") ?? "";
+  if (classes.split(/\s+/).includes("pc-snippet-row")) {
+    return el.children.length >= 2;
+  }
   const style = styleNoWs(el);
   return (
     style.includes("display:flex") &&
@@ -281,7 +289,10 @@ function flattenTopLevel(elements: Element[]): Element[] {
       el.children.length > 0
     ) {
       const style = styleNoWs(el);
+      const classes = el.getAttribute("class") ?? "";
+      const hasRowClass = classes.split(/\s+/).includes("pc-snippet-row");
       const isLayoutDiv =
+        hasRowClass ||
         (style.includes("display:flex") && style.includes("flex-wrap:wrap")) ||
         style.includes("border-bottom");
       if (!isLayoutDiv) {

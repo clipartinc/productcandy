@@ -178,9 +178,9 @@ export const TEMPLATES: Record<TemplateId, Template> = {
       `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" style="display:flex;gap:24px;flex-wrap:wrap;">
-  <div class="pc-snippet-col" style="flex:1;min-width:280px;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
-  <div class="pc-snippet-col" style="flex:1;min-width:280px;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
+<div class="pc-snippet-row" style="display:flex;gap:24px;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
 </div>
 ${WRAP_CLOSE}`.trim(),
   },
@@ -201,10 +201,10 @@ ${WRAP_CLOSE}`.trim(),
       `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" style="display:flex;gap:20px;flex-wrap:wrap;">
-  <div class="pc-snippet-col" style="flex:1;min-width:180px;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
-  <div class="pc-snippet-col" style="flex:1;min-width:180px;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
-  <div class="pc-snippet-col" style="flex:1;min-width:180px;"><h3>${escapeHtml(v.h3 ?? "")}</h3>${paragraphs(v.c3)}</div>
+<div class="pc-snippet-row" style="display:flex;gap:20px;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;"><h3>${escapeHtml(v.h3 ?? "")}</h3>${paragraphs(v.c3)}</div>
 </div>
 ${WRAP_CLOSE}`.trim(),
   },
@@ -244,9 +244,9 @@ ${WRAP_CLOSE}`.trim(),
       return `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
-  <div class="pc-snippet-col" style="flex:1;min-width:280px;">${imgTag(img)}</div>
-  <div class="pc-snippet-col" style="flex:1;min-width:280px;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
+<div class="pc-snippet-row" style="display:flex;gap:24px;align-items:flex-start;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;">${imgTag(img)}</div>
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
 </div>
 ${WRAP_CLOSE}`.trim();
     },
@@ -266,9 +266,9 @@ ${WRAP_CLOSE}`.trim();
       return `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
-  <div class="pc-snippet-col" style="flex:1;min-width:280px;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
-  <div class="pc-snippet-col" style="flex:1;min-width:280px;">${imgTag(img)}</div>
+<div class="pc-snippet-row" style="display:flex;gap:24px;align-items:flex-start;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;">${imgTag(img)}</div>
 </div>
 ${WRAP_CLOSE}`.trim();
     },
@@ -295,7 +295,7 @@ ${WRAP_CLOSE}`.trim();
         .map(([imgKey, capKey]) => {
           const img = findImage(v, imgKey, images);
           if (!img) return "";
-          return `<div class="pc-snippet-col" style="flex:1;min-width:180px;">${imgTag(img)}${
+          return `<div class="pc-snippet-col" style="flex:1 1 0;min-width:0;">${imgTag(img)}${
             v[capKey]
               ? `<p style="margin-top:8px;text-align:center;font-size:0.9em;color:#6b7280;">${escapeHtml(v[capKey])}</p>`
               : ""
@@ -303,7 +303,7 @@ ${WRAP_CLOSE}`.trim();
         })
         .filter(Boolean)
         .join("");
-      return `${RESPONSIVE_STYLE}${WRAP_OPEN}<div class="pc-snippet-row" style="display:flex;gap:16px;flex-wrap:wrap;">${cells}</div>${WRAP_CLOSE}`;
+      return `${RESPONSIVE_STYLE}${WRAP_OPEN}<div class="pc-snippet-row" style="display:flex;gap:16px;">${cells}</div>${WRAP_CLOSE}`;
     },
   },
 };

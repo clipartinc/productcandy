@@ -51,12 +51,12 @@ export const STARTERS: Starter[] = [
     label: "Two columns",
     html: `<style>.pc-snippet-wrap{container-type:inline-size;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}</style>
 <div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;">
-<div class="pc-snippet-row" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 280px;min-width:280px;">
+<div class="pc-snippet-row" style="display:flex;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;">
     <h3>Column 1 heading</h3>
     <p>Add column 1 text here.</p>
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 280px;min-width:280px;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;">
     <h3>Column 2 heading</h3>
     <p>Add column 2 text here.</p>
   </div>
@@ -68,16 +68,16 @@ export const STARTERS: Starter[] = [
     label: "Three columns",
     html: `<style>.pc-snippet-wrap{container-type:inline-size;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}</style>
 <div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;">
-<div class="pc-snippet-row" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 180px;min-width:180px;">
+<div class="pc-snippet-row" style="display:flex;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;">
     <h3>Column 1</h3>
     <p>Add text.</p>
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 180px;min-width:180px;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;">
     <h3>Column 2</h3>
     <p>Add text.</p>
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 180px;min-width:180px;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;">
     <h3>Column 3</h3>
     <p>Add text.</p>
   </div>

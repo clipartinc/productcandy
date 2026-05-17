@@ -304,6 +304,9 @@ export function BlockPreview({ block }: { block: Block }) {
             .canvas-html-preview a { color: #ec4899; text-decoration: underline; }
             .canvas-html-preview div[style*="min-width"] { min-width: 0 !important; }
             .canvas-html-preview div[style*="flex-wrap"] { flex-wrap: nowrap !important; }
+            .canvas-html-preview .pc-snippet-wrap { container-type: normal !important; }
+            .canvas-html-preview .pc-snippet-row { flex-direction: row !important; flex-wrap: nowrap !important; }
+            .canvas-html-preview .pc-snippet-row > .pc-snippet-col { flex: 1 1 0 !important; min-width: 0 !important; width: auto !important; max-width: none !important; }
             .canvas-html-preview { max-width: none !important; }
           `}</style>
         </div>

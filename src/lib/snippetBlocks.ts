@@ -260,19 +260,19 @@ function rowToHtml(row: Row): string {
   const nonEmpty = row.columns.filter((c) => c.blocks.length > 0);
   if (nonEmpty.length === 0) return "";
   if (nonEmpty.length === 1) return columnToHtml(nonEmpty[0]);
-  // Inline flex-wrap + per-cell min-width is the *last-ditch* fallback
-  // for the case where a sanitiser strips both <style> blocks AND class
-  // attributes. min-width 280 (2 cols) / 180 (3) / 130 (4) means a 2-col
-  // row needs >576px of parent space to stay side-by-side, so on any
-  // phone-width container it wraps naturally.
-  const minW = Math.max(120, Math.floor(580 / nonEmpty.length));
+  // Cells use `flex:1 1 0;min-width:0` so they shrink to fit *whatever*
+  // width the parent provides — no inline min-width that could trigger
+  // unwanted flex-wrap on a narrow desktop PDP container (Horizon's
+  // `--max-width--body-normal` is often ~500-600px, so any per-cell
+  // min-width of 200+ would wrap the row on desktop too). All stacking
+  // is delegated to the @container / @media rules in SNIPPET_RESPONSIVE_STYLE.
   const cells = nonEmpty
     .map(
       (c) =>
-        `<div class="pc-snippet-col" style="flex:1 1 ${minW}px;min-width:${minW}px;">${columnToHtml(c)}</div>`
+        `<div class="pc-snippet-col" style="flex:1 1 0;min-width:0;">${columnToHtml(c)}</div>`
     )
     .join("");
-  return `<div class="pc-snippet-row" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">${cells}</div>`;
+  return `<div class="pc-snippet-row" style="display:flex;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">${cells}</div>`;
 }
 
 // Every layout is wrapped in `.pc-snippet-wrap` so the @container query

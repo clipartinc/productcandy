@@ -30,9 +30,9 @@ import { htmlToLayout } from "@/lib/snippetParser";
 
 const RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{container-type:inline-size;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}</style>`;
 
-const TWO_COL_INSERT = `${RESPONSIVE_STYLE}<div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;"><div class="pc-snippet-row" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;"><div class="pc-snippet-col" style="flex:1 1 280px;min-width:280px;"><h3>Column 1 heading</h3><p>Add column 1 text here.</p></div><div class="pc-snippet-col" style="flex:1 1 280px;min-width:280px;"><h3>Column 2 heading</h3><p>Add column 2 text here.</p></div></div></div><p></p>`;
+const TWO_COL_INSERT = `${RESPONSIVE_STYLE}<div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;"><div class="pc-snippet-row" style="display:flex;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;"><div class="pc-snippet-col" style="flex:1 1 0;min-width:0;"><h3>Column 1 heading</h3><p>Add column 1 text here.</p></div><div class="pc-snippet-col" style="flex:1 1 0;min-width:0;"><h3>Column 2 heading</h3><p>Add column 2 text here.</p></div></div></div><p></p>`;
 
-const THREE_COL_INSERT = `${RESPONSIVE_STYLE}<div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;"><div class="pc-snippet-row" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;"><div class="pc-snippet-col" style="flex:1 1 180px;min-width:180px;"><h3>Column 1</h3><p>Add text.</p></div><div class="pc-snippet-col" style="flex:1 1 180px;min-width:180px;"><h3>Column 2</h3><p>Add text.</p></div><div class="pc-snippet-col" style="flex:1 1 180px;min-width:180px;"><h3>Column 3</h3><p>Add text.</p></div></div></div><p></p>`;
+const THREE_COL_INSERT = `${RESPONSIVE_STYLE}<div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;"><div class="pc-snippet-row" style="display:flex;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;"><div class="pc-snippet-col" style="flex:1 1 0;min-width:0;"><h3>Column 1</h3><p>Add text.</p></div><div class="pc-snippet-col" style="flex:1 1 0;min-width:0;"><h3>Column 2</h3><p>Add text.</p></div><div class="pc-snippet-col" style="flex:1 1 0;min-width:0;"><h3>Column 3</h3><p>Add text.</p></div></div></div><p></p>`;
 
 const HERO_CTA_INSERT = `<h2>Bold headline goes here</h2><p>Add a short supporting paragraph here.</p><p><a href="#" style="display:inline-block;background:#ec4899;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:600;">Button label</a></p><p></p>`;
 
@@ -645,6 +645,13 @@ function SnippetPreview({ html }: { html: string }) {
            HTML is untouched, so real product pages keep responsive wrap. */
         .snippet-preview-html div[style*="min-width"] { min-width: 0 !important; }
         .snippet-preview-html div[style*="flex-wrap"] { flex-wrap: nowrap !important; }
+        /* Disable the snippet's own @container query inside the narrow
+           preview card — otherwise a thumbnail-width wrapper would
+           always trigger the mobile stack rule and the preview would
+           never show a desktop side-by-side layout. */
+        .snippet-preview-html .pc-snippet-wrap { container-type: normal !important; }
+        .snippet-preview-html .pc-snippet-row { flex-direction: row !important; flex-wrap: nowrap !important; }
+        .snippet-preview-html .pc-snippet-row > .pc-snippet-col { flex: 1 1 0 !important; min-width: 0 !important; width: auto !important; max-width: none !important; }
         .snippet-preview-html { max-width: none !important; }
         .snippet-preview-button {
           display: block;
