@@ -610,10 +610,14 @@ function SnippetPreview({ html }: { html: string }) {
         .snippet-preview-html li { margin-bottom: 2px; }
         .snippet-preview-html img { max-width: 100%; height: auto; border-radius: 4px; }
         .snippet-preview-html a { color: #ec4899; text-decoration: underline; }
-        /* Neutralise the inline min-widths the layout HTML uses for desktop
-           sizing so multi-column rows still render side-by-side in the
-           narrow preview card. The saved HTML keeps its real min-widths. */
+        /* Neutralise the inline min-widths and flex-wrap the layout HTML
+           uses for desktop sizing so multi-column rows still render
+           side-by-side in the narrow preview card no matter what the
+           outer Polaris card / theme container's max-width is. The saved
+           HTML is untouched, so real product pages keep responsive wrap. */
         .snippet-preview-html div[style*="min-width"] { min-width: 0 !important; }
+        .snippet-preview-html div[style*="flex-wrap"] { flex-wrap: nowrap !important; }
+        .snippet-preview-html { max-width: none !important; }
         .snippet-preview-button {
           display: block;
           width: 100%;

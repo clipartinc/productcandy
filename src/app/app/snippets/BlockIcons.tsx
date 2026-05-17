@@ -303,6 +303,8 @@ export function BlockPreview({ block }: { block: Block }) {
             .canvas-html-preview img { max-width: 100%; height: auto; border-radius: 4px; }
             .canvas-html-preview a { color: #ec4899; text-decoration: underline; }
             .canvas-html-preview div[style*="min-width"] { min-width: 0 !important; }
+            .canvas-html-preview div[style*="flex-wrap"] { flex-wrap: nowrap !important; }
+            .canvas-html-preview { max-width: none !important; }
           `}</style>
         </div>
       );
