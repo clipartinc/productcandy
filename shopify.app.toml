@@ -16,3 +16,14 @@ redirect_urls = [ "https://productcandy.app/api/auth/callback" ]
 
 [webhooks]
 api_version = "2026-04"
+
+# App proxy — lets storefronts fetch from
+# https://{shop}.myshopify.com/apps/product-candy/snippets/:id
+# which Shopify rewrites to https://productcandy.app/api/proxy/snippets/:id
+# with shop + signature query params we verify server-side. Used by the
+# Snippet App Block in extensions/snippet-block to render saved snippets
+# without going through the theme's rte-formatter.
+[app_proxy]
+url = "https://productcandy.app/api/proxy"
+subpath = "product-candy"
+prefix = "apps"

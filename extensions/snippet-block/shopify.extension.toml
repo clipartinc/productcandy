@@ -1,0 +1,6 @@
+api_version = "2025-07"
+
+[[extensions]]
+type = "theme"
+name = "Product Candy Snippet Block"
+handle = "snippet-block"

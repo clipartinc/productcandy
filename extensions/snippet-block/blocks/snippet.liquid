@@ -1,0 +1,147 @@
+{%- comment -%}
+  Product Candy — Snippet block
+
+  Merchants drop this block into a section (typically the product page
+  template) via the theme customizer, pick which saved snippet to show,
+  and it renders the snippet's HTML inline. The block is **not** inside
+  the theme's rte-formatter / text-block wrapper, so the snippet can use
+  its full multi-column layout without being clamped by the theme's
+  body-normal max-width.
+
+  The HTML is fetched at render time via the app proxy
+  (/apps/product-candy/snippets/:id) so the merchant can edit a saved
+  snippet in the admin and it updates live on the storefront — no theme
+  re-publish needed.
+{%- endcomment -%}
+
+{%- liquid
+  assign snippet_id = block.settings.snippet_id | strip
+  assign max_width = block.settings.max_width | default: 'none'
+  assign alignment = block.settings.alignment | default: 'left'
+  assign padding_top = block.settings.padding_top | default: 0
+  assign padding_bottom = block.settings.padding_bottom | default: 0
+-%}
+
+<div
+  class="product-candy-snippet"
+  data-snippet-id="{{ snippet_id | escape }}"
+  style="
+    width: 100%;
+    {% if max_width != 'none' %}max-width: {{ max_width }};{% endif %}
+    margin-left: {% if alignment == 'center' or alignment == 'right' %}auto{% else %}0{% endif %};
+    margin-right: {% if alignment == 'center' or alignment == 'left' %}auto{% else %}0{% endif %};
+    padding-top: {{ padding_top }}px;
+    padding-bottom: {{ padding_bottom }}px;
+    box-sizing: border-box;
+  "
+  {{ block.shopify_attributes }}
+>
+  {%- if snippet_id == blank -%}
+    {%- if request.design_mode -%}
+      <div style="padding:16px;border:1px dashed #d1d5db;border-radius:8px;color:#6b7280;text-align:center;font-style:italic;">
+        Pick a snippet in the block settings to display it here.
+      </div>
+    {%- endif -%}
+  {%- else -%}
+    {%- comment -%}
+      app-proxy URL: Shopify rewrites /apps/{subpath}/* to
+      https://productcandy.app/api/proxy/* with shop + signature query
+      params. We expose /api/proxy/snippets/:id which returns the saved
+      HTML for that snippet (scoped to the current shop).
+    {%- endcomment -%}
+    <div
+      class="product-candy-snippet__content"
+      data-pc-snippet-mount
+    >
+      {%- comment -%} Server-side render via Shopify's section rendering? We can't reach
+      the app from Liquid synchronously, so we fetch client-side. Show a
+      lightweight placeholder while loading so the block doesn't collapse. {%- endcomment -%}
+      <noscript>
+        <p style="color:#6b7280;font-style:italic;">
+          Snippet content requires JavaScript to load.
+        </p>
+      </noscript>
+    </div>
+
+    <script>
+      (function () {
+        var mount = document.currentScript.previousElementSibling;
+        if (!mount) return;
+        var id = {{ snippet_id | json }};
+        if (!id) return;
+        fetch('/apps/product-candy/snippets/' + encodeURIComponent(id), {
+          headers: { Accept: 'text/html' },
+          credentials: 'same-origin'
+        })
+          .then(function (r) { return r.ok ? r.text() : ''; })
+          .then(function (html) {
+            if (html) mount.innerHTML = html;
+          })
+          .catch(function () { /* silent */ });
+      })();
+    </script>
+  {%- endif -%}
+</div>
+
+{% schema %}
+{
+  "name": "Product Candy snippet",
+  "target": "section",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Pick a snippet you've saved in Product Candy. The snippet renders in its own container — no theme width constraints, so multi-column layouts can fill the available space."
+    },
+    {
+      "type": "text",
+      "id": "snippet_id",
+      "label": "Snippet ID",
+      "info": "Find this in the Product Candy app — open the snippet you want to show and copy its ID from the URL."
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Alignment",
+      "options": [
+        { "value": "left", "label": "Left" },
+        { "value": "center", "label": "Center" },
+        { "value": "right", "label": "Right" }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "max_width",
+      "label": "Maximum width",
+      "options": [
+        { "value": "none", "label": "Full width" },
+        { "value": "1400px", "label": "Extra wide (1400px)" },
+        { "value": "1200px", "label": "Wide (1200px)" },
+        { "value": "1000px", "label": "Medium (1000px)" },
+        { "value": "800px", "label": "Narrow (800px)" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Top padding",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Bottom padding",
+      "min": 0,
+      "max": 80,
+      "step": 4,
+      "unit": "px",
+      "default": 0
+    }
+  ]
+}
+{% endschema %}

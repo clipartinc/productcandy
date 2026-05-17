@@ -387,10 +387,36 @@ export default function SnippetsPage() {
                         align="space-between"
                         blockAlign="center"
                       >
-                        <Text as="h3" variant="headingSm">
-                          {s.name}
-                        </Text>
+                        <BlockStack gap="050">
+                          <Text as="h3" variant="headingSm">
+                            {s.name}
+                          </Text>
+                          <Text as="p" tone="subdued" variant="bodyXs">
+                            ID:{" "}
+                            <code
+                              style={{
+                                fontFamily: "monospace",
+                                userSelect: "all",
+                              }}
+                              title="Copy this ID into the Snippet App Block in your theme to render this snippet full-width on product pages."
+                            >
+                              {s.id}
+                            </code>
+                          </Text>
+                        </BlockStack>
                         <InlineStack gap="200">
+                          <Button
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(s.id);
+                              } catch {
+                                /* clipboard may be blocked — user can still
+                                   triple-click + copy the id above */
+                              }
+                            }}
+                          >
+                            Copy ID
+                          </Button>
                           <Button onClick={() => openEdit(s)}>Edit</Button>
                           <Button
                             tone="critical"
