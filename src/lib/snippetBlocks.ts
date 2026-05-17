@@ -248,7 +248,13 @@ function rowToHtml(row: Row): string {
   const cells = nonEmpty
     .map((c) => `<div style="flex:1;min-width:0;">${columnToHtml(c)}</div>`)
     .join("");
-  return `<div style="display:flex;gap:16px;width:100%;">${cells}</div>`;
+  // Some themes (Horizon's rte-formatter is one) comment out width:100% in
+  // user-pasted inline styles as part of their RTE sanitiser. min-width:100%
+  // and align-self:stretch reach the same outcome through different paths
+  // that the sanitiser doesn't touch: min-width to claim the parent's width
+  // for a block element, align-self:stretch to fill the cross-axis when the
+  // parent is itself a flex/grid container.
+  return `<div style="display:flex;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">${cells}</div>`;
 }
 
 export function layoutToHtml(layout: Layout): string {

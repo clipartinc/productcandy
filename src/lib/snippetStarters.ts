@@ -49,7 +49,7 @@ export const STARTERS: Starter[] = [
   {
     id: "two-column",
     label: "Two columns",
-    html: `<div style="display:flex;gap:16px;width:100%;">
+    html: `<div style="display:flex;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
   <div style="flex:1;min-width:0;">
     <h3>Column 1 heading</h3>
     <p>Add column 1 text here.</p>
@@ -63,7 +63,7 @@ export const STARTERS: Starter[] = [
   {
     id: "three-column",
     label: "Three columns",
-    html: `<div style="display:flex;gap:16px;width:100%;">
+    html: `<div style="display:flex;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
   <div style="flex:1;min-width:0;">
     <h3>Column 1</h3>
     <p>Add text.</p>
