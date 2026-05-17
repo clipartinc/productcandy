@@ -43,6 +43,15 @@ model Shop {
   subscriptionStatus    String?   // "ACTIVE" | "CANCELLED" | "DECLINED" | "EXPIRED" | null
   subscriptionCheckedAt DateTime? // Last time we hit Admin GraphQL to refresh status
   isDevStore            Boolean?  // Cached from shop.plan.partnerDevelopment
+
+  // Uninstall lifecycle — Shopify GDPR webhooks:
+  //   app/uninstalled  → set uninstalledAt = now() (we keep data so a
+  //                      reinstall within 48 h keeps the merchant's work)
+  //   shop/redact      → cascade-delete the Shop row (fires ~48 h after
+  //                      uninstall if the merchant hasn't reinstalled).
+  // On any successful authenticated request after a reinstall we clear
+  // uninstalledAt so the entitlement gate immediately re-enables.
+  uninstalledAt         DateTime?
 }
 
 model DescriptionTemplate {

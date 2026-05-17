@@ -46,11 +46,17 @@ type ShopRow = {
   subscriptionStatus: string | null;
   subscriptionCheckedAt: Date | null;
   isDevStore: boolean | null;
+  uninstalledAt: Date | null;
 };
 
 export type Entitlement = {
   entitled: boolean;
-  reason: "dev_store" | "active_subscription" | "no_subscription" | "lapsed";
+  reason:
+    | "dev_store"
+    | "active_subscription"
+    | "no_subscription"
+    | "lapsed"
+    | "uninstalled";
   isDevStore: boolean;
   subscriptionStatus: string | null;
 };
@@ -152,6 +158,18 @@ export async function refreshEntitlement(
 }
 
 function buildEntitlement(row: ShopRow): Entitlement {
+  if (row.uninstalledAt) {
+    // Tombstoned shops: snippet rendering goes dark instantly, even if
+    // a subscription is still marked ACTIVE in the cached row. The
+    // shop row stays around until shop/redact fires ~48 h later so a
+    // reinstall in that window restores everything.
+    return {
+      entitled: false,
+      reason: "uninstalled",
+      isDevStore: row.isDevStore ?? false,
+      subscriptionStatus: row.subscriptionStatus,
+    };
+  }
   if (row.isDevStore) {
     return {
       entitled: true,

@@ -1,5 +1,6 @@
 import { getShopify, sessionStorage } from "./shopify";
 import { RequestedTokenType, type Session } from "@shopify/shopify-api";
+import { prisma } from "./prisma";
 
 /**
  * Extensions and embedded apps call our backend with an Authorization:
@@ -38,6 +39,17 @@ export async function authenticateExtensionRequest(req: Request): Promise<{
     });
     session = result.session;
     await sessionStorage.storeSession(session);
+
+    // A fresh token exchange means we just heard from this shop again
+    // — either a brand-new install or a reinstall after they had
+    // uninstalled. Either way, clear uninstalledAt so the entitlement
+    // gate stops treating them as tombstoned. We upsert because a
+    // brand-new shop has no row yet.
+    await prisma.shop.upsert({
+      where: { domain: shop },
+      update: { uninstalledAt: null },
+      create: { domain: shop },
+    });
   }
 
   return { shop, session };

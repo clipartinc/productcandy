@@ -12,10 +12,13 @@ export async function GET(req: NextRequest) {
 
   await sessionStorage.storeSession(session);
 
-  // Upsert the shop record so we can attach app data to it
+  // Upsert the shop record so we can attach app data to it. Clearing
+  // uninstalledAt on every install handshake un-tombstones a shop that
+  // uninstalled and came back within the 48 h shop/redact grace window
+  // — their saved snippets become accessible again immediately.
   await prisma.shop.upsert({
     where: { domain: session.shop },
-    update: {},
+    update: { uninstalledAt: null },
     create: { domain: session.shop },
   });
 
