@@ -302,6 +302,7 @@ export function BlockPreview({ block }: { block: Block }) {
             .canvas-html-preview li { margin-bottom: 2px; }
             .canvas-html-preview img { max-width: 100%; height: auto; border-radius: 4px; }
             .canvas-html-preview a { color: #ec4899; text-decoration: underline; }
+            .canvas-html-preview div[style*="min-width"] { min-width: 0 !important; }
           `}</style>
         </div>
       );
