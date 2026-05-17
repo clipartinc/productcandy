@@ -57,7 +57,31 @@ export default function EmbeddedHome() {
             <BlockStack gap="400">
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="h2" variant="headingMd">
-                  Description Layouts
+                  My snippets
+                </Text>
+                <Badge tone="info">New</Badge>
+              </InlineStack>
+              <Text as="p" tone="subdued">
+                Save reusable HTML blocks — warranty info, return policy, size
+                charts, brand story — and stamp them into any product
+                description from the Pre-Made Description Layout Examples
+                modal.
+              </Text>
+              <InlineStack>
+                <Link href="/app/snippets">
+                  <Button variant="primary">Manage snippets</Button>
+                </Link>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
+
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400">
+              <InlineStack align="space-between" blockAlign="center">
+                <Text as="h2" variant="headingMd">
+                  Pre-Made Description Layout Examples
                 </Text>
                 <Badge tone="info">Tool</Badge>
               </InlineStack>
@@ -105,8 +129,8 @@ export default function EmbeddedHome() {
                   <strong>More actions</strong>.
                 </List.Item>
                 <List.Item>
-                  Pick <strong>Description Layouts</strong> from the dropdown
-                  (see screenshot below).
+                  Pick <strong>Pre-Made Description Layout Examples</strong>{" "}
+                  from the dropdown (see screenshot below).
                 </List.Item>
                 <List.Item>
                   Choose colors and a layout, then click{" "}
@@ -118,7 +142,7 @@ export default function EmbeddedHome() {
               <Box paddingBlockStart="200" paddingBlockEnd="200">
                 <Image
                   src="/dropdown.png"
-                  alt="More actions menu showing Description Layouts"
+                  alt="More actions menu showing Pre-Made Description Layout Examples"
                   width={445}
                   height={293}
                   style={{
@@ -132,9 +156,9 @@ export default function EmbeddedHome() {
 
               <Banner tone="info">
                 Want your own reusable HTML blocks (warranty, brand story,
-                size chart)? Save them in <strong>My snippets</strong> below
-                and they&apos;ll appear in the same modal alongside the
-                built-in layouts.
+                size chart)? Save them in <strong>My snippets</strong> at the
+                top of this page and they&apos;ll appear in the same modal
+                alongside the built-in layouts.
               </Banner>
             </BlockStack>
           </Card>
@@ -183,29 +207,6 @@ export default function EmbeddedHome() {
                 delete it from the product&apos;s media library after the
                 crop is uploaded.
               </Banner>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
-              <InlineStack align="space-between" blockAlign="center">
-                <Text as="h2" variant="headingMd">
-                  My snippets
-                </Text>
-                <Badge tone="info">New</Badge>
-              </InlineStack>
-              <Text as="p" tone="subdued">
-                Save reusable HTML blocks — warranty info, return policy, size
-                charts, brand story — and stamp them into any product
-                description from the Description Layouts modal.
-              </Text>
-              <InlineStack>
-                <Link href="/app/snippets">
-                  <Button variant="primary">Manage snippets</Button>
-                </Link>
-              </InlineStack>
             </BlockStack>
           </Card>
         </Layout.Section>

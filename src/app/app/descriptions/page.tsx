@@ -168,9 +168,9 @@ function DescriptionsEditor() {
         {!productId && (
           <Banner tone="info" title="No product selected">
             <p>
-              Open this editor from a product page (Description Layouts block →
-              pick a layout). We&apos;ll add a product picker here in a later
-              release.
+              Open this editor from a product page (Pre-Made Description
+              Layout Examples block → pick a layout). We&apos;ll add a product
+              picker here in a later release.
             </p>
           </Banner>
         )}

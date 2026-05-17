@@ -318,7 +318,7 @@ function App() {
 
   return (
     <AdminAction
-      title="Description Layouts"
+      title="Pre-Made Description Layout Examples"
       primaryAction={<Button onPress={close} disabled={busy}>Done</Button>}
     >
       <BlockStack gap="base">

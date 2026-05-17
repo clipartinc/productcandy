@@ -77,7 +77,7 @@ export default async function Landing({
         <section id="features" className="border-t border-zinc-100 bg-zinc-50">
           <div className="mx-auto grid max-w-6xl gap-8 px-6 py-20 md:grid-cols-2">
             <Feature
-              title="Description Layouts"
+              title="Pre-Made Description Layout Examples"
               body="Pick a polished template, fill in the blanks, and write rich HTML straight into your product description. No theme edits, no copy-paste."
             />
             <Feature

@@ -372,7 +372,8 @@ export default function SnippetsPage() {
               <p>
                 Save reusable blocks here — warranty info, return policy, size
                 charts, brand story — and stamp them into any product
-                description from the Description Layouts modal.
+                description from the Pre-Made Description Layout Examples
+                modal.
               </p>
             </EmptyState>
           </Card>

@@ -2,7 +2,7 @@ api_version = "2025-07"
 uid = "2383a6ff-cacc-01d2-deb8-b16fad6a2e75aef9d004"
 
 [[extensions]]
-name = "Description Layouts"
+name = "Pre-Made Description Layout Examples"
 handle = "description-block"
 type = "ui_extension"
 

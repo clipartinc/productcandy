@@ -179,7 +179,7 @@ function App() {
 
   if (!productId) {
     return (
-      <AdminBlock title="Description Layouts">
+      <AdminBlock title="Pre-Made Description Layout Examples">
         <Banner tone="info" title="Save the product first">
           <Text>Save the product so it has an id, then come back here.</Text>
         </Banner>
@@ -261,7 +261,7 @@ function App() {
   }
 
   return (
-    <AdminBlock title="Description Layouts">
+    <AdminBlock title="Pre-Made Description Layout Examples">
       <BlockStack gap="base">
         <Text>Click a layout to drop placeholder boxes into the description below.</Text>
 
