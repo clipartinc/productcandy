@@ -245,16 +245,21 @@ function rowToHtml(row: Row): string {
   // shrink instead — narrower on small screens but visually still two
   // columns, which is what users expect when they drag two blocks
   // side-by-side in the builder.
+  // ~440px total → 2 cols get 220, 3 get 146, 4 get 110. Combined with
+  // flex-wrap:wrap, cells stay side-by-side on tablet+desktop containers
+  // and collapse to a single stack on narrow mobile viewports (≤ ~440px),
+  // which is what users expect: "two columns" on desktop, "stacked" on
+  // phone. The width:100% / min-width:100% / align-self:stretch trio is
+  // belt-and-suspenders so themed RTE sanitisers (Horizon's rte-formatter
+  // wraps width:100% in /* */) still get the row spanning the parent.
+  const minW = Math.max(120, Math.floor(440 / nonEmpty.length));
   const cells = nonEmpty
-    .map((c) => `<div style="flex:1;min-width:0;">${columnToHtml(c)}</div>`)
+    .map(
+      (c) =>
+        `<div style="flex:1 1 ${minW}px;min-width:${minW}px;">${columnToHtml(c)}</div>`
+    )
     .join("");
-  // Some themes (Horizon's rte-formatter is one) comment out width:100% in
-  // user-pasted inline styles as part of their RTE sanitiser. min-width:100%
-  // and align-self:stretch reach the same outcome through different paths
-  // that the sanitiser doesn't touch: min-width to claim the parent's width
-  // for a block element, align-self:stretch to fill the cross-axis when the
-  // parent is itself a flex/grid container.
-  return `<div style="display:flex;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">${cells}</div>`;
+  return `<div style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">${cells}</div>`;
 }
 
 export function layoutToHtml(layout: Layout): string {
