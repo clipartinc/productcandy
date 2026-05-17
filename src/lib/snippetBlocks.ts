@@ -147,7 +147,7 @@ function placeholderHtml(b: Block): string {
     case "image":
       return `<div ${PH_BLOCK}>Image placeholder — replace with a product image.</div>`;
     case "spec-row":
-      return `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:120px;"><div ${PH_BLOCK}>Spec name</div></div><div style="flex:2;min-width:200px;"><div ${PH_BLOCK}>Spec value</div></div></div>`;
+      return `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:60px;"><div ${PH_BLOCK}>Spec name</div></div><div style="flex:2;min-width:80px;"><div ${PH_BLOCK}>Spec value</div></div></div>`;
     case "html":
       return `<div ${PH_BLOCK}>Custom HTML placeholder</div>`;
   }
@@ -188,9 +188,9 @@ function blockToHtml(b: Block): string {
       return b.entries
         .map(
           (e) =>
-            `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:120px;font-weight:600;">${escapeHtml(
+            `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:60px;font-weight:600;">${escapeHtml(
               e.label
-            )}</div><div style="flex:2;min-width:200px;">${escapeHtml(
+            )}</div><div style="flex:2;min-width:80px;">${escapeHtml(
               e.value
             )}</div></div>`
         )
@@ -237,13 +237,17 @@ function rowToHtml(row: Row): string {
   const nonEmpty = row.columns.filter((c) => c.blocks.length > 0);
   if (nonEmpty.length === 0) return "";
   if (nonEmpty.length === 1) return columnToHtml(nonEmpty[0]);
-  const minW = Math.max(120, Math.floor(720 / nonEmpty.length));
+  // Target ~440px total so two columns fit side-by-side in a typical 500px+
+  // product description container (Shopify themes vary, but most are wider
+  // than this). flex:1 still lets columns share the available space evenly
+  // when there's room; flex-wrap:wrap lets them stack on narrow mobile.
+  const minW = Math.max(100, Math.floor(440 / nonEmpty.length));
   const cells = nonEmpty
     .map(
       (c) => `<div style="flex:1;min-width:${minW}px;">${columnToHtml(c)}</div>`
     )
     .join("");
-  return `<div style="display:flex;gap:24px;flex-wrap:wrap;">${cells}</div>`;
+  return `<div style="display:flex;gap:16px;flex-wrap:wrap;">${cells}</div>`;
 }
 
 export function layoutToHtml(layout: Layout): string {
