@@ -116,12 +116,12 @@ const TEMPLATES: TemplateMeta[] = [
     id: "two-column",
     label: "Two columns",
     skeleton: (bg, text) => `
-<div data-pc-template="two-column" style="display:flex;gap:16px;flex-wrap:wrap;">
-  <div style="flex:1;min-width:220px;">
+<div data-pc-template="two-column" style="display:flex;gap:16px;">
+  <div style="flex:1;min-width:0;">
     <h3>${phInline("Column 1 heading", bg, text)}</h3>
     ${ph("Click here to write column 1 text…", bg, text)}
   </div>
-  <div style="flex:1;min-width:220px;">
+  <div style="flex:1;min-width:0;">
     <h3>${phInline("Column 2 heading", bg, text)}</h3>
     ${ph("Click here to write column 2 text…", bg, text)}
   </div>
@@ -131,16 +131,16 @@ const TEMPLATES: TemplateMeta[] = [
     id: "three-column",
     label: "Three columns",
     skeleton: (bg, text) => `
-<div data-pc-template="three-column" style="display:flex;gap:16px;flex-wrap:wrap;">
-  <div style="flex:1;min-width:140px;">
+<div data-pc-template="three-column" style="display:flex;gap:16px;">
+  <div style="flex:1;min-width:0;">
     <h3>${phInline("Column 1 heading", bg, text)}</h3>
     ${ph("Click to write…", bg, text)}
   </div>
-  <div style="flex:1;min-width:140px;">
+  <div style="flex:1;min-width:0;">
     <h3>${phInline("Column 2 heading", bg, text)}</h3>
     ${ph("Click to write…", bg, text)}
   </div>
-  <div style="flex:1;min-width:140px;">
+  <div style="flex:1;min-width:0;">
     <h3>${phInline("Column 3 heading", bg, text)}</h3>
     ${ph("Click to write…", bg, text)}
   </div>
@@ -162,9 +162,9 @@ const TEMPLATES: TemplateMeta[] = [
     id: "image-text",
     label: "Image + text",
     skeleton: (bg, text) => `
-<div data-pc-template="image-text" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
-  <div style="flex:1;min-width:220px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
-  <div style="flex:1;min-width:220px;">
+<div data-pc-template="image-text" style="display:flex;gap:16px;align-items:flex-start;">
+  <div style="flex:1;min-width:0;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
+  <div style="flex:1;min-width:0;">
     <h3>${phInline("Headline", bg, text)}</h3>
     ${ph("Click here to write your supporting text…", bg, text)}
   </div>
@@ -174,12 +174,12 @@ const TEMPLATES: TemplateMeta[] = [
     id: "text-image",
     label: "Text + image",
     skeleton: (bg, text) => `
-<div data-pc-template="text-image" style="display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start;">
-  <div style="flex:1;min-width:220px;">
+<div data-pc-template="text-image" style="display:flex;gap:16px;align-items:flex-start;">
+  <div style="flex:1;min-width:0;">
     <h3>${phInline("Headline", bg, text)}</h3>
     ${ph("Click here to write your supporting text…", bg, text)}
   </div>
-  <div style="flex:1;min-width:220px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
+  <div style="flex:1;min-width:0;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
 </div>`.trim(),
   },
   {

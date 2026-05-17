@@ -237,17 +237,18 @@ function rowToHtml(row: Row): string {
   const nonEmpty = row.columns.filter((c) => c.blocks.length > 0);
   if (nonEmpty.length === 0) return "";
   if (nonEmpty.length === 1) return columnToHtml(nonEmpty[0]);
-  // Target ~440px total so two columns fit side-by-side in a typical 500px+
-  // product description container (Shopify themes vary, but most are wider
-  // than this). flex:1 still lets columns share the available space evenly
-  // when there's room; flex-wrap:wrap lets them stack on narrow mobile.
-  const minW = Math.max(100, Math.floor(440 / nonEmpty.length));
+  // No flex-wrap and no min-width on each column: the cells stay strictly
+  // side-by-side and share whatever width the parent provides. Themes that
+  // wrap content in a narrow container (e.g. a section with its own
+  // --max-width--body-normal, a multi-column resource list) used to make
+  // these columns wrap-stack on what looked like a wide page. Now they
+  // shrink instead — narrower on small screens but visually still two
+  // columns, which is what users expect when they drag two blocks
+  // side-by-side in the builder.
   const cells = nonEmpty
-    .map(
-      (c) => `<div style="flex:1;min-width:${minW}px;">${columnToHtml(c)}</div>`
-    )
+    .map((c) => `<div style="flex:1;min-width:0;">${columnToHtml(c)}</div>`)
     .join("");
-  return `<div style="display:flex;gap:16px;flex-wrap:wrap;">${cells}</div>`;
+  return `<div style="display:flex;gap:16px;">${cells}</div>`;
 }
 
 export function layoutToHtml(layout: Layout): string {

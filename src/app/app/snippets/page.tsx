@@ -28,9 +28,9 @@ import { SnippetBuilder } from "./SnippetBuilder";
 import { type Layout, layoutToHtml } from "@/lib/snippetBlocks";
 import { htmlToLayout } from "@/lib/snippetParser";
 
-const TWO_COL_INSERT = `<div style="display:flex;gap:16px;flex-wrap:wrap;"><div style="flex:1;min-width:220px;"><h3>Column 1 heading</h3><p>Add column 1 text here.</p></div><div style="flex:1;min-width:220px;"><h3>Column 2 heading</h3><p>Add column 2 text here.</p></div></div><p></p>`;
+const TWO_COL_INSERT = `<div style="display:flex;gap:16px;"><div style="flex:1;min-width:0;"><h3>Column 1 heading</h3><p>Add column 1 text here.</p></div><div style="flex:1;min-width:0;"><h3>Column 2 heading</h3><p>Add column 2 text here.</p></div></div><p></p>`;
 
-const THREE_COL_INSERT = `<div style="display:flex;gap:16px;flex-wrap:wrap;"><div style="flex:1;min-width:140px;"><h3>Column 1</h3><p>Add text.</p></div><div style="flex:1;min-width:140px;"><h3>Column 2</h3><p>Add text.</p></div><div style="flex:1;min-width:140px;"><h3>Column 3</h3><p>Add text.</p></div></div><p></p>`;
+const THREE_COL_INSERT = `<div style="display:flex;gap:16px;"><div style="flex:1;min-width:0;"><h3>Column 1</h3><p>Add text.</p></div><div style="flex:1;min-width:0;"><h3>Column 2</h3><p>Add text.</p></div><div style="flex:1;min-width:0;"><h3>Column 3</h3><p>Add text.</p></div></div><p></p>`;
 
 const HERO_CTA_INSERT = `<h2>Bold headline goes here</h2><p>Add a short supporting paragraph here.</p><p><a href="#" style="display:inline-block;background:#ec4899;color:#fff;text-decoration:none;padding:10px 20px;border-radius:6px;font-weight:600;">Button label</a></p><p></p>`;
 
