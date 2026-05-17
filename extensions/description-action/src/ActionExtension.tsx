@@ -386,7 +386,6 @@ function App() {
                         >
                           <Image source={snippetThumbUri(s.id)} alt={s.name} />
                         </Pressable>
-                        <Text>{s.name}</Text>
                         <Button
                           variant="primary"
                           onPress={() => applySnippet(s)}
@@ -394,6 +393,7 @@ function App() {
                         >
                           Apply Snippet
                         </Button>
+                        <Text>{s.name}</Text>
                       </BlockStack>
                     ))}
                   </InlineStack>
@@ -425,7 +425,6 @@ function App() {
                       >
                         <Image source={thumbDataUri(t.id)} alt={t.label} />
                       </Pressable>
-                      <Text>{t.label}</Text>
                       <Button
                         variant="primary"
                         onPress={() => applyTemplate(t)}
@@ -433,6 +432,7 @@ function App() {
                       >
                         Apply Layout
                       </Button>
+                      <Text>{t.label}</Text>
                     </BlockStack>
                   ))}
                 </InlineStack>
