@@ -147,7 +147,7 @@ function placeholderHtml(b: Block): string {
     case "image":
       return `<div ${PH_BLOCK}>Image placeholder — replace with a product image.</div>`;
     case "spec-row":
-      return `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:60px;"><div ${PH_BLOCK}>Spec name</div></div><div style="flex:2;min-width:80px;"><div ${PH_BLOCK}>Spec value</div></div></div>`;
+      return `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;width:100%;"><div style="flex:1;min-width:60px;"><div ${PH_BLOCK}>Spec name</div></div><div style="flex:2;min-width:80px;"><div ${PH_BLOCK}>Spec value</div></div></div>`;
     case "html":
       return `<div ${PH_BLOCK}>Custom HTML placeholder</div>`;
   }
@@ -188,7 +188,7 @@ function blockToHtml(b: Block): string {
       return b.entries
         .map(
           (e) =>
-            `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:60px;font-weight:600;">${escapeHtml(
+            `<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;width:100%;"><div style="flex:1;min-width:60px;font-weight:600;">${escapeHtml(
               e.label
             )}</div><div style="flex:2;min-width:80px;">${escapeHtml(
               e.value
@@ -248,7 +248,7 @@ function rowToHtml(row: Row): string {
   const cells = nonEmpty
     .map((c) => `<div style="flex:1;min-width:0;">${columnToHtml(c)}</div>`)
     .join("");
-  return `<div style="display:flex;gap:16px;">${cells}</div>`;
+  return `<div style="display:flex;gap:16px;width:100%;">${cells}</div>`;
 }
 
 export function layoutToHtml(layout: Layout): string {

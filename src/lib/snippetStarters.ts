@@ -19,9 +19,9 @@ export const STARTERS: Starter[] = [
     id: "spec-sheet",
     label: "Spec sheet (intro + spec rows)",
     html: `<p>Add an intro paragraph about the product here.</p>
-<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:60px;font-weight:600;"><p>Spec name</p></div><div style="flex:2;min-width:80px;"><p>Spec value</p></div></div>
-<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:60px;font-weight:600;"><p>Spec name</p></div><div style="flex:2;min-width:80px;"><p>Spec value</p></div></div>
-<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;"><div style="flex:1;min-width:60px;font-weight:600;"><p>Spec name</p></div><div style="flex:2;min-width:80px;"><p>Spec value</p></div></div>`,
+<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;width:100%;"><div style="flex:1;min-width:60px;font-weight:600;"><p>Spec name</p></div><div style="flex:2;min-width:80px;"><p>Spec value</p></div></div>
+<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;width:100%;"><div style="flex:1;min-width:60px;font-weight:600;"><p>Spec name</p></div><div style="flex:2;min-width:80px;"><p>Spec value</p></div></div>
+<div style="display:flex;gap:12px;padding:6px 0;border-bottom:1px solid #e5e7eb;width:100%;"><div style="flex:1;min-width:60px;font-weight:600;"><p>Spec name</p></div><div style="flex:2;min-width:80px;"><p>Spec value</p></div></div>`,
   },
   {
     id: "story-features",
@@ -49,7 +49,7 @@ export const STARTERS: Starter[] = [
   {
     id: "two-column",
     label: "Two columns",
-    html: `<div style="display:flex;gap:16px;">
+    html: `<div style="display:flex;gap:16px;width:100%;">
   <div style="flex:1;min-width:0;">
     <h3>Column 1 heading</h3>
     <p>Add column 1 text here.</p>
@@ -63,7 +63,7 @@ export const STARTERS: Starter[] = [
   {
     id: "three-column",
     label: "Three columns",
-    html: `<div style="display:flex;gap:16px;">
+    html: `<div style="display:flex;gap:16px;width:100%;">
   <div style="flex:1;min-width:0;">
     <h3>Column 1</h3>
     <p>Add text.</p>
