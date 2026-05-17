@@ -234,7 +234,7 @@ export default function SnippetsPage() {
 
   return (
     <Page
-      title="My snippets"
+      title="My Custom Snippets"
       subtitle="Reusable HTML blocks you can stamp into any product description."
       backAction={{ content: "Home", url: "/app" }}
       primaryAction={
