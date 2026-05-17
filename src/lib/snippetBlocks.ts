@@ -233,26 +233,28 @@ function columnToHtml(col: Column): string {
   return col.blocks.map(blockToHtml).filter(Boolean).join("");
 }
 
-// Stacking on mobile is done with **container queries** + a viewport
-// @media fallback. The container query is the primary mechanism because:
-// it asks "is the box my row sits in narrower than X?" — which is the
-// actual layout question — whereas @media asks "is the viewport narrower
-// than X?", and Shopify themes routinely render the description in
-// contexts (Horizon's `<rte-formatter>` cell, theme-editor "mobile"
-// previews, app-block iframes) where the viewport check doesn't match
-// the actual container width.
+// Stacking uses TWO independent triggers, deliberately at different
+// breakpoints because they answer different questions:
 //
-// Both @container and @media target `.pc-snippet-wrap .pc-snippet-row`
-// rather than `.pc-snippet-row` alone so we win specificity vs theme
-// rules like `.rte div { ... }`. !important is belt-and-suspenders for
-// the inline-style override (inline beats normal author CSS, but author
-// !important beats inline).
+//   @container (max-width: 480px) — "is the actual cell my row sits in
+//   tiny?" Fires only on phone-sized containers. Horizon themes constrain
+//   the PDP description with `--max-width--body-normal` so the desktop
+//   container is often ~600-700 px wide — we DON'T want to stack there,
+//   so 480 px keeps the trigger well below typical desktop body-normal.
 //
-// The container itself is a wrapper div with `container-type:inline-size`
-// — required because @container queries an *ancestor* container, not
-// the element itself. The wrapper takes the parent's available width.
-const STACK_BREAKPOINT = 700; // px — covers phones and small tablets
-export const SNIPPET_RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{container-type:inline-size;}@container (max-width:${STACK_BREAKPOINT}px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}@media (max-width:${STACK_BREAKPOINT}px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}</style>`;
+//   @media (max-width: 768px) — "is the viewport itself small?" Fires
+//   on every phone + tablet-portrait device, regardless of how wide the
+//   theme renders the description container. Desktop viewports are 1024+
+//   so this never fires on desktop.
+//
+// The two together cover: real mobile devices (via @media), genuinely
+// narrow embeds like the app-proxy iframe or a sidebar widget (via
+// @container), and never trigger on a desktop user looking at a Horizon
+// product page with body-normal width ~650 px.
+//
+// Selectors are `.pc-snippet-wrap .pc-snippet-row` (specificity 0,2,0)
+// + !important so theme rules like `.rte div { ... }` can't beat them.
+export const SNIPPET_RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{container-type:inline-size;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;flex-wrap:nowrap !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;min-width:0 !important;max-width:100% !important;width:100% !important;}}</style>`;
 
 function rowToHtml(row: Row): string {
   const nonEmpty = row.columns.filter((c) => c.blocks.length > 0);
