@@ -43,6 +43,12 @@ export type TemplateId =
 
 const THUMB = (id: string) => `/templates/${id}.svg`;
 
+// @media rule that forces multi-column rows to stack on mobile viewports.
+// Paired with .pc-snippet-row / .pc-snippet-col classes on the wrappers
+// below so inline flex-wrap (which only fires when the parent container is
+// narrow) isn't the only stacking mechanism on phones.
+const RESPONSIVE_STYLE = `<style>@media (max-width:600px){.pc-snippet-row{flex-direction:column !important;}.pc-snippet-row > .pc-snippet-col{flex-basis:100% !important;min-width:0 !important;width:100% !important;}}</style>`;
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -168,9 +174,10 @@ export const TEMPLATES: Record<TemplateId, Template> = {
     ],
     render: (v) =>
       `
-<div style="display:flex;gap:24px;flex-wrap:wrap;">
-  <div style="flex:1;min-width:240px;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
-  <div style="flex:1;min-width:240px;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
+${RESPONSIVE_STYLE}
+<div class="pc-snippet-row" style="display:flex;gap:24px;flex-wrap:wrap;">
+  <div class="pc-snippet-col" style="flex:1;min-width:240px;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
+  <div class="pc-snippet-col" style="flex:1;min-width:240px;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
 </div>`.trim(),
   },
   "three-column": {
@@ -188,10 +195,11 @@ export const TEMPLATES: Record<TemplateId, Template> = {
     ],
     render: (v) =>
       `
-<div style="display:flex;gap:20px;flex-wrap:wrap;">
-  <div style="flex:1;min-width:200px;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
-  <div style="flex:1;min-width:200px;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
-  <div style="flex:1;min-width:200px;"><h3>${escapeHtml(v.h3 ?? "")}</h3>${paragraphs(v.c3)}</div>
+${RESPONSIVE_STYLE}
+<div class="pc-snippet-row" style="display:flex;gap:20px;flex-wrap:wrap;">
+  <div class="pc-snippet-col" style="flex:1;min-width:200px;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
+  <div class="pc-snippet-col" style="flex:1;min-width:200px;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
+  <div class="pc-snippet-col" style="flex:1;min-width:200px;"><h3>${escapeHtml(v.h3 ?? "")}</h3>${paragraphs(v.c3)}</div>
 </div>`.trim(),
   },
   "hero-cta": {
@@ -228,9 +236,10 @@ export const TEMPLATES: Record<TemplateId, Template> = {
     render: (v, images) => {
       const img = findImage(v, "img", images);
       return `
-<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
-  <div style="flex:1;min-width:240px;">${imgTag(img)}</div>
-  <div style="flex:1;min-width:240px;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
+${RESPONSIVE_STYLE}
+<div class="pc-snippet-row" style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+  <div class="pc-snippet-col" style="flex:1;min-width:240px;">${imgTag(img)}</div>
+  <div class="pc-snippet-col" style="flex:1;min-width:240px;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
 </div>`.trim();
     },
   },
@@ -247,9 +256,10 @@ export const TEMPLATES: Record<TemplateId, Template> = {
     render: (v, images) => {
       const img = findImage(v, "img", images);
       return `
-<div style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
-  <div style="flex:1;min-width:240px;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
-  <div style="flex:1;min-width:240px;">${imgTag(img)}</div>
+${RESPONSIVE_STYLE}
+<div class="pc-snippet-row" style="display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start;">
+  <div class="pc-snippet-col" style="flex:1;min-width:240px;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
+  <div class="pc-snippet-col" style="flex:1;min-width:240px;">${imgTag(img)}</div>
 </div>`.trim();
     },
   },
@@ -275,7 +285,7 @@ export const TEMPLATES: Record<TemplateId, Template> = {
         .map(([imgKey, capKey]) => {
           const img = findImage(v, imgKey, images);
           if (!img) return "";
-          return `<div style="flex:1;min-width:200px;">${imgTag(img)}${
+          return `<div class="pc-snippet-col" style="flex:1;min-width:200px;">${imgTag(img)}${
             v[capKey]
               ? `<p style="margin-top:8px;text-align:center;font-size:0.9em;color:#6b7280;">${escapeHtml(v[capKey])}</p>`
               : ""
@@ -283,7 +293,7 @@ export const TEMPLATES: Record<TemplateId, Template> = {
         })
         .filter(Boolean)
         .join("");
-      return `<div style="display:flex;gap:16px;flex-wrap:wrap;">${cells}</div>`;
+      return `${RESPONSIVE_STYLE}<div class="pc-snippet-row" style="display:flex;gap:16px;flex-wrap:wrap;">${cells}</div>`;
     },
   },
 };

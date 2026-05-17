@@ -271,6 +271,10 @@ function parseMultiColumnRow(el: Element): Row {
 function flattenTopLevel(elements: Element[]): Element[] {
   const out: Element[] = [];
   for (const el of elements) {
+    // Drop the responsive-stacking <style> tag we inject above each row —
+    // it carries no semantic block content and would otherwise round-trip
+    // as an "html" block on every save.
+    if (el.tagName === "STYLE") continue;
     if (
       el.tagName === "DIV" &&
       !el.hasAttribute("data-pc-placeholder") &&

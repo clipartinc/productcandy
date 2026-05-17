@@ -233,38 +233,37 @@ function columnToHtml(col: Column): string {
   return col.blocks.map(blockToHtml).filter(Boolean).join("");
 }
 
+// Inline <style> + .pc-snippet-row/.pc-snippet-col classes give the row a
+// viewport-based responsive switch that inline flex-wrap can't express on
+// its own: inline min-width only triggers wrap when the *parent container*
+// is narrow, which a wide PDP container on a phone may not be. The @media
+// rule flips the row to a single vertical stack on any viewport ≤ 600px,
+// regardless of how the theme sizes the description container. flex-wrap +
+// min-width below is the fallback for sanitisers that strip <style> tags.
+export const SNIPPET_RESPONSIVE_STYLE = `<style>@media (max-width:600px){.pc-snippet-row{flex-direction:column !important;}.pc-snippet-row > .pc-snippet-col{flex-basis:100% !important;min-width:0 !important;width:100% !important;}}</style>`;
+
 function rowToHtml(row: Row): string {
   const nonEmpty = row.columns.filter((c) => c.blocks.length > 0);
   if (nonEmpty.length === 0) return "";
   if (nonEmpty.length === 1) return columnToHtml(nonEmpty[0]);
-  // No flex-wrap and no min-width on each column: the cells stay strictly
-  // side-by-side and share whatever width the parent provides. Themes that
-  // wrap content in a narrow container (e.g. a section with its own
-  // --max-width--body-normal, a multi-column resource list) used to make
-  // these columns wrap-stack on what looked like a wide page. Now they
-  // shrink instead — narrower on small screens but visually still two
-  // columns, which is what users expect when they drag two blocks
-  // side-by-side in the builder.
-  // ~440px total → 2 cols get 220, 3 get 146, 4 get 110. Combined with
-  // flex-wrap:wrap, cells stay side-by-side on tablet+desktop containers
-  // and collapse to a single stack on narrow mobile viewports (≤ ~440px),
-  // which is what users expect: "two columns" on desktop, "stacked" on
-  // phone. The width:100% / min-width:100% / align-self:stretch trio is
-  // belt-and-suspenders so themed RTE sanitisers (Horizon's rte-formatter
-  // wraps width:100% in /* */) still get the row spanning the parent.
+  // ~440px total → 2 cols get 220, 3 get 146, 4 get 110. flex-wrap + the
+  // per-cell min-width keeps the row side-by-side on tablet+desktop
+  // containers and is a fallback stack on very narrow parents; the @media
+  // rule above is the primary mobile-stack mechanism (covers the case
+  // where a phone-viewport PDP still gives the description container >
+  // 440px, which keeps inline flex-wrap from firing).
   const minW = Math.max(120, Math.floor(440 / nonEmpty.length));
   const cells = nonEmpty
     .map(
       (c) =>
-        `<div style="flex:1 1 ${minW}px;min-width:${minW}px;">${columnToHtml(c)}</div>`
+        `<div class="pc-snippet-col" style="flex:1 1 ${minW}px;min-width:${minW}px;">${columnToHtml(c)}</div>`
     )
     .join("");
-  return `<div style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">${cells}</div>`;
+  return `<div class="pc-snippet-row" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">${cells}</div>`;
 }
 
 export function layoutToHtml(layout: Layout): string {
-  return layout
-    .map(rowToHtml)
-    .filter(Boolean)
-    .join("\n");
+  const body = layout.map(rowToHtml).filter(Boolean).join("\n");
+  if (!body) return "";
+  return `${SNIPPET_RESPONSIVE_STYLE}\n${body}`;
 }

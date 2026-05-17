@@ -54,6 +54,14 @@ function ph(label: string, bg: string, text: string): string {
   return `<div data-pc-placeholder="1" style="background-color:${bg};color:${text};border:1px dashed #d1d5db;border-radius:8px;padding:12px 16px;margin:8px 0;font-style:italic;">${label}</div>`;
 }
 
+// Inline @media rule that flips multi-column rows to a single vertical
+// stack on viewports ≤600px. Inline min-width alone isn't enough — themes
+// often size the description container wider than the viewport on phones
+// (or wrap it in flex parents that resist shrinking), so flex-wrap never
+// fires. The class hooks below (.pc-snippet-row / .pc-snippet-col) are
+// added to every multi-column skeleton so this rule can target them.
+const RESPONSIVE_STYLE = `<style>@media (max-width:600px){.pc-snippet-row{flex-direction:column !important;}.pc-snippet-row > .pc-snippet-col{flex-basis:100% !important;min-width:0 !important;width:100% !important;}}</style>`;
+
 // Inline placeholder (used for headings, short labels)
 function phInline(label: string, bg: string, text: string): string {
   if (bg === "none") {
@@ -116,12 +124,13 @@ const TEMPLATES: TemplateMeta[] = [
     id: "two-column",
     label: "Two columns",
     skeleton: (bg, text) => `
-<div data-pc-template="two-column" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
-  <div style="flex:1 1 220px;min-width:220px;">
+${RESPONSIVE_STYLE}
+<div class="pc-snippet-row" data-pc-template="two-column" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">
     <h3>${phInline("Column 1 heading", bg, text)}</h3>
     ${ph("Click here to write column 1 text…", bg, text)}
   </div>
-  <div style="flex:1 1 220px;min-width:220px;">
+  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">
     <h3>${phInline("Column 2 heading", bg, text)}</h3>
     ${ph("Click here to write column 2 text…", bg, text)}
   </div>
@@ -131,16 +140,17 @@ const TEMPLATES: TemplateMeta[] = [
     id: "three-column",
     label: "Three columns",
     skeleton: (bg, text) => `
-<div data-pc-template="three-column" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
-  <div style="flex:1 1 146px;min-width:146px;">
+${RESPONSIVE_STYLE}
+<div class="pc-snippet-row" data-pc-template="three-column" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 146px;min-width:146px;">
     <h3>${phInline("Column 1 heading", bg, text)}</h3>
     ${ph("Click to write…", bg, text)}
   </div>
-  <div style="flex:1 1 146px;min-width:146px;">
+  <div class="pc-snippet-col" style="flex:1 1 146px;min-width:146px;">
     <h3>${phInline("Column 2 heading", bg, text)}</h3>
     ${ph("Click to write…", bg, text)}
   </div>
-  <div style="flex:1 1 146px;min-width:146px;">
+  <div class="pc-snippet-col" style="flex:1 1 146px;min-width:146px;">
     <h3>${phInline("Column 3 heading", bg, text)}</h3>
     ${ph("Click to write…", bg, text)}
   </div>
@@ -162,9 +172,10 @@ const TEMPLATES: TemplateMeta[] = [
     id: "image-text",
     label: "Image + text",
     skeleton: (bg, text) => `
-<div data-pc-template="image-text" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;align-items:flex-start;">
-  <div style="flex:1 1 220px;min-width:220px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
-  <div style="flex:1 1 220px;min-width:220px;">
+${RESPONSIVE_STYLE}
+<div class="pc-snippet-row" data-pc-template="image-text" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;align-items:flex-start;">
+  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
+  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">
     <h3>${phInline("Headline", bg, text)}</h3>
     ${ph("Click here to write your supporting text…", bg, text)}
   </div>
@@ -174,28 +185,30 @@ const TEMPLATES: TemplateMeta[] = [
     id: "text-image",
     label: "Text + image",
     skeleton: (bg, text) => `
-<div data-pc-template="text-image" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;align-items:flex-start;">
-  <div style="flex:1 1 220px;min-width:220px;">
+${RESPONSIVE_STYLE}
+<div class="pc-snippet-row" data-pc-template="text-image" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;align-items:flex-start;">
+  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">
     <h3>${phInline("Headline", bg, text)}</h3>
     ${ph("Click here to write your supporting text…", bg, text)}
   </div>
-  <div style="flex:1 1 220px;min-width:220px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
+  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
 </div>`.trim(),
   },
   {
     id: "gallery-3",
     label: "Image gallery (3)",
     skeleton: (bg, text) => `
-<div data-pc-template="gallery-3" style="display:flex;gap:16px;flex-wrap:wrap;">
-  <div style="flex:1;min-width:200px;">
+${RESPONSIVE_STYLE}
+<div class="pc-snippet-row" data-pc-template="gallery-3" style="display:flex;gap:16px;flex-wrap:wrap;">
+  <div class="pc-snippet-col" style="flex:1;min-width:200px;">
     ${ph("Image 1 placeholder", bg, text)}
     ${ph("Caption 1", bg, text)}
   </div>
-  <div style="flex:1;min-width:200px;">
+  <div class="pc-snippet-col" style="flex:1;min-width:200px;">
     ${ph("Image 2 placeholder", bg, text)}
     ${ph("Caption 2", bg, text)}
   </div>
-  <div style="flex:1;min-width:200px;">
+  <div class="pc-snippet-col" style="flex:1;min-width:200px;">
     ${ph("Image 3 placeholder", bg, text)}
     ${ph("Caption 3", bg, text)}
   </div>

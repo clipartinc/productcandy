@@ -22,6 +22,24 @@
   assign padding_bottom = block.settings.padding_bottom | default: 0
 -%}
 
+<style>
+  /* Responsive stacking: even if the saved snippet HTML's own <style> tag
+     gets stripped by a sanitiser somewhere up the chain, this wrapper-
+     scoped rule still flips multi-column rows to a single column on
+     phones. The .pc-snippet-row / .pc-snippet-col classes are stamped by
+     the snippet builder onto every multi-column row. */
+  @media (max-width: 600px) {
+    .product-candy-snippet .pc-snippet-row {
+      flex-direction: column !important;
+    }
+    .product-candy-snippet .pc-snippet-row > .pc-snippet-col {
+      flex-basis: 100% !important;
+      min-width: 0 !important;
+      width: 100% !important;
+    }
+  }
+</style>
+
 <div
   class="product-candy-snippet"
   data-snippet-id="{{ snippet_id | escape }}"

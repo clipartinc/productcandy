@@ -49,12 +49,13 @@ export const STARTERS: Starter[] = [
   {
     id: "two-column",
     label: "Two columns",
-    html: `<div style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
-  <div style="flex:1 1 220px;min-width:220px;">
+    html: `<style>@media (max-width:600px){.pc-snippet-row{flex-direction:column !important;}.pc-snippet-row > .pc-snippet-col{flex-basis:100% !important;min-width:0 !important;width:100% !important;}}</style>
+<div class="pc-snippet-row" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">
     <h3>Column 1 heading</h3>
     <p>Add column 1 text here.</p>
   </div>
-  <div style="flex:1 1 220px;min-width:220px;">
+  <div class="pc-snippet-col" style="flex:1 1 220px;min-width:220px;">
     <h3>Column 2 heading</h3>
     <p>Add column 2 text here.</p>
   </div>
@@ -63,16 +64,17 @@ export const STARTERS: Starter[] = [
   {
     id: "three-column",
     label: "Three columns",
-    html: `<div style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
-  <div style="flex:1 1 146px;min-width:146px;">
+    html: `<style>@media (max-width:600px){.pc-snippet-row{flex-direction:column !important;}.pc-snippet-row > .pc-snippet-col{flex-basis:100% !important;min-width:0 !important;width:100% !important;}}</style>
+<div class="pc-snippet-row" style="display:flex;flex-wrap:wrap;gap:16px;width:100%;min-width:100%;align-self:stretch;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 146px;min-width:146px;">
     <h3>Column 1</h3>
     <p>Add text.</p>
   </div>
-  <div style="flex:1 1 146px;min-width:146px;">
+  <div class="pc-snippet-col" style="flex:1 1 146px;min-width:146px;">
     <h3>Column 2</h3>
     <p>Add text.</p>
   </div>
-  <div style="flex:1 1 146px;min-width:146px;">
+  <div class="pc-snippet-col" style="flex:1 1 146px;min-width:146px;">
     <h3>Column 3</h3>
     <p>Add text.</p>
   </div>
