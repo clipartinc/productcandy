@@ -10,6 +10,7 @@ import {
   Banner,
   Select,
   Link,
+  ProgressIndicator,
   useApi,
 } from "@shopify/ui-extensions-react/admin";
 import { useEffect, useState } from "react";
@@ -385,6 +386,12 @@ function App() {
             )}
 
             <Text fontWeight="bold">Your custom snippets</Text>
+            {snippets === null && (
+              <InlineStack gap="base" blockAlignment="center">
+                <ProgressIndicator size="small-200" />
+                <Text>Loading your saved snippets…</Text>
+              </InlineStack>
+            )}
             {entitled === false &&
               snippets &&
               snippets.length > freeSnippetIds.length && (
@@ -403,7 +410,7 @@ function App() {
                   </BlockStack>
                 </Banner>
               )}
-            {snippets && snippets.length > 0 ? (
+            {snippets && snippets.length > 0 && (
               <BlockStack gap="base">
                 {chunk(snippets, 3).map((row, i) => (
                   <InlineStack key={`s-${i}`} gap="base">
@@ -444,7 +451,8 @@ function App() {
                   </InlineStack>
                 ))}
               </BlockStack>
-            ) : (
+            )}
+            {snippets && snippets.length === 0 && (
               <Text>
                 Save reusable HTML blocks (warranty, brand story, size chart…)
                 to stamp them here alongside the built-in layouts.
