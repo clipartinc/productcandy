@@ -32,6 +32,26 @@
      container so we can query the actual block width (not the viewport,
      which lies inside theme-editor mobile previews and iframes). */
   .product-candy-snippet { container-type: inline-size; }
+  /* Defensive base layout: themes occasionally have higher-specificity
+     `.rte > *` or `* { display: block !important }` style rules that
+     beat the inline style="display:flex" attribute on .pc-snippet-row.
+     Re-asserting the flex layout here at higher specificity + !important
+     guarantees the row stays side-by-side on desktop. The @container
+     / @media rules below then flip it to column on small screens. */
+  .product-candy-snippet .pc-snippet-row {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    gap: 16px !important;
+    width: 100% !important;
+    align-items: stretch !important;
+    box-sizing: border-box !important;
+  }
+  .product-candy-snippet .pc-snippet-row > .pc-snippet-col {
+    flex: 1 1 0 !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
   @container (max-width: 480px) {
     .product-candy-snippet .pc-snippet-row {
       flex-direction: column !important;
