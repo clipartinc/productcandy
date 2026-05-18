@@ -254,32 +254,43 @@ function columnToHtml(col: Column): string {
 //
 // Selectors are `.pc-snippet-wrap .pc-snippet-row` (specificity 0,2,0)
 // + !important so theme rules like `.rte div { ... }` can't beat them.
-export const SNIPPET_RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{container-type:inline-size;width:100% !important;}.pc-snippet-wrap .pc-snippet-row{display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;gap:16px !important;width:100% !important;align-items:stretch !important;box-sizing:border-box !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box !important;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;max-width:100% !important;width:100% !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;max-width:100% !important;width:100% !important;}}</style>`;
+// CSS Grid (was Flexbox). Even inline `display:flex !important` was
+// somehow being overridden by Horizon's rte-formatter render path —
+// likely a `::slotted(*)` shadow-DOM rule or a JS mutation. Grid is
+// rarely targeted by theme resets, the column count lives in a single
+// declaration, and `minmax(0, 1fr)` gives the same shrink-to-fit
+// behavior we got from `flex:1 1 0;min-width:0`.
+//
+// Stacking still uses TWO triggers at different breakpoints:
+//   @container (max-width: 480px) — phone-sized cells, fires inside
+//   narrow embeds (app-proxy iframe, sidebar widgets) regardless of
+//   viewport. 480 px keeps it well below Horizon's body-normal so
+//   desktop PDPs don't trip it.
+//   @media (max-width: 768px) — phone + tablet-portrait viewports,
+//   matches every real mobile device. Never fires on desktop (1024+).
+// Both override grid-template-columns to `1fr` (single column).
+export const SNIPPET_RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{container-type:inline-size;width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{grid-template-columns:1fr !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{grid-template-columns:1fr !important;}}</style>`;
 
 function rowToHtml(row: Row): string {
   const nonEmpty = row.columns.filter((c) => c.blocks.length > 0);
   if (nonEmpty.length === 0) return "";
   if (nonEmpty.length === 1) return columnToHtml(nonEmpty[0]);
-  // Cells use `flex:1 1 0;min-width:0` so they shrink to fit *whatever*
-  // width the parent provides — no inline min-width that could trigger
-  // unwanted flex-wrap on a narrow desktop PDP container (Horizon's
-  // `--max-width--body-normal` is often ~500-600px, so any per-cell
-  // min-width of 200+ would wrap the row on desktop too). All stacking
-  // is delegated to the @container / @media rules in SNIPPET_RESPONSIVE_STYLE.
+  // CSS Grid layout: one declaration controls the column count. Cells
+  // are plain divs — grid handles their sizing via the parent's
+  // grid-template-columns. `minmax(0, 1fr)` is what stops content from
+  // forcing a column wider than its 1fr share.
   const cells = nonEmpty
     .map(
       (c) =>
-        `<div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">${columnToHtml(c)}</div>`
+        `<div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;">${columnToHtml(c)}</div>`
     )
     .join("");
-  // Inline `!important` ONLY on display:flex — that's the single
-  // property Horizon's `.rte > * { display:block !important }` rule
-  // was killing. Inline !important is the top of the CSS cascade so
-  // it beats author !important, which is exactly why we don't put
-  // !important on flex-direction / flex / etc. here: those need to
-  // stay overrideable by the @container / @media stack-on-mobile
-  // rules in SNIPPET_RESPONSIVE_STYLE, which are author !important.
-  return `<div class="pc-snippet-row" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:16px;width:100%;min-width:100%;align-items:stretch;box-sizing:border-box;">${cells}</div>`;
+  // Inline `display:grid !important` is the strongest guarantee
+  // against theme reset rules like `.rte > * { display:block }`.
+  // grid-template-columns is plain inline so @media/@container author
+  // !important can override it to `1fr` for stacking on small screens.
+  const cols = `repeat(${nonEmpty.length}, minmax(0, 1fr))`;
+  return `<div class="pc-snippet-row" style="display:grid !important;grid-template-columns:${cols};gap:16px;width:100%;align-items:start;box-sizing:border-box;">${cells}</div>`;
 }
 
 // Every layout is wrapped in `.pc-snippet-wrap` so the @container query

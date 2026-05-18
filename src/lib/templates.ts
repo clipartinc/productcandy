@@ -46,7 +46,7 @@ const THUMB = (id: string) => `/templates/${id}.svg`;
 // Stacks multi-column rows on small screens. Container query is primary
 // (matches the actual cell width); @media is fallback. See snippetBlocks
 // for the long-form rationale.
-const RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{container-type:inline-size;width:100% !important;}.pc-snippet-wrap .pc-snippet-row{display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;gap:16px !important;width:100% !important;align-items:stretch !important;box-sizing:border-box !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box !important;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;max-width:100% !important;width:100% !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;max-width:100% !important;width:100% !important;}}</style>`;
+const RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{container-type:inline-size;width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{grid-template-columns:1fr !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{grid-template-columns:1fr !important;}}</style>`;
 
 const WRAP_OPEN = `<div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;">`;
 const WRAP_CLOSE = `</div>`;
@@ -178,9 +178,9 @@ export const TEMPLATES: Record<TemplateId, Template> = {
       `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:24px;width:100%;align-items:stretch;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
+<div class="pc-snippet-row" style="display:grid !important;grid-template-columns:repeat(2, minmax(0, 1fr));gap:24px;width:100%;align-items:start;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
 </div>
 ${WRAP_CLOSE}`.trim(),
   },
@@ -201,10 +201,10 @@ ${WRAP_CLOSE}`.trim(),
       `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:20px;width:100%;align-items:stretch;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.h3 ?? "")}</h3>${paragraphs(v.c3)}</div>
+<div class="pc-snippet-row" style="display:grid !important;grid-template-columns:repeat(3, minmax(0, 1fr));gap:20px;width:100%;align-items:start;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.h1 ?? "")}</h3>${paragraphs(v.c1)}</div>
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.h2 ?? "")}</h3>${paragraphs(v.c2)}</div>
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.h3 ?? "")}</h3>${paragraphs(v.c3)}</div>
 </div>
 ${WRAP_CLOSE}`.trim(),
   },
@@ -244,9 +244,9 @@ ${WRAP_CLOSE}`.trim(),
       return `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:24px;width:100%;align-items:flex-start;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">${imgTag(img)}</div>
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
+<div class="pc-snippet-row" style="display:grid !important;grid-template-columns:repeat(2, minmax(0, 1fr));gap:24px;width:100%;align-items:start;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;">${imgTag(img)}</div>
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
 </div>
 ${WRAP_CLOSE}`.trim();
     },
@@ -266,9 +266,9 @@ ${WRAP_CLOSE}`.trim();
       return `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:24px;width:100%;align-items:flex-start;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">${imgTag(img)}</div>
+<div class="pc-snippet-row" style="display:grid !important;grid-template-columns:repeat(2, minmax(0, 1fr));gap:24px;width:100%;align-items:start;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;"><h3>${escapeHtml(v.headline ?? "")}</h3>${paragraphs(v.body)}</div>
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;">${imgTag(img)}</div>
 </div>
 ${WRAP_CLOSE}`.trim();
     },
@@ -287,7 +287,7 @@ ${WRAP_CLOSE}`.trim();
       { key: "cap3", label: "Caption 3", kind: "text" },
     ],
     render: (v, images) => {
-      const cells = [
+      const items = [
         ["img1", "cap1"],
         ["img2", "cap2"],
         ["img3", "cap3"],
@@ -295,15 +295,17 @@ ${WRAP_CLOSE}`.trim();
         .map(([imgKey, capKey]) => {
           const img = findImage(v, imgKey, images);
           if (!img) return "";
-          return `<div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">${imgTag(img)}${
+          return `<div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;">${imgTag(img)}${
             v[capKey]
               ? `<p style="margin-top:8px;text-align:center;font-size:0.9em;color:#6b7280;">${escapeHtml(v[capKey])}</p>`
               : ""
           }</div>`;
         })
-        .filter(Boolean)
-        .join("");
-      return `${RESPONSIVE_STYLE}${WRAP_OPEN}<div class="pc-snippet-row" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:16px;width:100%;align-items:stretch;box-sizing:border-box;">${cells}</div>${WRAP_CLOSE}`;
+        .filter(Boolean);
+      // Grid column count tracks the number of non-empty image cells so
+      // a gallery with 1 or 2 missing images still distributes evenly.
+      const cols = `repeat(${items.length || 1}, minmax(0, 1fr))`;
+      return `${RESPONSIVE_STYLE}${WRAP_OPEN}<div class="pc-snippet-row" style="display:grid !important;grid-template-columns:${cols};gap:16px;width:100%;align-items:start;box-sizing:border-box;">${items.join("")}</div>${WRAP_CLOSE}`;
     },
   },
 };

@@ -32,50 +32,30 @@
      container so we can query the actual block width (not the viewport,
      which lies inside theme-editor mobile previews and iframes). */
   .product-candy-snippet { container-type: inline-size; }
-  /* Defensive base layout: themes occasionally have higher-specificity
-     `.rte > *` or `* { display: block !important }` style rules that
-     beat the inline style="display:flex" attribute on .pc-snippet-row.
-     Re-asserting the flex layout here at higher specificity + !important
-     guarantees the row stays side-by-side on desktop. The @container
-     / @media rules below then flip it to column on small screens. */
+  /* Base layout is CSS Grid (switched from Flexbox: Horizon's
+     rte-formatter render path was overriding `display:flex !important`
+     even when set inline). Theme reset rules rarely target `display:
+     grid`, and grid-template-columns alone determines the column
+     layout — much harder for unrelated theme CSS to break. */
   .product-candy-snippet .pc-snippet-row {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    display: grid !important;
     gap: 16px !important;
     width: 100% !important;
-    align-items: stretch !important;
+    align-items: start !important;
     box-sizing: border-box !important;
   }
   .product-candy-snippet .pc-snippet-row > .pc-snippet-col {
-    flex: 1 1 0 !important;
     min-width: 0 !important;
     box-sizing: border-box !important;
   }
   @container (max-width: 480px) {
     .product-candy-snippet .pc-snippet-row {
-      flex-direction: column !important;
-      flex-wrap: nowrap !important;
-    }
-    .product-candy-snippet .pc-snippet-row > .pc-snippet-col {
-      flex: 0 0 100% !important;
-      flex-basis: 100% !important;
-      min-width: 0 !important;
-      max-width: 100% !important;
-      width: 100% !important;
+      grid-template-columns: 1fr !important;
     }
   }
   @media (max-width: 768px) {
     .product-candy-snippet .pc-snippet-row {
-      flex-direction: column !important;
-      flex-wrap: nowrap !important;
-    }
-    .product-candy-snippet .pc-snippet-row > .pc-snippet-col {
-      flex: 0 0 100% !important;
-      flex-basis: 100% !important;
-      min-width: 0 !important;
-      max-width: 100% !important;
-      width: 100% !important;
+      grid-template-columns: 1fr !important;
     }
   }
 </style>

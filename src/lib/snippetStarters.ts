@@ -49,14 +49,14 @@ export const STARTERS: Starter[] = [
   {
     id: "two-column",
     label: "Two columns",
-    html: `<style>.pc-snippet-wrap{container-type:inline-size;width:100% !important;}.pc-snippet-wrap .pc-snippet-row{display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;gap:16px !important;width:100% !important;align-items:stretch !important;box-sizing:border-box !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box !important;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;max-width:100% !important;width:100% !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;max-width:100% !important;width:100% !important;}}</style>
+    html: `<style>.pc-snippet-wrap{container-type:inline-size;width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{grid-template-columns:1fr !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{grid-template-columns:1fr !important;}}</style>
 <div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;">
-<div class="pc-snippet-row" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:16px;width:100%;min-width:100%;align-items:stretch;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
+<div class="pc-snippet-row" style="display:grid !important;grid-template-columns:repeat(2, minmax(0, 1fr));gap:16px;width:100%;align-items:start;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;">
     <h3>Column 1 heading</h3>
     <p>Add column 1 text here.</p>
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;">
     <h3>Column 2 heading</h3>
     <p>Add column 2 text here.</p>
   </div>
@@ -66,18 +66,18 @@ export const STARTERS: Starter[] = [
   {
     id: "three-column",
     label: "Three columns",
-    html: `<style>.pc-snippet-wrap{container-type:inline-size;width:100% !important;}.pc-snippet-wrap .pc-snippet-row{display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;gap:16px !important;width:100% !important;align-items:stretch !important;box-sizing:border-box !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box !important;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;max-width:100% !important;width:100% !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{flex-direction:column !important;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{flex:0 0 100% !important;flex-basis:100% !important;max-width:100% !important;width:100% !important;}}</style>
+    html: `<style>.pc-snippet-wrap{container-type:inline-size;width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{grid-template-columns:1fr !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{grid-template-columns:1fr !important;}}</style>
 <div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;">
-<div class="pc-snippet-row" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:16px;width:100%;min-width:100%;align-items:stretch;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
+<div class="pc-snippet-row" style="display:grid !important;grid-template-columns:repeat(3, minmax(0, 1fr));gap:16px;width:100%;align-items:start;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;">
     <h3>Column 1</h3>
     <p>Add text.</p>
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;">
     <h3>Column 2</h3>
     <p>Add text.</p>
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;">
     <h3>Column 3</h3>
     <p>Add text.</p>
   </div>

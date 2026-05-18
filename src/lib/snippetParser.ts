@@ -58,6 +58,13 @@ function isMultiColumnRow(el: Element): boolean {
     return el.children.length >= 2;
   }
   const style = styleNoWs(el);
+  // Accept either the modern Grid output (`display:grid` +
+  // `grid-template-columns`) or the legacy Flex output
+  // (`display:flex` + `flex-wrap:wrap`) so older saved snippets keep
+  // round-tripping after the Grid migration.
+  if (style.includes("display:grid") && style.includes("grid-template-columns")) {
+    return !style.includes("border-bottom") && el.children.length >= 2;
+  }
   return (
     style.includes("display:flex") &&
     style.includes("flex-wrap:wrap") &&
@@ -293,6 +300,7 @@ function flattenTopLevel(elements: Element[]): Element[] {
       const hasRowClass = classes.split(/\s+/).includes("pc-snippet-row");
       const isLayoutDiv =
         hasRowClass ||
+        (style.includes("display:grid") && style.includes("grid-template-columns")) ||
         (style.includes("display:flex") && style.includes("flex-wrap:wrap")) ||
         style.includes("border-bottom");
       if (!isLayoutDiv) {
