@@ -146,26 +146,14 @@ function BillingPageInner() {
 
               {!status?.isDevStore && !status?.entitled && (
                 <>
-                  <Text as="p" tone="subdued">
-                    Pre-made layouts and one custom snippet are always
-                    free. The $4.99/month plan unlocks unlimited custom
-                    snippets:
-                  </Text>
                   <List type="bullet">
                     <List.Item>
-                      <strong>Free plan:</strong> your oldest saved
-                      snippet applies to product descriptions and
-                      renders on the storefront — additional snippets
-                      can still be built and edited, but can&apos;t be
-                      applied or rendered
+                      <strong>Free plan:</strong> Pre-Made layouts and 1
+                      custom layout.
                     </List.Item>
                     <List.Item>
-                      <strong>$4.99/month:</strong> every snippet
-                      applies and renders, with no quota
-                    </List.Item>
-                    <List.Item>
-                      Built-in templates and the snippet builder are
-                      free at every plan
+                      <strong>Paid plan ($4.99/month):</strong> Pre-Made
+                      layouts and unlimited custom layouts.
                     </List.Item>
                   </List>
                   <InlineStack>
