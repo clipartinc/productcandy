@@ -8,6 +8,7 @@ import {
   Pressable,
   Button,
   Banner,
+  Box,
   Select,
   Link,
   ProgressIndicator,
@@ -429,7 +430,13 @@ function App() {
                                 : `${s.name} requires Custom Snippets subscription`
                             }
                           >
-                            <Image source={snippetThumbUri(s.id)} alt={s.name} />
+                            {/* Forces the 4:3 SVG to render at its
+                                intrinsic 240x180 instead of being
+                                squashed into the Pressable's default
+                                square click target. */}
+                            <Box inlineSize={240} blockSize={180}>
+                              <Image source={snippetThumbUri(s.id)} alt={s.name} />
+                            </Box>
                           </Pressable>
                           {canApply ? (
                             <Button
@@ -476,7 +483,9 @@ function App() {
                         padding="none"
                         accessibilityLabel={`Apply ${t.label} layout`}
                       >
-                        <Image source={thumbDataUri(t.id)} alt={t.label} />
+                        <Box inlineSize={240} blockSize={180}>
+                          <Image source={thumbDataUri(t.id)} alt={t.label} />
+                        </Box>
                       </Pressable>
                       <Button
                         variant="primary"
