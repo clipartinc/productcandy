@@ -254,24 +254,24 @@ function columnToHtml(col: Column): string {
 //
 // Selectors are `.pc-snippet-wrap .pc-snippet-row` (specificity 0,2,0)
 // + !important so theme rules like `.rte div { ... }` can't beat them.
-// CSS Grid with auto-fit. No @media, no @container — the previous
-// rules were getting tripped by Horizon's body-normal-constrained
-// description column (narrower than 480 px on this theme), forcing
-// even desktop rows to stack.
+// CSS Grid with auto-fit + viewport breakout.
 //
-// `repeat(auto-fit, minmax(min(100%, Xpx), 1fr))` lets the grid
-// figure out the column count from the actual container width:
-//   - container ≥ N×X + gaps:   N columns side-by-side
-//   - container < that threshold: auto-flows to fewer columns, then
-//     finally a single stacked column
-// `min(100%, Xpx)` caps the minimum at 100% of container so a parent
-// narrower than X doesn't overflow.
+// auto-fit (no @media): the grid picks its column count from the
+// actual container width — N columns when container ≥ N×Xpx + gaps,
+// auto-flows down to a single stacked column on narrow containers.
 //
-// X is per-row, picked from the column count so 2-col rows stack
-// below ~576 px (real phones), 3-col below ~632 px (small tablets),
-// and 4-col below ~616 px. Wide containers (PDPs on desktop, theme
-// app block sections) always render the full grid.
-export const SNIPPET_RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}</style>`;
+// Breakout: Horizon's <rte-formatter> applies `max-width: var(--max-
+// width--body-normal)` (typically 600 px or less) to the description
+// column. Without the breakout, the snippet wrap inherits that
+// narrow width and the grid stacks even on wide desktops. The 100vw
+// + negative-margin trick extends the row to the viewport width,
+// escaping the parent's max-width constraint regardless of how
+// many wrappers Horizon nests it in.
+//
+// Per-cell minimum: 280 px for 2 cols, 200 px for 3, 150 px for 4+.
+// Wraps `min(100%, Xpx)` so extreme-narrow viewports (< X) still get
+// 100 % single column without overflow.
+export const SNIPPET_RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100vw;max-width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}</style>`;
 
 function gridMinPx(cellCount: number): number {
   if (cellCount <= 2) return 280;
@@ -291,7 +291,11 @@ function rowToHtml(row: Row): string {
     .join("");
   const minPx = gridMinPx(nonEmpty.length);
   const cols = `repeat(auto-fit, minmax(min(100%, ${minPx}px), 1fr))`;
-  return `<div class="pc-snippet-row" style="display:grid !important;grid-template-columns:${cols};gap:16px;width:100%;align-items:start;box-sizing:border-box;">${cells}</div>`;
+  // 100vw + negative margins break out of Horizon's rte-formatter
+  // `max-width: var(--max-width--body-normal)` clamp. Without this
+  // the wrap is body-normal-narrow and auto-fit collapses to 1 col
+  // even on a 1440 px desktop viewport.
+  return `<div class="pc-snippet-row" style="display:grid !important;grid-template-columns:${cols};gap:16px;width:100vw;max-width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);align-items:start;box-sizing:border-box;">${cells}</div>`;
 }
 
 // Wrap survives for class-targeting purposes (preview overrides, theme
