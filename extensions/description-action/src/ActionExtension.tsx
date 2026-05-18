@@ -130,12 +130,12 @@ const TEMPLATES: TemplateMeta[] = [
     skeleton: (bg, text) => `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" data-pc-template="two-column" style="display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;gap:16px !important;width:100% !important;min-width:100% !important;align-items:stretch !important;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">
+<div class="pc-snippet-row" data-pc-template="two-column" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:16px;width:100%;min-width:100%;align-items:stretch;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
     <h3>${phInline("Column 1 heading", bg, text)}</h3>
     ${ph("Click here to write column 1 text…", bg, text)}
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
     <h3>${phInline("Column 2 heading", bg, text)}</h3>
     ${ph("Click here to write column 2 text…", bg, text)}
   </div>
@@ -148,16 +148,16 @@ ${WRAP_CLOSE}`.trim(),
     skeleton: (bg, text) => `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" data-pc-template="three-column" style="display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;gap:16px !important;width:100% !important;min-width:100% !important;align-items:stretch !important;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">
+<div class="pc-snippet-row" data-pc-template="three-column" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:16px;width:100%;min-width:100%;align-items:stretch;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
     <h3>${phInline("Column 1 heading", bg, text)}</h3>
     ${ph("Click to write…", bg, text)}
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
     <h3>${phInline("Column 2 heading", bg, text)}</h3>
     ${ph("Click to write…", bg, text)}
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
     <h3>${phInline("Column 3 heading", bg, text)}</h3>
     ${ph("Click to write…", bg, text)}
   </div>
@@ -182,9 +182,9 @@ ${WRAP_CLOSE}`.trim(),
     skeleton: (bg, text) => `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" data-pc-template="image-text" style="display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;gap:16px !important;width:100% !important;min-width:100% !important;align-items:flex-start !important;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
-  <div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">
+<div class="pc-snippet-row" data-pc-template="image-text" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:16px;width:100%;min-width:100%;align-items:flex-start;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
     <h3>${phInline("Headline", bg, text)}</h3>
     ${ph("Click here to write your supporting text…", bg, text)}
   </div>
@@ -197,12 +197,12 @@ ${WRAP_CLOSE}`.trim(),
     skeleton: (bg, text) => `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" data-pc-template="text-image" style="display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;gap:16px !important;width:100% !important;min-width:100% !important;align-items:flex-start !important;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">
+<div class="pc-snippet-row" data-pc-template="text-image" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:16px;width:100%;min-width:100%;align-items:flex-start;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
     <h3>${phInline("Headline", bg, text)}</h3>
     ${ph("Click here to write your supporting text…", bg, text)}
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">${ph("Image placeholder — replace with a product image using Shopify's image button in the description editor.", bg, text)}</div>
 </div>
 ${WRAP_CLOSE}`.trim(),
   },
@@ -212,16 +212,16 @@ ${WRAP_CLOSE}`.trim(),
     skeleton: (bg, text) => `
 ${RESPONSIVE_STYLE}
 ${WRAP_OPEN}
-<div class="pc-snippet-row" data-pc-template="gallery-3" style="display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;gap:16px !important;width:100% !important;align-items:stretch !important;box-sizing:border-box;">
-  <div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">
+<div class="pc-snippet-row" data-pc-template="gallery-3" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:16px;width:100%;align-items:stretch;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
     ${ph("Image 1 placeholder", bg, text)}
     ${ph("Caption 1", bg, text)}
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
     ${ph("Image 2 placeholder", bg, text)}
     ${ph("Caption 2", bg, text)}
   </div>
-  <div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">
+  <div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">
     ${ph("Image 3 placeholder", bg, text)}
     ${ph("Caption 3", bg, text)}
   </div>

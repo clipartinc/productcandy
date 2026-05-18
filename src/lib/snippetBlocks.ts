@@ -269,14 +269,17 @@ function rowToHtml(row: Row): string {
   const cells = nonEmpty
     .map(
       (c) =>
-        `<div class="pc-snippet-col" style="flex:1 1 0 !important;min-width:0 !important;box-sizing:border-box;">${columnToHtml(c)}</div>`
+        `<div class="pc-snippet-col" style="flex:1 1 0;min-width:0;box-sizing:border-box;">${columnToHtml(c)}</div>`
     )
     .join("");
-  // !important on every layout property of the row: inline + !important
-  // is the only declaration that beats theme `.rte > * { display:block
-  // !important }` rules. The author <style> block above asserts the
-  // same with class selectors as a fallback when inline gets sanitised.
-  return `<div class="pc-snippet-row" style="display:flex !important;flex-direction:row !important;flex-wrap:nowrap !important;gap:16px !important;width:100% !important;min-width:100% !important;align-items:stretch !important;box-sizing:border-box;">${cells}</div>`;
+  // Inline `!important` ONLY on display:flex — that's the single
+  // property Horizon's `.rte > * { display:block !important }` rule
+  // was killing. Inline !important is the top of the CSS cascade so
+  // it beats author !important, which is exactly why we don't put
+  // !important on flex-direction / flex / etc. here: those need to
+  // stay overrideable by the @container / @media stack-on-mobile
+  // rules in SNIPPET_RESPONSIVE_STYLE, which are author !important.
+  return `<div class="pc-snippet-row" style="display:flex !important;flex-direction:row;flex-wrap:nowrap;gap:16px;width:100%;min-width:100%;align-items:stretch;box-sizing:border-box;">${cells}</div>`;
 }
 
 // Every layout is wrapped in `.pc-snippet-wrap` so the @container query
