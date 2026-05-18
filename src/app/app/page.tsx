@@ -65,7 +65,9 @@ export default function EmbeddedHome() {
                 Save reusable HTML blocks — warranty info, return policy, size
                 charts, brand story — and stamp them into any product
                 description from the Pre-Made Description Layout Examples
-                modal.
+                modal. <strong>Your first saved snippet is free</strong>;
+                additional snippets need the $4.99/month Custom Snippets
+                add-on to apply or render on the storefront.
               </Text>
               <InlineStack>
                 <Link href="/app/snippets">

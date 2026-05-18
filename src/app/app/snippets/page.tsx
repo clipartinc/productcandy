@@ -15,6 +15,7 @@ import {
   Divider,
   Select,
   Modal,
+  Badge,
 } from "@shopify/polaris";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -64,6 +65,7 @@ export default function SnippetsPage() {
   const [layout, setLayout] = useState<Layout>([]);
   const [nameError, setNameError] = useState<string | undefined>(undefined);
   const [entitled, setEntitled] = useState<boolean | null>(null);
+  const [freeSnippetIds, setFreeSnippetIds] = useState<string[]>([]);
 
   const editor = useEditor({
     extensions: [
@@ -88,6 +90,7 @@ export default function SnippetsPage() {
       if (!res.ok) throw new Error(json.error ?? "Load failed");
       setSnippets(json.snippets);
       setEntitled(json.entitlement?.entitled ?? null);
+      setFreeSnippetIds(json.entitlement?.freeSnippetIds ?? []);
       setStatus({ kind: "ready" });
     } catch (e) {
       setStatus({
@@ -246,18 +249,19 @@ export default function SnippetsPage() {
       }
     >
       <BlockStack gap="400">
-        {entitled === false && (
+        {entitled === false && snippets.length > freeSnippetIds.length && (
           <Banner
             tone="info"
-            title="Building snippets is free — applying them needs a subscription"
-            action={{ content: "View billing", url: "/app/billing" }}
+            title="Free plan includes 1 custom snippet"
+            action={{ content: "Upgrade — $4.99/month", url: "/app/billing" }}
           >
             <p>
-              You can create, edit, and save as many custom snippets as you
-              like on the free plan. The $4.99/month Custom Snippets add-on
-              unlocks <strong>applying snippets to product descriptions</strong>{" "}
-              from the action extension and <strong>rendering them on your
-              storefront</strong> via the Product Candy snippet theme block.
+              Your oldest saved snippet (marked <strong>Free</strong> below)
+              works on the free plan — apply it to product descriptions and
+              render it on your storefront. Additional snippets need the
+              $4.99/month Custom Snippets subscription to apply or render.
+              You can keep building and editing as many as you like; only
+              applying / rendering is gated.
             </p>
           </Banner>
         )}
@@ -409,9 +413,18 @@ export default function SnippetsPage() {
                         blockAlign="center"
                       >
                         <BlockStack gap="050">
-                          <Text as="h3" variant="headingSm">
-                            {s.name}
-                          </Text>
+                          <InlineStack gap="200" blockAlign="center">
+                            <Text as="h3" variant="headingSm">
+                              {s.name}
+                            </Text>
+                            {entitled === true ? null : freeSnippetIds.includes(
+                                s.id
+                              ) ? (
+                              <Badge tone="success">Free</Badge>
+                            ) : (
+                              <Badge tone="attention">Requires upgrade</Badge>
+                            )}
+                          </InlineStack>
                           <Text as="p" tone="subdued" variant="bodyXs">
                             ID:{" "}
                             <code

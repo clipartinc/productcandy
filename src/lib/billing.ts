@@ -25,6 +25,12 @@ export const PLAN_NAME = "Custom Snippets";
 export const PRICE_USD = 4.99;
 export const PRICE_INTERVAL = "EVERY_30_DAYS" as const;
 
+// Free plan includes one custom snippet — the merchant's oldest saved
+// snippet always renders / applies, regardless of subscription status.
+// Additional snippets require an active subscription. If the free
+// snippet is deleted, the next-oldest takes over automatically.
+export const FREE_SNIPPET_QUOTA = 1;
+
 // Toggle real charges with SHOPIFY_BILLING_TEST=false in production.
 // Default true so accidental clicks during development never charge a
 // real merchant — Shopify's test mode shows the same confirmation page
@@ -59,6 +65,12 @@ export type Entitlement = {
     | "uninstalled";
   isDevStore: boolean;
   subscriptionStatus: string | null;
+  // IDs of snippets that work on the free plan (first N by createdAt
+  // where N === FREE_SNIPPET_QUOTA). Only populated when entitled =
+  // false — subscribed merchants have no quota. The proxy + UI use
+  // this set to decide which individual snippets to allow vs gate.
+  freeSnippetIds: string[];
+  freeQuota: number;
 };
 
 function isStale(row: ShopRow): boolean {
@@ -109,7 +121,8 @@ type ActiveSubsInfo = {
  */
 export async function refreshEntitlement(
   shopRow: ShopRow,
-  session: Session
+  session: Session,
+  freeIds?: string[]
 ): Promise<Entitlement> {
   // Two queries in parallel — dev-store flag rarely changes but we
   // refresh it alongside the subscription so a single shop row carries
@@ -149,49 +162,66 @@ export async function refreshEntitlement(
     },
   });
 
-  return buildEntitlement({
-    ...shopRow,
-    isDevStore: isDev,
-    subscriptionId: ours?.id ?? null,
-    subscriptionStatus: ours?.status ?? null,
-  });
+  const freeSnippetIds = freeIds ?? (await freeSnippetIdsFor(shopRow.id));
+  return buildEntitlement(
+    {
+      ...shopRow,
+      isDevStore: isDev,
+      subscriptionId: ours?.id ?? null,
+      subscriptionStatus: ours?.status ?? null,
+    },
+    freeSnippetIds
+  );
 }
 
-function buildEntitlement(row: ShopRow): Entitlement {
+function buildEntitlement(
+  row: ShopRow,
+  freeSnippetIds: string[]
+): Entitlement {
+  const base = {
+    isDevStore: row.isDevStore ?? false,
+    subscriptionStatus: row.subscriptionStatus,
+    freeSnippetIds,
+    freeQuota: FREE_SNIPPET_QUOTA,
+  };
   if (row.uninstalledAt) {
     // Tombstoned shops: snippet rendering goes dark instantly, even if
     // a subscription is still marked ACTIVE in the cached row. The
     // shop row stays around until shop/redact fires ~48 h later so a
     // reinstall in that window restores everything.
-    return {
-      entitled: false,
-      reason: "uninstalled",
-      isDevStore: row.isDevStore ?? false,
-      subscriptionStatus: row.subscriptionStatus,
-    };
+    return { ...base, entitled: false, reason: "uninstalled" };
   }
   if (row.isDevStore) {
     return {
+      ...base,
       entitled: true,
       reason: "dev_store",
       isDevStore: true,
-      subscriptionStatus: row.subscriptionStatus,
     };
   }
   if (row.subscriptionStatus === "ACTIVE") {
-    return {
-      entitled: true,
-      reason: "active_subscription",
-      isDevStore: false,
-      subscriptionStatus: row.subscriptionStatus,
-    };
+    return { ...base, entitled: true, reason: "active_subscription" };
   }
   return {
+    ...base,
     entitled: false,
     reason: row.subscriptionStatus ? "lapsed" : "no_subscription",
-    isDevStore: false,
-    subscriptionStatus: row.subscriptionStatus,
   };
+}
+
+// The first FREE_SNIPPET_QUOTA snippets (ordered by createdAt) work on
+// the free plan even when the merchant isn't subscribed. Looked up
+// per shop because the ordering is stable as long as no snippet is
+// deleted; if the free snippet is deleted, the next-oldest one
+// becomes the new free snippet automatically.
+async function freeSnippetIdsFor(shopId: string): Promise<string[]> {
+  const rows = await prisma.descriptionTemplate.findMany({
+    where: { shopId },
+    orderBy: { createdAt: "asc" },
+    take: FREE_SNIPPET_QUOTA,
+    select: { id: true },
+  });
+  return rows.map((r) => r.id);
 }
 
 /**
@@ -204,15 +234,20 @@ export async function checkEntitlement(
   shopRow: ShopRow,
   session?: Session
 ): Promise<Entitlement> {
+  // Free-snippet quota check runs every call (single indexed query)
+  // because it must reflect the current snippet count, not a 5-min
+  // cached one — a merchant who just deleted snippet #1 needs to see
+  // snippet #2 promoted to free immediately.
+  const freeSnippetIds = await freeSnippetIdsFor(shopRow.id);
   if (session && isStale(shopRow)) {
     try {
-      return await refreshEntitlement(shopRow, session);
+      return await refreshEntitlement(shopRow, session, freeSnippetIds);
     } catch {
       // Network / auth failure — fall through to cached value rather
       // than failing closed and locking the merchant out.
     }
   }
-  return buildEntitlement(shopRow);
+  return buildEntitlement(shopRow, freeSnippetIds);
 }
 
 type SubscriptionCreateResult = {

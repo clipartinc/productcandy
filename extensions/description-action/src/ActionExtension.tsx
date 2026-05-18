@@ -244,16 +244,17 @@ function App() {
   const [busy, setBusy] = useState(false);
   const [snippets, setSnippets] = useState<Snippet[] | null>(null);
   const [entitled, setEntitled] = useState<boolean | null>(null);
+  const [freeSnippetIds, setFreeSnippetIds] = useState<string[]>([]);
   const [status, setStatus] = useState<
     | { kind: "idle" }
     | { kind: "error"; message: string }
   >({ kind: "idle" });
 
   // Pull the merchant's saved snippets on open. The same endpoint
-  // returns the live entitlement so we can decide whether to render
-  // the Apply Snippet cards (entitled) or a subscribe banner
-  // (free/lapsed). Fails silently — built-in templates stay usable
-  // even if the backend is down.
+  // returns the live entitlement (including which snippet IDs are
+  // covered by the free quota) so we can per-snippet gate the Apply
+  // button without a second round-trip. Built-in templates stay
+  // usable even if the snippets backend is down.
   useEffect(() => {
     (async () => {
       try {
@@ -265,10 +266,14 @@ function App() {
         if (!res.ok) return;
         const json = (await res.json()) as {
           snippets: Snippet[];
-          entitlement?: { entitled: boolean };
+          entitlement?: {
+            entitled: boolean;
+            freeSnippetIds?: string[];
+          };
         };
         setSnippets(json.snippets ?? []);
         setEntitled(json.entitlement?.entitled ?? false);
+        setFreeSnippetIds(json.entitlement?.freeSnippetIds ?? []);
       } catch {
         // ignore
       }
@@ -380,49 +385,62 @@ function App() {
             )}
 
             <Text fontWeight="bold">Your custom snippets</Text>
-            {entitled === false ? (
-              <Banner tone="info" title="Upgrade to apply custom snippets">
-                <BlockStack gap="small">
-                  <Text>
-                    Custom Snippets is a $4.99/month add-on. Building and
-                    saving snippets in the app stays free — you just need
-                    a subscription to apply them to product descriptions
-                    or render them on your storefront.
-                  </Text>
-                  <InlineStack gap="base">
-                    <Link to="shopify://admin/apps/product-candy/app/billing">
-                      Subscribe — $4.99/month
-                    </Link>
-                    <Link to="shopify://admin/apps/product-candy/app/snippets">
-                      Manage saved snippets
-                    </Link>
-                  </InlineStack>
-                </BlockStack>
-              </Banner>
-            ) : snippets && snippets.length > 0 ? (
+            {entitled === false &&
+              snippets &&
+              snippets.length > freeSnippetIds.length && (
+                <Banner tone="info" title="Free plan: 1 custom snippet">
+                  <BlockStack gap="small">
+                    <Text>
+                      Your first saved snippet works on the free plan.
+                      Additional snippets need the $4.99/month Custom
+                      Snippets add-on to apply or render on your storefront.
+                    </Text>
+                    <InlineStack gap="base">
+                      <Link to="shopify://admin/apps/product-candy/app/billing">
+                        Upgrade — $4.99/month
+                      </Link>
+                    </InlineStack>
+                  </BlockStack>
+                </Banner>
+              )}
+            {snippets && snippets.length > 0 ? (
               <BlockStack gap="base">
                 {chunk(snippets, 3).map((row, i) => (
                   <InlineStack key={`s-${i}`} gap="base">
-                    {row.map((s) => (
-                      <BlockStack key={s.id} gap="none" inlineAlignment="center">
-                        <Pressable
-                          onPress={() => applySnippet(s)}
-                          disabled={busy}
-                          padding="none"
-                          accessibilityLabel={`Apply snippet ${s.name}`}
-                        >
-                          <Image source={snippetThumbUri(s.id)} alt={s.name} />
-                        </Pressable>
-                        <Button
-                          variant="primary"
-                          onPress={() => applySnippet(s)}
-                          disabled={busy}
-                        >
-                          Apply Snippet
-                        </Button>
-                        <Text>{s.name}</Text>
-                      </BlockStack>
-                    ))}
+                    {row.map((s) => {
+                      const isFree = freeSnippetIds.includes(s.id);
+                      const canApply = entitled === true || isFree;
+                      return (
+                        <BlockStack key={s.id} gap="none" inlineAlignment="center">
+                          <Pressable
+                            onPress={() => (canApply ? applySnippet(s) : undefined)}
+                            disabled={busy || !canApply}
+                            padding="none"
+                            accessibilityLabel={
+                              canApply
+                                ? `Apply snippet ${s.name}`
+                                : `${s.name} requires Custom Snippets subscription`
+                            }
+                          >
+                            <Image source={snippetThumbUri(s.id)} alt={s.name} />
+                          </Pressable>
+                          {canApply ? (
+                            <Button
+                              variant="primary"
+                              onPress={() => applySnippet(s)}
+                              disabled={busy}
+                            >
+                              Apply Snippet
+                            </Button>
+                          ) : (
+                            <Link to="shopify://admin/apps/product-candy/app/billing">
+                              Upgrade to apply
+                            </Link>
+                          )}
+                          <Text>{s.name}</Text>
+                        </BlockStack>
+                      );
+                    })}
                   </InlineStack>
                 ))}
               </BlockStack>

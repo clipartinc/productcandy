@@ -48,15 +48,17 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
   if (!shop) return new NextResponse("", { status: 200 });
 
   // Entitlement gate — free / lapsed merchants get an empty response
-  // so the storefront snippet block renders nothing. Dev stores and
-  // active subscribers pass through. The Shopify Admin session for
-  // this shop is cached from the install / token-exchange flow and
-  // lets checkEntitlement refresh from Admin GraphQL if stale.
+  // for any snippet that isn't in their free-quota set (oldest N
+  // snippets by createdAt). Dev stores and active subscribers pass
+  // through unconditionally. The Shopify Admin session for this shop
+  // is cached from the install / token-exchange flow and lets
+  // checkEntitlement refresh from Admin GraphQL if stale.
   const shopify = getShopify();
   const offlineId = shopify.session.getOfflineId(verified.shop);
   const session = (await sessionStorage.loadSession(offlineId)) ?? undefined;
   const ent = await checkEntitlement(shop, session);
-  if (!ent.entitled) {
+  const isFreeSnippet = ent.freeSnippetIds.includes(id);
+  if (!ent.entitled && !isFreeSnippet) {
     return new NextResponse("", {
       status: 200,
       headers: {
