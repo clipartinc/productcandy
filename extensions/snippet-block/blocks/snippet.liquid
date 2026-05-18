@@ -31,12 +31,10 @@
      every multi-column row. .product-candy-snippet itself becomes a
      container so we can query the actual block width (not the viewport,
      which lies inside theme-editor mobile previews and iframes). */
-  .product-candy-snippet { container-type: inline-size; }
-  /* Base layout is CSS Grid (switched from Flexbox: Horizon's
-     rte-formatter render path was overriding `display:flex !important`
-     even when set inline). Theme reset rules rarely target `display:
-     grid`, and grid-template-columns alone determines the column
-     layout — much harder for unrelated theme CSS to break. */
+  /* Base layout is CSS Grid with auto-fit, no @media / @container
+     queries — the grid itself decides how many columns fit based on
+     the actual container width, then auto-flows extra cells to new
+     rows and finally to a single stacked column when narrow. */
   .product-candy-snippet .pc-snippet-row {
     display: grid !important;
     gap: 16px !important;
@@ -47,16 +45,6 @@
   .product-candy-snippet .pc-snippet-row > .pc-snippet-col {
     min-width: 0 !important;
     box-sizing: border-box !important;
-  }
-  @container (max-width: 480px) {
-    .product-candy-snippet .pc-snippet-row {
-      grid-template-columns: 1fr !important;
-    }
-  }
-  @media (max-width: 768px) {
-    .product-candy-snippet .pc-snippet-row {
-      grid-template-columns: 1fr !important;
-    }
   }
 </style>
 

@@ -254,50 +254,51 @@ function columnToHtml(col: Column): string {
 //
 // Selectors are `.pc-snippet-wrap .pc-snippet-row` (specificity 0,2,0)
 // + !important so theme rules like `.rte div { ... }` can't beat them.
-// CSS Grid (was Flexbox). Even inline `display:flex !important` was
-// somehow being overridden by Horizon's rte-formatter render path —
-// likely a `::slotted(*)` shadow-DOM rule or a JS mutation. Grid is
-// rarely targeted by theme resets, the column count lives in a single
-// declaration, and `minmax(0, 1fr)` gives the same shrink-to-fit
-// behavior we got from `flex:1 1 0;min-width:0`.
+// CSS Grid with auto-fit. No @media, no @container — the previous
+// rules were getting tripped by Horizon's body-normal-constrained
+// description column (narrower than 480 px on this theme), forcing
+// even desktop rows to stack.
 //
-// Stacking still uses TWO triggers at different breakpoints:
-//   @container (max-width: 480px) — phone-sized cells, fires inside
-//   narrow embeds (app-proxy iframe, sidebar widgets) regardless of
-//   viewport. 480 px keeps it well below Horizon's body-normal so
-//   desktop PDPs don't trip it.
-//   @media (max-width: 768px) — phone + tablet-portrait viewports,
-//   matches every real mobile device. Never fires on desktop (1024+).
-// Both override grid-template-columns to `1fr` (single column).
-export const SNIPPET_RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{container-type:inline-size;width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}@container (max-width:480px){.pc-snippet-wrap .pc-snippet-row{grid-template-columns:1fr !important;}}@media (max-width:768px){.pc-snippet-wrap .pc-snippet-row{grid-template-columns:1fr !important;}}</style>`;
+// `repeat(auto-fit, minmax(min(100%, Xpx), 1fr))` lets the grid
+// figure out the column count from the actual container width:
+//   - container ≥ N×X + gaps:   N columns side-by-side
+//   - container < that threshold: auto-flows to fewer columns, then
+//     finally a single stacked column
+// `min(100%, Xpx)` caps the minimum at 100% of container so a parent
+// narrower than X doesn't overflow.
+//
+// X is per-row, picked from the column count so 2-col rows stack
+// below ~576 px (real phones), 3-col below ~632 px (small tablets),
+// and 4-col below ~616 px. Wide containers (PDPs on desktop, theme
+// app block sections) always render the full grid.
+export const SNIPPET_RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}</style>`;
+
+function gridMinPx(cellCount: number): number {
+  if (cellCount <= 2) return 280;
+  if (cellCount === 3) return 200;
+  return 150;
+}
 
 function rowToHtml(row: Row): string {
   const nonEmpty = row.columns.filter((c) => c.blocks.length > 0);
   if (nonEmpty.length === 0) return "";
   if (nonEmpty.length === 1) return columnToHtml(nonEmpty[0]);
-  // CSS Grid layout: one declaration controls the column count. Cells
-  // are plain divs — grid handles their sizing via the parent's
-  // grid-template-columns. `minmax(0, 1fr)` is what stops content from
-  // forcing a column wider than its 1fr share.
   const cells = nonEmpty
     .map(
       (c) =>
         `<div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;">${columnToHtml(c)}</div>`
     )
     .join("");
-  // Inline `display:grid !important` is the strongest guarantee
-  // against theme reset rules like `.rte > * { display:block }`.
-  // grid-template-columns is plain inline so @media/@container author
-  // !important can override it to `1fr` for stacking on small screens.
-  const cols = `repeat(${nonEmpty.length}, minmax(0, 1fr))`;
+  const minPx = gridMinPx(nonEmpty.length);
+  const cols = `repeat(auto-fit, minmax(min(100%, ${minPx}px), 1fr))`;
   return `<div class="pc-snippet-row" style="display:grid !important;grid-template-columns:${cols};gap:16px;width:100%;align-items:start;box-sizing:border-box;">${cells}</div>`;
 }
 
-// Every layout is wrapped in `.pc-snippet-wrap` so the @container query
-// has an ancestor to size against. The wrapper is invisible (width:100%
-// of its parent) but provides the containment context.
+// Wrap survives for class-targeting purposes (preview overrides, theme
+// app block scoping). No `container-type: inline-size` because we're
+// no longer using @container queries — auto-fit grid replaces them.
 export function layoutToHtml(layout: Layout): string {
   const body = layout.map(rowToHtml).filter(Boolean).join("\n");
   if (!body) return "";
-  return `${SNIPPET_RESPONSIVE_STYLE}\n<div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;">\n${body}\n</div>`;
+  return `${SNIPPET_RESPONSIVE_STYLE}\n<div class="pc-snippet-wrap" style="width:100%;">\n${body}\n</div>`;
 }
