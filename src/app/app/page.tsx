@@ -129,8 +129,8 @@ export default function EmbeddedHome() {
                   <strong>More actions</strong>.
                 </List.Item>
                 <List.Item>
-                  Pick <strong>Pre-Made Description Layout Examples</strong>{" "}
-                  from the dropdown (see screenshot below).
+                  Pick <strong>Description Layouts</strong> from the dropdown
+                  (see screenshot below).
                 </List.Item>
                 <List.Item>
                   Choose colors and a layout, then click{" "}
@@ -142,7 +142,7 @@ export default function EmbeddedHome() {
               <Box paddingBlockStart="200" paddingBlockEnd="200">
                 <Image
                   src="/dropdown.png"
-                  alt="More actions menu showing Pre-Made Description Layout Examples"
+                  alt="More actions menu showing Description Layouts"
                   width={445}
                   height={293}
                   style={{
