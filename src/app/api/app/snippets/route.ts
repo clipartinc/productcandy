@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticateExtensionRequest } from "@/lib/sessionToken";
 import { checkEntitlement } from "@/lib/billing";
+import { freshSnippetHtml } from "@/lib/freshSnippetHtml";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ async function shopAndSessionFor(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const { shop, session } = await shopAndSessionFor(req);
-    const [snippets, entitlement] = await Promise.all([
+    const [rawSnippets, entitlement] = await Promise.all([
       prisma.descriptionTemplate.findMany({
         where: { shopId: shop.id },
         orderBy: { updatedAt: "desc" },
@@ -43,6 +44,14 @@ export async function GET(req: NextRequest) {
       }),
       checkEntitlement(shop, session),
     ]);
+    // Regenerate HTML from the stored Layout JSON on every read so the
+    // action extension's "Apply Snippet" button stamps the latest
+    // layoutToHtml output even when the merchant hasn't manually
+    // re-saved each snippet after a code change.
+    const snippets = rawSnippets.map((s) => ({
+      ...s,
+      html: freshSnippetHtml(s),
+    }));
     // Returning entitlement alongside snippets lets the action
     // extension render the subscribe banner without a second round-trip
     // and the dashboard reflect the live status on every refresh.

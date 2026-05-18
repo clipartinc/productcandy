@@ -3,6 +3,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { prisma } from "@/lib/prisma";
 import { getShopify, sessionStorage } from "@/lib/shopify";
 import { checkEntitlement } from "@/lib/billing";
+import { freshSnippetHtml } from "@/lib/freshSnippetHtml";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -70,14 +71,19 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
 
   const snippet = await prisma.descriptionTemplate.findFirst({
     where: { id, shopId: shop.id },
-    select: { html: true },
+    select: { html: true, layout: true },
   });
   if (!snippet) return new NextResponse("", { status: 200 });
+
+  // Regenerate HTML from the stored Layout JSON when available so the
+  // storefront always renders the latest layoutToHtml output, even if
+  // the stored html column was written by an older version of the code.
+  const html = freshSnippetHtml(snippet);
 
   // Returning HTML directly so the App Block can drop it into the DOM via
   // innerHTML. Same-origin via app proxy means no CORS to worry about.
   // Short cache so admins see edits quickly after saving in the app.
-  return new NextResponse(snippet.html, {
+  return new NextResponse(html, {
     status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
