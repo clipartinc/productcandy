@@ -49,7 +49,7 @@ export const STARTERS: Starter[] = [
   {
     id: "two-column",
     label: "Two columns",
-    html: `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}rte-formatter:has(.pc-snippet-row),.rte:has(.pc-snippet-row),.text-block:has(.pc-snippet-row){max-width:none !important;}</style>
+    html: `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}rte-formatter:has(.pc-snippet-row),.rte:has(.pc-snippet-row),.text-block:has(.pc-snippet-row),.spacing-style:has(.pc-snippet-row),[style*="--max-width"]:has(.pc-snippet-row){--max-width:none !important;--width:100% !important;max-width:none !important;width:100% !important;}</style>
 <div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;">
 <div class="pc-snippet-row" style="display:grid !important;grid-template-columns:repeat(auto-fit, minmax(min(100%, 280px), 1fr));gap:16px;width:100%;align-items:start;box-sizing:border-box;">
   <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;">
@@ -66,7 +66,7 @@ export const STARTERS: Starter[] = [
   {
     id: "three-column",
     label: "Three columns",
-    html: `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}rte-formatter:has(.pc-snippet-row),.rte:has(.pc-snippet-row),.text-block:has(.pc-snippet-row){max-width:none !important;}</style>
+    html: `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}rte-formatter:has(.pc-snippet-row),.rte:has(.pc-snippet-row),.text-block:has(.pc-snippet-row),.spacing-style:has(.pc-snippet-row),[style*="--max-width"]:has(.pc-snippet-row){--max-width:none !important;--width:100% !important;max-width:none !important;width:100% !important;}</style>
 <div class="pc-snippet-wrap" style="container-type:inline-size;width:100%;">
 <div class="pc-snippet-row" style="display:grid !important;grid-template-columns:repeat(auto-fit, minmax(min(100%, 200px), 1fr));gap:16px;width:100%;align-items:start;box-sizing:border-box;">
   <div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;">

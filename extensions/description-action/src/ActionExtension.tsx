@@ -61,7 +61,7 @@ function ph(label: string, bg: string, text: string): string {
 // doesn't equal the viewport, so viewport-only @media doesn't always
 // fire when we'd want it to. The container query asks the actual cell
 // width via the .pc-snippet-wrap div's `container-type:inline-size`.
-const RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}rte-formatter:has(.pc-snippet-row),.rte:has(.pc-snippet-row),.text-block:has(.pc-snippet-row){max-width:none !important;}</style>`;
+const RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}rte-formatter:has(.pc-snippet-row),.rte:has(.pc-snippet-row),.text-block:has(.pc-snippet-row),.spacing-style:has(.pc-snippet-row),[style*="--max-width"]:has(.pc-snippet-row){--max-width:none !important;--width:100% !important;max-width:none !important;width:100% !important;}</style>`;
 
 const WRAP_OPEN = `<div class="pc-snippet-wrap" style="width:100%;">`;
 const WRAP_CLOSE = `</div>`;

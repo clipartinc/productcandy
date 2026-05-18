@@ -272,7 +272,7 @@ function columnToHtml(col: Column): string {
 // Per-cell minimum: 280 px for 2 cols, 200 px for 3, 150 px for 4+.
 // `min(100%, Xpx)` caps the minimum at 100 % of container so an
 // extreme-narrow parent doesn't overflow.
-export const SNIPPET_RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}rte-formatter:has(.pc-snippet-row),.rte:has(.pc-snippet-row),.text-block:has(.pc-snippet-row){max-width:none !important;}</style>`;
+export const SNIPPET_RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}rte-formatter:has(.pc-snippet-row),.rte:has(.pc-snippet-row),.text-block:has(.pc-snippet-row),.spacing-style:has(.pc-snippet-row),[style*="--max-width"]:has(.pc-snippet-row){--max-width:none !important;--width:100% !important;max-width:none !important;width:100% !important;}</style>`;
 
 function gridMinPx(cellCount: number): number {
   if (cellCount <= 2) return 280;

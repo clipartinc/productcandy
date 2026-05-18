@@ -29,7 +29,7 @@ import { SnippetBuilder } from "./SnippetBuilder";
 import { type Layout, layoutToHtml } from "@/lib/snippetBlocks";
 import { htmlToLayout } from "@/lib/snippetParser";
 
-const RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}rte-formatter:has(.pc-snippet-row),.rte:has(.pc-snippet-row),.text-block:has(.pc-snippet-row){max-width:none !important;}</style>`;
+const RESPONSIVE_STYLE = `<style>.pc-snippet-wrap{width:100%;}.pc-snippet-wrap .pc-snippet-row{display:grid;gap:16px;width:100%;align-items:start;box-sizing:border-box;}.pc-snippet-wrap .pc-snippet-row > .pc-snippet-col{min-width:0;box-sizing:border-box;}rte-formatter:has(.pc-snippet-row),.rte:has(.pc-snippet-row),.text-block:has(.pc-snippet-row),.spacing-style:has(.pc-snippet-row),[style*="--max-width"]:has(.pc-snippet-row){--max-width:none !important;--width:100% !important;max-width:none !important;width:100% !important;}</style>`;
 
 const TWO_COL_INSERT = `${RESPONSIVE_STYLE}<div class="pc-snippet-wrap" style="width:100%;"><div class="pc-snippet-row" style="display:grid !important;grid-template-columns:repeat(auto-fit, minmax(min(100%, 280px), 1fr));gap:16px;width:100%;align-items:start;box-sizing:border-box;"><div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;"><h3>Column 1 heading</h3><p>Add column 1 text here.</p></div><div class="pc-snippet-col" style="min-width:0;box-sizing:border-box;"><h3>Column 2 heading</h3><p>Add column 2 text here.</p></div></div></div><p></p>`;
 
