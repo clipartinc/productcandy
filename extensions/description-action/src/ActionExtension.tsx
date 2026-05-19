@@ -9,6 +9,7 @@ import {
   Button,
   Banner,
   Box,
+  Icon,
   Select,
   Link,
   ProgressIndicator,
@@ -243,6 +244,7 @@ function App() {
   const [mode, setMode] = useState<Mode>("append");
   const [bgColor, setBgColor] = useState<string>("none");
   const [textColor, setTextColor] = useState<string>("#111827");
+  const [colorSettingsOpen, setColorSettingsOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [snippets, setSnippets] = useState<Snippet[] | null>(null);
   const [entitled, setEntitled] = useState<boolean | null>(null);
@@ -351,34 +353,55 @@ function App() {
           <>
             <Text>
               Pick a layout to drop placeholder boxes into the product
-              description. Choose colors below — pick &quot;None&quot; for
-              background to get a clean (unstyled) skeleton.
+              description.
             </Text>
 
-            <InlineStack gap="base">
-              <Select
-                label="Background color"
-                value={bgColor}
-                options={BG_OPTIONS}
-                onChange={setBgColor}
-              />
-              <Select
-                label="Text color"
-                value={textColor}
-                options={TEXT_OPTIONS}
-                onChange={setTextColor}
-              />
-            </InlineStack>
+            <Pressable
+              onPress={() => setColorSettingsOpen((open) => !open)}
+              padding="none"
+              accessibilityLabel={
+                colorSettingsOpen
+                  ? "Hide color settings"
+                  : "Show color settings"
+              }
+            >
+              <InlineStack gap="small" blockAlignment="center">
+                <Icon
+                  name={
+                    colorSettingsOpen ? "ChevronDownMinor" : "ChevronRightMinor"
+                  }
+                />
+                <Text fontWeight="bold">Color settings</Text>
+              </InlineStack>
+            </Pressable>
+            {colorSettingsOpen && (
+              <BlockStack gap="base">
+                <InlineStack gap="base">
+                  <Select
+                    label="Background color"
+                    value={bgColor}
+                    options={BG_OPTIONS}
+                    onChange={setBgColor}
+                  />
+                  <Select
+                    label="Text color"
+                    value={textColor}
+                    options={TEXT_OPTIONS}
+                    onChange={setTextColor}
+                  />
+                </InlineStack>
 
-            <Select
-              label="When applying a layout"
-              value={mode}
-              options={[
-                { label: "Append to existing description", value: "append" },
-                { label: "Replace existing description", value: "replace" },
-              ]}
-              onChange={(v) => setMode(v as Mode)}
-            />
+                <Select
+                  label="When applying a layout"
+                  value={mode}
+                  options={[
+                    { label: "Append to existing description", value: "append" },
+                    { label: "Replace existing description", value: "replace" },
+                  ]}
+                  onChange={(v) => setMode(v as Mode)}
+                />
+              </BlockStack>
+            )}
 
             {status.kind === "error" && (
               <Banner tone="critical" title="Couldn’t apply layout">
