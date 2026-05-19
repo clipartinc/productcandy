@@ -111,7 +111,7 @@ export default function EmbeddedHome() {
                 <List.Item>
                   Choose colors and a layout, then click{" "}
                   <strong>Apply Layout</strong>. The placeholder boxes drop into
-                  the description editor — overtype each one with your content.
+                  the description editor.
                 </List.Item>
               </List>
 
