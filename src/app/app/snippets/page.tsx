@@ -21,7 +21,7 @@ import { useEditor, EditorContent, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TiptapImage from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { appBridgeFetch } from "@/lib/appBridgeFetch";
 import { STARTERS } from "@/lib/snippetStarters";
 import { Div } from "@/lib/tiptapDiv";
@@ -237,6 +237,20 @@ export default function SnippetsPage() {
     setLinkUrl("");
   }
 
+  // Bubble the free-quota layouts (the merchant's oldest saved ones) to
+  // the top of the list so the layout that's actually working on the
+  // free plan is what they see first. Relative order of everything
+  // else is preserved because Array.prototype.sort is stable.
+  const sortedSnippets = useMemo(() => {
+    if (freeSnippetIds.length === 0) return snippets;
+    const free = new Set(freeSnippetIds);
+    return [...snippets].sort((a, b) => {
+      const aFree = free.has(a.id) ? 0 : 1;
+      const bFree = free.has(b.id) ? 0 : 1;
+      return aFree - bFree;
+    });
+  }, [snippets, freeSnippetIds]);
+
   return (
     <Page
       title="My Custom Layouts"
@@ -385,7 +399,7 @@ export default function SnippetsPage() {
         ) : (
           <Card>
             <BlockStack gap="0">
-              {snippets.map((s, i) => (
+              {sortedSnippets.map((s, i) => (
                 <Box key={s.id}>
                   {i > 0 && <Divider />}
                   <Box padding="400">
