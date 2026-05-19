@@ -43,10 +43,15 @@ export async function authenticateExtensionRequest(
     // No cached session — do an offline token exchange. This is the
     // standard pattern for managed-install apps; first request from
     // a new merchant will hit this path and seed the Session row.
+    // `expiring: true` requests Shopify's new expiring offline tokens
+    // — Shopify rejects non-expiring tokens on the Admin API as of
+    // 2025/2026 with "Non-expiring access tokens are no longer
+    // accepted for the Admin API".
     const result = await shopify.auth.tokenExchange({
       shop,
       sessionToken,
       requestedTokenType: RequestedTokenType.OfflineAccessToken,
+      expiring: true,
     });
     session = result.session;
     await sessionStorage.storeSession(session);

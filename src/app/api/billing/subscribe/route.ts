@@ -17,12 +17,20 @@ export async function OPTIONS() {
 
 function isStaleTokenError(e: unknown): boolean {
   if (!(e instanceof Error)) return false;
-  // Admin GraphQL returns 401 with the body "Invalid API key or access
-  // token" when the cached offline session's access token has been
-  // rotated (typical after the merchant uninstalls + reinstalls).
+  // Several signals from Admin GraphQL that the cached offline token
+  // is unusable and we need to re-exchange via the merchant's
+  // current session JWT:
+  //   - HTTP 401 + "Invalid API key or access token": token rotated
+  //     after uninstall/reinstall.
+  //   - HTTP 403 + "Non-expiring access tokens are no longer
+  //     accepted": Shopify is rejecting a legacy non-expiring offline
+  //     token that's still in our cache from before we switched to
+  //     `expiring: true` in tokenExchange.
   return (
     e.message.includes("HTTP 401") ||
-    e.message.includes("Invalid API key or access token")
+    e.message.includes("HTTP 403") ||
+    e.message.includes("Invalid API key or access token") ||
+    e.message.includes("Non-expiring access tokens")
   );
 }
 
