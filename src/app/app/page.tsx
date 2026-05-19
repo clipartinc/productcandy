@@ -89,35 +89,9 @@ export default function EmbeddedHome() {
               </InlineStack>
               <Text as="p" tone="subdued">
                 Drop a polished layout into any product description in one
-                click. Pick from these built-in layouts or save your own
+                click. Pick from the built-in layouts below or save your own
                 snippets.
               </Text>
-
-              <Grid columns={{ xs: 3, sm: 3, md: 3, lg: 3, xl: 3 }} gap={{ xs: "200" }}>
-                {LAYOUT_THUMBS.map((t) => (
-                  <Grid.Cell key={t.id}>
-                    <BlockStack gap="100" inlineAlign="center">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={`/templates/${t.id}.svg`}
-                        alt={t.label}
-                        style={{
-                          width: "100%",
-                          height: "auto",
-                          maxWidth: 200,
-                          border: "1px solid #e5e7eb",
-                          borderRadius: 6,
-                        }}
-                      />
-                      <Text as="p" tone="subdued" alignment="center">
-                        {t.label}
-                      </Text>
-                    </BlockStack>
-                  </Grid.Cell>
-                ))}
-              </Grid>
-
-              <Divider />
 
               <Text as="h3" variant="headingSm">
                 How to use it from a product page
@@ -155,6 +129,35 @@ export default function EmbeddedHome() {
                   }}
                 />
               </Box>
+
+              <Divider />
+
+              <Text as="h3" variant="headingSm">
+                Pre-Made Description Layout Examples
+              </Text>
+              <Grid columns={{ xs: 3, sm: 3, md: 3, lg: 3, xl: 3 }} gap={{ xs: "200" }}>
+                {LAYOUT_THUMBS.map((t) => (
+                  <Grid.Cell key={t.id}>
+                    <BlockStack gap="100" inlineAlign="center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={`/templates/${t.id}.svg`}
+                        alt={t.label}
+                        style={{
+                          width: "100%",
+                          height: "auto",
+                          maxWidth: 200,
+                          border: "1px solid #e5e7eb",
+                          borderRadius: 6,
+                        }}
+                      />
+                      <Text as="p" tone="subdued" alignment="center">
+                        {t.label}
+                      </Text>
+                    </BlockStack>
+                  </Grid.Cell>
+                ))}
+              </Grid>
 
               <Banner tone="info">
                 Want your own reusable HTML blocks (warranty, brand story,
