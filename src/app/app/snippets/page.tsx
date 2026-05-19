@@ -66,7 +66,6 @@ export default function SnippetsPage() {
   const [nameError, setNameError] = useState<string | undefined>(undefined);
   const [entitled, setEntitled] = useState<boolean | null>(null);
   const [freeSnippetIds, setFreeSnippetIds] = useState<string[]>([]);
-  const [regenerating, setRegenerating] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -104,38 +103,6 @@ export default function SnippetsPage() {
   useEffect(() => {
     load();
   }, []);
-
-  async function regenerateAll() {
-    setRegenerating(true);
-    try {
-      const res = await appBridgeFetch("/api/app/snippets/regenerate", {
-        method: "POST",
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error ?? "Regenerate failed");
-      // Reload so the list reflects the new updatedAt timestamps + the
-      // thumbnail previews re-fetch with the regenerated HTML.
-      await load();
-      // App Bridge global is set by the CDN script (see appBridgeFetch).
-      const toast = (
-        window as unknown as {
-          shopify?: { toast?: { show: (msg: string) => void } };
-        }
-      ).shopify?.toast;
-      const msg =
-        json.regenerated === 0
-          ? "Layouts already up to date"
-          : `Regenerated ${json.regenerated} of ${json.total} layout${json.total === 1 ? "" : "s"}`;
-      toast?.show(msg);
-    } catch (e) {
-      setStatus({
-        kind: "error",
-        message: e instanceof Error ? e.message : "Regenerate failed",
-      });
-    } finally {
-      setRegenerating(false);
-    }
-  }
 
   function openNew() {
     setDraftName("");
@@ -279,20 +246,6 @@ export default function SnippetsPage() {
         editing
           ? undefined
           : { content: "New layout", onAction: openNew }
-      }
-      secondaryActions={
-        editing
-          ? undefined
-          : [
-              {
-                content: regenerating ? "Regenerating…" : "Regenerate HTML",
-                onAction: () => void regenerateAll(),
-                disabled: regenerating || snippets.length === 0,
-                helpText:
-                  "Rebuilds every saved layout's HTML from its visual layout. " +
-                  "Use after a Product Candy update if existing layouts look off.",
-              },
-            ]
       }
     >
       <BlockStack gap="400">
