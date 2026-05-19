@@ -81,11 +81,14 @@ function BillingPageInner() {
       if (!body.confirmationUrl) {
         throw new Error("No confirmation URL returned");
       }
-      // Top-frame redirect — Shopify's approval page must own the whole
-      // window, not run inside the embedded iframe. App Bridge would
-      // normally wrap this, but a direct top.location.assign works for
-      // this redirect-to-Shopify flow.
-      window.top?.location.assign(body.confirmationUrl);
+      // Top-frame redirect to Shopify's hosted approval page.
+      // `window.top.location.assign(...)` is blocked by the browser
+      // when the top frame (admin.shopify.com) is cross-origin from
+      // the embedded app (productcandy.app) — accessing the Location
+      // property throws a SecurityError. `window.open(url, '_top')`
+      // is the standard escape: it triggers a top-frame navigation
+      // without crossing the origin boundary as a property read.
+      window.open(body.confirmationUrl, "_top");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
       setSubmitting(false);
