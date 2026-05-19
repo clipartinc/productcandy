@@ -220,57 +220,6 @@ export default function EmbeddedHome() {
         <Layout.Section>
           <Card>
             <BlockStack gap="400">
-              <InlineStack align="space-between" blockAlign="center">
-                <Text as="h2" variant="headingMd">
-                  Want layouts to fill the full page width?
-                </Text>
-                <Badge tone="attention">Optional</Badge>
-              </InlineStack>
-              <Text as="p" tone="subdued">
-                When you stamp a layout into a product description, your
-                theme constrains it to its standard reading width. If you
-                want a layout to render edge-to-edge — useful for spec
-                tables, comparison rows, or multi-column rows — add the
-                <strong> Product Candy Snippet </strong> block to your theme
-                instead. It renders in its own container, outside the
-                theme&apos;s width constraints.
-              </Text>
-              <List type="number">
-                <List.Item>
-                  In Shopify admin, open <strong>Online Store → Themes
-                  → Customize</strong>.
-                </List.Item>
-                <List.Item>
-                  Navigate to the page (e.g. Products) where you want the
-                  layout to appear.
-                </List.Item>
-                <List.Item>
-                  Click <strong>Add section</strong> or{" "}
-                  <strong>Add block</strong> →
-                  <strong> Apps → Product Candy snippet</strong>.
-                </List.Item>
-                <List.Item>
-                  In the block settings, paste the{" "}
-                  <strong>Layout ID</strong> (find it next to each
-                  layout&apos;s name on the{" "}
-                  <Link href="/app/snippets">My Custom Layouts</Link> page).
-                </List.Item>
-                <List.Item>
-                  Save the theme. The layout now renders on the storefront
-                  full-width.
-                </List.Item>
-              </List>
-              <Banner tone="info">
-                Editing a layout in this app updates everywhere it&apos;s
-                placed — no theme re-publish needed.
-              </Banner>
-            </BlockStack>
-          </Card>
-        </Layout.Section>
-
-        <Layout.Section>
-          <Card>
-            <BlockStack gap="400">
               <Text as="h2" variant="headingMd">
                 Tips &amp; FAQ
               </Text>
