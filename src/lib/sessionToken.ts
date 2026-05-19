@@ -11,11 +11,17 @@ import { prisma } from "./prisma";
  *  - does a Shopify token exchange to mint a fresh one (required when
  *    using managed install / use_legacy_install_flow = false, where the
  *    install flow doesn't hit our /api/auth/callback).
+ *
+ * Pass `forceFresh: true` to wipe the cached session before exchanging
+ * — needed after a 401 from Admin GraphQL when the merchant has
+ * uninstalled + reinstalled the app and the rotated access token has
+ * left our cache stale. Callers can retry-on-401 by re-invoking with
+ * `forceFresh: true`.
  */
-export async function authenticateExtensionRequest(req: Request): Promise<{
-  shop: string;
-  session: Session;
-}> {
+export async function authenticateExtensionRequest(
+  req: Request,
+  opts: { forceFresh?: boolean } = {}
+): Promise<{ shop: string; session: Session }> {
   const auth = req.headers.get("authorization") ?? "";
   const match = /^Bearer\s+(.+)$/i.exec(auth);
   if (!match) throw new Error("Missing Authorization: Bearer <session_token>");
@@ -26,6 +32,11 @@ export async function authenticateExtensionRequest(req: Request): Promise<{
   const shop = payload.dest.replace(/^https?:\/\//, "");
 
   const offlineId = shopify.session.getOfflineId(shop);
+  if (opts.forceFresh) {
+    // Drop the cached session so the load below misses and we
+    // re-exchange against the JWT.
+    await sessionStorage.deleteSession(offlineId).catch(() => {});
+  }
   let session = await sessionStorage.loadSession(offlineId);
 
   if (!session) {
