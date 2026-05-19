@@ -32,6 +32,9 @@ export async function POST(req: NextRequest) {
     const { confirmationUrl } = await createSubscription(session, returnUrl);
     return NextResponse.json({ confirmationUrl }, { headers: CORS_HEADERS });
   } catch (e) {
+    // Log the full error to server logs (Vercel/host) so root cause is
+    // visible — the client only sees the message, not the stack.
+    console.error("[billing/subscribe] failed", e);
     return NextResponse.json(
       { error: e instanceof Error ? e.message : "Unknown error" },
       { status: 500, headers: CORS_HEADERS }

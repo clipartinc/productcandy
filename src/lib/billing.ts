@@ -295,7 +295,10 @@ export async function createSubscription(
         {
           plan: {
             appRecurringPricingDetails: {
-              price: { amount: PRICE_USD, currencyCode: "USD" },
+              // Shopify's `Decimal` scalar is serialised as a string
+              // — passing the JS number `4.99` raw was likely causing
+              // the appSubscriptionCreate 500.
+              price: { amount: PRICE_USD.toFixed(2), currencyCode: "USD" },
               interval: PRICE_INTERVAL,
             },
           },

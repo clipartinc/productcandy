@@ -69,14 +69,23 @@ function BillingPageInner() {
       const res = await appBridgeFetch("/api/billing/subscribe", {
         method: "POST",
       });
-      if (!res.ok) throw new Error(`Subscribe failed (${res.status})`);
-      const json = (await res.json()) as { confirmationUrl?: string };
-      if (!json.confirmationUrl) throw new Error("No confirmation URL returned");
+      // Surface the server's error body (includes the underlying
+      // Shopify Admin GraphQL message) instead of just the HTTP code.
+      const body = (await res.json().catch(() => ({}))) as {
+        confirmationUrl?: string;
+        error?: string;
+      };
+      if (!res.ok) {
+        throw new Error(body.error ?? `Subscribe failed (${res.status})`);
+      }
+      if (!body.confirmationUrl) {
+        throw new Error("No confirmation URL returned");
+      }
       // Top-frame redirect — Shopify's approval page must own the whole
       // window, not run inside the embedded iframe. App Bridge would
       // normally wrap this, but a direct top.location.assign works for
       // this redirect-to-Shopify flow.
-      window.top?.location.assign(json.confirmationUrl);
+      window.top?.location.assign(body.confirmationUrl);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unknown error");
       setSubmitting(false);
