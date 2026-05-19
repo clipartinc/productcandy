@@ -17,7 +17,7 @@ redirect_urls = [ "https://productcandy.app/api/auth/callback" ]
 [webhooks]
 api_version = "2026-04"
 
-  # Custom Snippets billing — keeps shop.subscriptionStatus in sync when
+  # Custom Layouts billing — keeps shop.subscriptionStatus in sync when
   # a merchant cancels / expires / re-accepts the $4.99/mo subscription
   # via Shopify admin instead of through our embedded billing page.
   [[webhooks.subscriptions]]

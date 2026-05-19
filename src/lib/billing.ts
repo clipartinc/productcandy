@@ -1,16 +1,16 @@
 /**
- * Custom Snippets billing — $4.99/mo recurring Shopify app subscription.
+ * Custom Layouts billing — $4.99/mo recurring Shopify app subscription.
  *
  * Gates two surfaces:
  *  1. The /api/proxy/snippets/[id] endpoint that the theme app block
- *     hits to render saved snippets on storefronts — returns empty if
+ *     hits to render saved layouts on storefronts — returns empty if
  *     the merchant isn't entitled, so storefronts of free/lapsed shops
- *     stop showing custom snippet content.
- *  2. The Apply Snippet button inside the Pre-Made Description Layout
+ *     stop showing custom layout content.
+ *  2. The Apply Layout button inside the Pre-Made Description Layout
  *     Examples action extension — UI-side gate that hides the apply
  *     control and shows a subscribe banner instead.
  *
- * Editing custom snippets in /app/snippets stays open for everyone;
+ * Editing custom layouts in /app/snippets stays open for everyone;
  * merchants can build and save layouts at any plan, they just can't
  * apply them until they subscribe.
  *
@@ -21,14 +21,14 @@
 import { prisma } from "./prisma";
 import type { Session } from "@shopify/shopify-api";
 
-export const PLAN_NAME = "Custom Snippets";
+export const PLAN_NAME = "Custom Layouts";
 export const PRICE_USD = 4.99;
 export const PRICE_INTERVAL = "EVERY_30_DAYS" as const;
 
-// Free plan includes one custom snippet — the merchant's oldest saved
-// snippet always renders / applies, regardless of subscription status.
-// Additional snippets require an active subscription. If the free
-// snippet is deleted, the next-oldest takes over automatically.
+// Free plan includes one custom layout — the merchant's oldest saved
+// layout always renders / applies, regardless of subscription status.
+// Additional layouts require an active subscription. If the free
+// layout is deleted, the next-oldest takes over automatically.
 export const FREE_SNIPPET_QUOTA = 1;
 
 // Toggle real charges with SHOPIFY_BILLING_TEST=false in production.

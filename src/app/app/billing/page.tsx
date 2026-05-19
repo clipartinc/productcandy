@@ -85,16 +85,16 @@ function BillingPageInner() {
 
   return (
     <Page
-      title="Custom Snippets billing"
-      subtitle="Unlock applying and rendering custom snippets — $4.99 per month."
+      title="Custom Layouts billing"
+      subtitle="Unlock applying and rendering custom layouts — $4.99 per month."
     >
       <Layout>
         {justSubscribed && (
           <Layout.Section>
             <Banner tone="success" title="You're subscribed">
               <p>
-                Thanks! Custom Snippets are now unlocked for your store.
-                Head to a product page and use the Apply Snippet button
+                Thanks! Custom Layouts are now unlocked for your store.
+                Head to a product page and use the Apply Layout button
                 from the Pre-Made Description Layout Examples action.
               </p>
             </Banner>
@@ -129,7 +129,7 @@ function BillingPageInner() {
 
               {status?.isDevStore && (
                 <Text as="p" tone="subdued">
-                  Development stores get Custom Snippets free of charge so
+                  Development stores get Custom Layouts free of charge so
                   partner builds and demos work end-to-end without billing
                   setup. Production merchants pay the standard $4.99/month.
                 </Text>
@@ -137,7 +137,7 @@ function BillingPageInner() {
 
               {!status?.isDevStore && status?.entitled && (
                 <Text as="p" tone="subdued">
-                  Your $4.99/month Custom Snippets subscription is active.
+                  Your $4.99/month Custom Layouts subscription is active.
                   Manage or cancel any time from{" "}
                   <strong>Settings → Apps and sales channels →
                   Product Candy → Billing</strong> in Shopify admin.

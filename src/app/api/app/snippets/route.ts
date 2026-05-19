@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
       checkEntitlement(shop, session),
     ]);
     // Regenerate HTML from the stored Layout JSON on every read so the
-    // action extension's "Apply Snippet" button stamps the latest
+    // action extension's "Apply Layout" button stamps the latest
     // layoutToHtml output even when the merchant hasn't manually
     // re-saved each snippet after a code change.
     const snippets = rawSnippets.map((s) => ({

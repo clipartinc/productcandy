@@ -15,7 +15,7 @@ export async function OPTIONS() {
   return new NextResponse(null, { status: 204, headers: CORS_HEADERS });
 }
 
-// POST starts a Custom Snippets subscription. Returns the Shopify-
+// POST starts a Custom Layouts subscription. Returns the Shopify-
 // hosted confirmation URL; the embedded app opens it in the top frame
 // so the merchant sees Shopify's own approval page, not ours.
 export async function POST(req: NextRequest) {

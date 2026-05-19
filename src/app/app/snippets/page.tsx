@@ -124,8 +124,8 @@ export default function SnippetsPage() {
       ).shopify?.toast;
       const msg =
         json.regenerated === 0
-          ? "Snippets already up to date"
-          : `Regenerated ${json.regenerated} of ${json.total} snippet${json.total === 1 ? "" : "s"}`;
+          ? "Layouts already up to date"
+          : `Regenerated ${json.regenerated} of ${json.total} layout${json.total === 1 ? "" : "s"}`;
       toast?.show(msg);
     } catch (e) {
       setStatus({
@@ -181,7 +181,7 @@ export default function SnippetsPage() {
     if (!editing || !editor) return;
     const html = mode === "builder" ? layoutToHtml(layout) : editor.getHTML();
     if (!draftName.trim()) {
-      setNameError("Give your snippet a name before saving.");
+      setNameError("Give your layout a name before saving.");
       return;
     }
     if (!html.trim() || html === "<p></p>") {
@@ -272,13 +272,13 @@ export default function SnippetsPage() {
 
   return (
     <Page
-      title="My Custom Snippets"
-      subtitle="Reusable HTML blocks you can stamp into any product description."
+      title="My Custom Layouts"
+      subtitle="Reusable layouts you can stamp into any product description."
       backAction={{ content: "Home", url: "/app" }}
       primaryAction={
         editing
           ? undefined
-          : { content: "New snippet", onAction: openNew }
+          : { content: "New layout", onAction: openNew }
       }
       secondaryActions={
         editing
@@ -289,8 +289,8 @@ export default function SnippetsPage() {
                 onAction: () => void regenerateAll(),
                 disabled: regenerating || snippets.length === 0,
                 helpText:
-                  "Rebuilds every saved snippet's HTML from its visual layout. " +
-                  "Use after a Product Candy update if existing snippets look off.",
+                  "Rebuilds every saved layout's HTML from its visual layout. " +
+                  "Use after a Product Candy update if existing layouts look off.",
               },
             ]
       }
@@ -299,14 +299,14 @@ export default function SnippetsPage() {
         {entitled === false && snippets.length > freeSnippetIds.length && (
           <Banner
             tone="info"
-            title="Free plan includes 1 custom snippet"
+            title="Free plan includes 1 custom layout"
             action={{ content: "Upgrade — $4.99/month", url: "/app/billing" }}
           >
             <p>
-              Your oldest saved snippet (marked <strong>Free</strong> below)
+              Your oldest saved layout (marked <strong>Free</strong> below)
               works on the free plan — apply it to product descriptions and
-              render it on your storefront. Additional snippets need the
-              $4.99/month Custom Snippets subscription to apply or render.
+              render it on your storefront. Additional layouts need the
+              $4.99/month Custom Layouts subscription to apply or render.
               You can keep building and editing as many as you like; only
               applying / rendering is gated.
             </p>
@@ -327,7 +327,7 @@ export default function SnippetsPage() {
           <Card>
             <BlockStack gap="400">
               <Text as="h2" variant="headingMd">
-                {editing === "new" ? "New snippet" : `Edit: ${editing.name}`}
+                {editing === "new" ? "New layout" : `Edit: ${editing.name}`}
               </Text>
 
               <TextField
@@ -402,7 +402,7 @@ export default function SnippetsPage() {
                   onClick={save}
                   loading={saving}
                 >
-                  {editing === "new" ? "Create snippet" : "Save"}
+                  {editing === "new" ? "Create layout" : "Save"}
                 </Button>
                 <InlineStack align="center" gap="200">
                   <Button variant="tertiary" onClick={closeEditor} disabled={saving}>
@@ -415,7 +415,7 @@ export default function SnippetsPage() {
                       onClick={() => setConfirmDelete(editing)}
                       disabled={saving}
                     >
-                      Delete snippet
+                      Delete layout
                     </Button>
                   )}
                 </InlineStack>
@@ -428,18 +428,18 @@ export default function SnippetsPage() {
           <Card>
             <InlineStack gap="200" blockAlign="center">
               <Spinner size="small" />
-              <Text as="p">Loading snippets…</Text>
+              <Text as="p">Loading layouts…</Text>
             </InlineStack>
           </Card>
         ) : snippets.length === 0 ? (
           <Card>
             <EmptyState
-              heading="No snippets yet"
-              action={{ content: "Create your first snippet", onAction: openNew }}
+              heading="No layouts yet"
+              action={{ content: "Create your first layout", onAction: openNew }}
               image=""
             >
               <p>
-                Save reusable blocks here — warranty info, return policy, size
+                Save reusable layouts here — warranty info, return policy, size
                 charts, brand story — and stamp them into any product
                 description from the Pre-Made Description Layout Examples
                 modal.
@@ -479,7 +479,7 @@ export default function SnippetsPage() {
                                 fontFamily: "monospace",
                                 userSelect: "all",
                               }}
-                              title="Copy this ID into the Snippet App Block in your theme to render this snippet full-width on product pages."
+                              title="Copy this ID into the Snippet App Block in your theme to render this layout full-width on product pages."
                             >
                               {s.id}
                             </code>

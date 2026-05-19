@@ -22,7 +22,7 @@ export async function OPTIONS() {
 // paths (GET /api/app/snippets, app-proxy storefront route) already
 // derive fresh HTML on the fly, but the stored html column is what
 // gets stamped into product.descriptionHtml by the action extension,
-// so refreshing it means future Apply Snippet clicks always carry
+// so refreshing it means future Apply Layout clicks always carry
 // the latest layout output.
 //
 // Returns counts for the UI to show. Idempotent — running again is a

@@ -35,8 +35,8 @@ model Shop {
   installedAt   DateTime            @default(now())
   templates     DescriptionTemplate[]
 
-  // Billing — Custom Snippets is a $4.99/mo paid feature; merchants on
-  // free plans can edit snippets in the admin but can't stamp them into
+  // Billing — Custom Layouts is a $4.99/mo paid feature; merchants on
+  // free plans can edit layouts in the admin but can't stamp them into
   // products or render them on storefronts until they subscribe.
   // Dev stores (plan.partnerDevelopment) bypass the paywall entirely.
   subscriptionId        String?   // Shopify GID for the active appSubscription

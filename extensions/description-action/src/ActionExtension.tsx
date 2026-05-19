@@ -386,22 +386,22 @@ function App() {
               </Banner>
             )}
 
-            <Text fontWeight="bold">Your custom snippets</Text>
+            <Text fontWeight="bold">Your custom layouts</Text>
             {snippets === null && (
               <InlineStack gap="base" blockAlignment="center">
                 <ProgressIndicator size="small-200" />
-                <Text>Loading your saved snippets…</Text>
+                <Text>Loading your saved layouts…</Text>
               </InlineStack>
             )}
             {entitled === false &&
               snippets &&
               snippets.length > freeSnippetIds.length && (
-                <Banner tone="info" title="Free plan: 1 custom snippet">
+                <Banner tone="info" title="Free plan: 1 custom layout">
                   <BlockStack gap="small">
                     <Text>
-                      Your first saved snippet works on the free plan.
-                      Additional snippets need the $4.99/month Custom
-                      Snippets add-on to apply or render on your storefront.
+                      Your first saved layout works on the free plan.
+                      Additional layouts need the $4.99/month Custom
+                      Layouts add-on to apply or render on your storefront.
                     </Text>
                     <InlineStack gap="base">
                       <Link to="shopify://admin/apps/product-candy/app/billing">
@@ -426,8 +426,8 @@ function App() {
                             padding="none"
                             accessibilityLabel={
                               canApply
-                                ? `Apply snippet ${s.name}`
-                                : `${s.name} requires Custom Snippets subscription`
+                                ? `Apply layout ${s.name}`
+                                : `${s.name} requires Custom Layouts subscription`
                             }
                           >
                             {/* Forces the 4:3 SVG to render at its
@@ -444,7 +444,7 @@ function App() {
                               onPress={() => applySnippet(s)}
                               disabled={busy}
                             >
-                              Apply Snippet
+                              Apply Layout
                             </Button>
                           ) : (
                             <Link to="shopify://admin/apps/product-candy/app/billing">
@@ -461,13 +461,13 @@ function App() {
             )}
             {snippets && snippets.length === 0 && (
               <Text>
-                Save reusable HTML blocks (warranty, brand story, size chart…)
+                Save reusable layouts (warranty, brand story, size chart…)
                 to stamp them here alongside the built-in layouts.
               </Text>
             )}
             <InlineStack gap="base">
               <Link to="shopify://admin/apps/product-candy/app/snippets">
-                + Add new snippet
+                + Add new layout
               </Link>
             </InlineStack>
 

@@ -57,21 +57,21 @@ export default function EmbeddedHome() {
             <BlockStack gap="400">
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="h2" variant="headingMd">
-                  My snippets
+                  My Custom Layouts
                 </Text>
                 <Badge tone="info">New</Badge>
               </InlineStack>
               <Text as="p" tone="subdued">
-                Save reusable HTML blocks — warranty info, return policy, size
+                Save reusable layouts — warranty info, return policy, size
                 charts, brand story — and stamp them into any product
                 description from the Pre-Made Description Layout Examples
-                modal. <strong>Your first saved snippet is free</strong>;
-                additional snippets need the $4.99/month Custom Snippets
+                modal. <strong>Your first saved layout is free</strong>;
+                additional layouts need the $4.99/month Custom Layouts
                 add-on to apply or render on the storefront.
               </Text>
               <InlineStack>
                 <Link href="/app/snippets">
-                  <Button variant="primary">Manage snippets</Button>
+                  <Button variant="primary">Manage layouts</Button>
                 </Link>
               </InlineStack>
             </BlockStack>
@@ -90,7 +90,7 @@ export default function EmbeddedHome() {
               <Text as="p" tone="subdued">
                 Drop a polished layout into any product description in one
                 click. Pick from the built-in layouts below or save your own
-                snippets.
+                custom layouts.
               </Text>
 
               <Text as="h3" variant="headingSm">
@@ -160,10 +160,11 @@ export default function EmbeddedHome() {
               </Grid>
 
               <Banner tone="info">
-                Want your own reusable HTML blocks (warranty, brand story,
-                size chart)? Save them in <strong>My snippets</strong> at the
-                top of this page and they&apos;ll appear in the same modal
-                alongside the built-in layouts.
+                Want your own reusable layouts (warranty, brand story,
+                size chart)? Save them in{" "}
+                <strong>My Custom Layouts</strong> at the top of this page
+                and they&apos;ll appear in the same modal alongside the
+                built-in layouts.
               </Banner>
             </BlockStack>
           </Card>
@@ -221,15 +222,15 @@ export default function EmbeddedHome() {
             <BlockStack gap="400">
               <InlineStack align="space-between" blockAlign="center">
                 <Text as="h2" variant="headingMd">
-                  Want snippets to fill the full page width?
+                  Want layouts to fill the full page width?
                 </Text>
                 <Badge tone="attention">Optional</Badge>
               </InlineStack>
               <Text as="p" tone="subdued">
-                When you stamp a snippet into a product description, your
+                When you stamp a layout into a product description, your
                 theme constrains it to its standard reading width. If you
-                want a snippet to render edge-to-edge — useful for spec
-                tables, comparison rows, or multi-column layouts — add the
+                want a layout to render edge-to-edge — useful for spec
+                tables, comparison rows, or multi-column rows — add the
                 <strong> Product Candy Snippet </strong> block to your theme
                 instead. It renders in its own container, outside the
                 theme&apos;s width constraints.
@@ -241,7 +242,7 @@ export default function EmbeddedHome() {
                 </List.Item>
                 <List.Item>
                   Navigate to the page (e.g. Products) where you want the
-                  snippet to appear.
+                  layout to appear.
                 </List.Item>
                 <List.Item>
                   Click <strong>Add section</strong> or{" "}
@@ -249,17 +250,18 @@ export default function EmbeddedHome() {
                   <strong> Apps → Product Candy snippet</strong>.
                 </List.Item>
                 <List.Item>
-                  In the block settings, paste the <strong>Snippet ID</strong>{" "}
-                  (find it next to each snippet&apos;s name on the{" "}
-                  <Link href="/app/snippets">My snippets</Link> page).
+                  In the block settings, paste the{" "}
+                  <strong>Layout ID</strong> (find it next to each
+                  layout&apos;s name on the{" "}
+                  <Link href="/app/snippets">My Custom Layouts</Link> page).
                 </List.Item>
                 <List.Item>
-                  Save the theme. The snippet now renders on the storefront
+                  Save the theme. The layout now renders on the storefront
                   full-width.
                 </List.Item>
               </List>
               <Banner tone="info">
-                Editing a snippet in this app updates everywhere it&apos;s
+                Editing a layout in this app updates everywhere it&apos;s
                 placed — no theme re-publish needed.
               </Banner>
             </BlockStack>
