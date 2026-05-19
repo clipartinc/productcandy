@@ -162,9 +162,11 @@ export default function EmbeddedHome() {
               <Banner tone="info">
                 Want your own reusable layouts (warranty, brand story,
                 size chart)? Save them in{" "}
-                <strong>My Custom Layouts</strong> at the top of this page
-                and they&apos;ll appear in the same modal alongside the
-                built-in layouts.
+                <Link href="/app/snippets">
+                  <strong>My Custom Layouts</strong>
+                </Link>{" "}
+                at the top of this page and they&apos;ll appear in the
+                same modal alongside the built-in layouts.
               </Banner>
             </BlockStack>
           </Card>
