@@ -249,23 +249,6 @@ export default function SnippetsPage() {
       }
     >
       <BlockStack gap="400">
-        {entitled === false && snippets.length > freeSnippetIds.length && (
-          <Banner
-            tone="info"
-            title="Free plan includes 1 custom layout"
-            action={{ content: "Upgrade — $4.99/month", url: "/app/billing" }}
-          >
-            <p>
-              Your oldest saved layout (marked <strong>Free</strong> below)
-              works on the free plan — apply it to product descriptions and
-              render it on your storefront. Additional layouts need the
-              $4.99/month Custom Layouts subscription to apply or render.
-              You can keep building and editing as many as you like; only
-              applying / rendering is gated.
-            </p>
-          </Banner>
-        )}
-
         {status.kind === "error" && (
           <Banner
             tone="critical"
@@ -475,6 +458,23 @@ export default function SnippetsPage() {
               ))}
             </BlockStack>
           </Card>
+        )}
+
+        {entitled === false && snippets.length > freeSnippetIds.length && (
+          <Banner
+            tone="info"
+            title="Free plan includes 1 custom layout"
+            action={{ content: "Upgrade — $4.99/month", url: "/app/billing" }}
+          >
+            <p>
+              Your oldest saved layout (marked <strong>Free</strong> above)
+              works on the free plan — apply it to product descriptions and
+              render it on your storefront. Additional layouts need the
+              $4.99/month Custom Layouts subscription to apply or render.
+              You can keep building and editing as many as you like; only
+              applying / rendering is gated.
+            </p>
+          </Banner>
         )}
 
         {confirmDelete && (
